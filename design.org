@@ -47,10 +47,6 @@ Entities are what are rendered and are also a subclass of node. They bring toget
 
 An application can have several viewports. As Qix does not force any particular windowing implementation, it can not have a window class. Once your window is set up, however, you can use the viewport handle drawing an area on screen. The most common children the cameras, which will be rendered in order unless then are not enabled.
 
-*** Cameras
-
-A camera abstracts the projection matrix. It is a subclass of the node and as such can have children and can be modified using translate, rotate and scale (although I don't know how scale would be useful). When it is updated, it stores the inverse of its node transform. (Moving toward an object moves the object toward the screen) It is not recommended to use the same camara in multiple node chains (more about this under nodes) as it only keeps the last calculated node position.
-
 *** Shaders
 
 Shaders are the compiled output from text-based vertex and fragment shaders. They require a name, vertex shader source code, fragment shader source code, a list of uniforms and a list of attributes. Vertices and index buffers need not be specified if you are using them. 
