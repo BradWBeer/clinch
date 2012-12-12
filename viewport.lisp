@@ -49,21 +49,6 @@
   )
 
 
-(defmethod attribute :around ((this viewport) key)
-  
-  (cond
-    ((eql 'width key) (if (width this)
-			  (values (width this) this)
-			  (call-next-method)))
-
-    ((eql 'height key) (if (height this)
-			  (values (height this) this)
-			  (call-next-method)))
-
-    (t (call-next-method))))
-
-
-
 (defmethod resize ((this viewport) x y w h)
   (setf (x this) x
 	(y this) y
@@ -74,22 +59,20 @@
 
 (defmethod width ((this viewport))
   (with-slots ((w width)) this
-    (if (zerop w)
-	(attribute this 'window-width)
-	w)))
+    w))
 
 (defmethod (setf width) (new-val (this viewport))
-  (setf (slot-value this 'width) new-val))
+  (sdl2:in-main-thread ()
+  (setf (slot-value this 'width) new-val)))
 
 (defmethod height ((this viewport))
-  (with-slots ((w height)) this
-    (if (zerop w)
-	(attribute this 'window-height)
-	w)))
+  (with-slots ((h height)) this
+    h))
 
 
 (defmethod (setf height) (new-val (this viewport))
-  (setf (slot-value this 'height) new-val))
+  (sdl2:in-main-thread ()
+		       (setf (slot-value this 'height) new-val)))
 
 (defmethod update :before ((this viewport) &key parent force)
   "Update this and child nodes if changed."
@@ -118,17 +101,11 @@
     
 
 (defmethod quick-set ((this viewport) x y w h)
+  (sdl2:in-main-thread ()
   (setf (x this) x
 	(y this) y
 	(width this) w
-	(height this) h))
-
-(defmethod add-child ((this viewport) child &key)
-  (with-accessors ((children children)) this
-    (unless (member child children)
-      (setf children
-	    (cons child children)))))
-
+	(height this) h)))
 
 ;; (defmethod print-object ((this viewport) s)
 

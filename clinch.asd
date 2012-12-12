@@ -8,7 +8,12 @@
   :license "MIT"
   :version "0.1"
   :depends-on (#:cl-opengl
-	       #:sb-cga)
+	       #:sb-cga
+	       #:trivial-garbage
+	       #:bordeaux-threads
+	       #:trivial-channels
+	       #:sdl2
+	       #:kit.sdl2)
   :components ((:file "package")
 	       (:file "clinch")
 	       (:file "transform")

@@ -7,64 +7,33 @@
   ((shader
     :initform nil
     :initarg :shader
-    :accessor shader)
+    :reader shader)
    (indexes
     :initform nil
     :initarg :indexes
-    :accessor indexes)
+    :reader indexes)
    (render-values
     :initform nil
     :initarg :values
-    :accessor render-values)
-   (parent
-    :initform nil
-    :initarg :parent
-    :accessor parent)
-   (vertices
-    :initform nil
-    :initarg  :vertices
-    :accessor vertices)
-   (normals
-    :initform nil
-    :initarg  :normals
-    :accessor normals)
-   (before-render :initform nil
-		  :initarg :before-render
-		  :accessor before-render)
-   (after-render :initform nil
-		 :initarg :after-render
-		 :accessor after-render)
-   (once          :initform nil
-		  :initarg :once
-		  :accessor once)))
+    :reader render-values)))
 
-(defun all-indices-used? (entity)
-  ;; TODO: Is the naming okay? The language used does not feel idiomatic/clear.
-  ;; TODO: Perhaps an error should be signalled instead of simply a warning?
-  "Asserts that all vertices are 'used' by the indices and that ~ 
-none of the indices are below or above the range 0 to (vertices_length/stride - 1)"
-  (let* ((vertices (get-render-value entity :vertices))
-         (indices (indexes entity))
-         (indices-data (get-buffer-data indices)))
-    (if    ;; Are the lists of the same length and do they contain the same elements?
-     ;; If so:
-     ;;  1. All vertices are 'used' by the indices
-     ;;  2. None of the indices are below or above the range 0 to (vertices_length/stride - 1)
-     (equalp (coerce (sort indices-data #'<) 'list)
-	     (loop for i from 0 to (1- (vertex-count vertices))
-		collect i))
-     t
-     (warn "Indices not used correctly in entity ~A" entity))))
 
 (defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
   "Strict-index: ALL-INDICES-USED? on THIS"
-  (when parent (add-child parent this))
-					;(when compile (make-render-func this))
-  (when strict-index (all-indices-used? this)))
+  (when parent (add-child parent this)))
 
-;; (defmethod print-object ((this entity) s)
-;;   (format s "#<entity>"))
+(defmethod (setf shader) (new-value (this entity))
+  (sdl2:in-main-thread ()
+    (setf (slot-value this 'shader) new-value)))
 
+(defmethod (setf indexes) (new-value (this entity))
+  (sdl2:in-main-thread ()
+    (setf (slot-value this 'indexes) new-value)))
+
+(defmethod (setf render-values) (new-value (this entity))
+  (sdl2:in-main-thread ()
+    (setf (slot-value this 'render-values) new-value)))
+		       
 (defun render-value-location (values key)
   (loop
      for i in values 
@@ -86,7 +55,8 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 	 (with-accessors ((lst render-values)) this
 	   (let ((loc (render-value-location lst name)))
 	     (if loc
-		 (setf (third (nth loc lst)) new-value))))))
+		 (sdl2:in-main-thread ()
+		 (setf (third (nth loc lst)) new-value)))))))
     ret))
 
 (defmethod get-primitive ((this entity) name)
@@ -202,19 +172,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 
 (defmethod render ((this entity) &key parent projection)
 
-  (when (once this)
-    (funcall (once this) this)
-    (setf (once this) nil))
-  
-  (when (before-render this)
-    (let ((*parent* this))
-      (funcall (before-render this) this)))
-
-  (draw this :parent parent :projection projection)
-
-  (when (after-render this)
-    (let ((*parent* this))
-      (funcall (after-render this) this))))
+  (draw this :parent parent :projection projection))
 
 (defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
 
