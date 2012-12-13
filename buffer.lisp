@@ -68,7 +68,7 @@
 
     (cond
       ;; Raw CFFI data?
-      ((typep data 'sb-sys:system-area-pointer)
+      ((cffi:pointerp data)
 
        (%gl:Buffer-Data target
 			(* (get-size this) (cffi:foreign-type-size type))
