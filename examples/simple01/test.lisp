@@ -5,9 +5,6 @@
       "
 #version 120
 
-//uniform vec4 color;
-//attribute vec4 color;
-//varying vec4 vcolor;
 uniform sampler2D t1;
 attribute vec2 tc1;
 varying vec2 v_tc1;
@@ -20,12 +17,10 @@ varying vec2 v_tc1;
 (setf frag-source
       "
 #version 120
-//varying vec4 vcolor;
 uniform sampler2D t1;
 varying vec2 v_tc1;
         void main() {
             gl_FragColor = texture2D(t1, v_tc1);
-
         }")
 
 (let ((viewport (make-instance 'clinch::viewport))
@@ -71,9 +66,7 @@ varying vec2 v_tc1;
 
     (setf camera (clinch::make-perspective-transform (/ (* 65 pi) 360) (/ width height) .5 100))
     (clinch::use-projection-transform camera)
-    (gl:load-identity))
-
-
+    
   (defun start ()
     (declare (optimize (speed 3)))
     (glfw:do-window (:redbits 8
@@ -123,8 +116,6 @@ varying vec2 v_tc1;
 				     :uniforms '(("t1" :int))
 				     :attributes '(("tc1" :float))))
 	 
-	 (clinch:use-shader shader)	 
-
 	 ;; create buffers....
 	 (setf vertexes (make-instance 'clinch:buffer 
 				       :Stride 3
@@ -142,7 +133,8 @@ varying vec2 v_tc1;
 						1.0 1.0
 						0.0 0.0
 						1.0 0.0)))
-	 
+
+	 ;; Create entity (the actual thing that gets drawn on screen)
 	 (setf box (make-instance 'clinch:entity
 				  :parent *node2*
 				  :indexes indexes
@@ -154,11 +146,8 @@ varying vec2 v_tc1;
 	 )
       (clinch::run-loop pipeline (clinch::width viewport) (clinch::height viewport))
       )
-    
-    
     ;; End Program
-    
-    
+        
     (print "closed")))
 
 
