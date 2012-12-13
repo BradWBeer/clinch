@@ -127,7 +127,7 @@
 (defmethod attach-uniform ((this shader) (uniform string) (matrix transform))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
   (destructuring-bind (name type . id) (get-uniform-id this uniform)
-    (gl:uniform-matrix id (transform matrix))))
+    (gl:uniform-matrix id 4 (transform matrix))))
 
 
 

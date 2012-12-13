@@ -10,28 +10,34 @@
     :accessor children)
    (current-transform
     :accessor current-transform
-    :initform nil)))
+    :initform nil)
+   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required.")))
     
 (defmethod initialize-instance :after ((this node) &key parent)
   (when parent
     (add-child parent this)))
 
 (defmethod print-object ((this node) s)
+  "Print function for node."
   (format s "#<NODE children: ~A ~S~%{~{~,4f~t~,4f~t~,4f~t~,4f~^~% ~}}>" (length (children this)) (qtype this) (transform->list (transform this))))
 
 (defmethod changed? ((this node))
+  "Has this node changed and not updated?"
   (null (current-transform this)))
 
 (defmethod (setf changed?) (val (this node))
+  "Set this node to update later."
   (setf (current-transform this) (when val nil)))
 
 (defmethod add-child ((this node) child &key)
+  "Add a child. Children must implement update and render."
   (with-accessors ((children children)) this
     (unless (member child children)
       (setf children
 	    (cons child children)))))
 
 (defmethod update ((this node) &optional parent &key matrix force)
+  "Update this and child nodes if changed."
   (when (or force (changed? this))
     (setf (current-transform this)
   	  (if parent
@@ -43,6 +49,7 @@
   (current-transform this))
 		     
 (defmethod render ((this node) &key parent matrix)
+  "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (changed? this)
     (update this parent :matrix matrix))
   
@@ -50,6 +57,7 @@
      do (render i :parent this :matrix (current-transform this))))
 
 (defmethod render ((this list) &key parent matrix)
+  "Render a list of rendables."
   (loop for i in this
        do (render i :parent parent :matrix matrix)))
 

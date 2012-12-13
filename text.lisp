@@ -4,6 +4,7 @@
 (in-package #:clinch)
 
 (defmacro print-text (text &key (width nil) (wrap :pango_wrap_word))
+  "Print a block of text."
   `(with-paragraph (:width ,width :wrap ,wrap)
      (save)
      (pango:pango_layout_set_markup *layout* (xmls:toxml
@@ -16,6 +17,7 @@
 
 
 (defmacro with-paragraph ((&key (layout '*layout*)  (context '*context*) width wrap) &body body)
+  "Create a paragraph of text"
   (let ((gwidth (gensym))
 	(gwrap (gensym)))
 
