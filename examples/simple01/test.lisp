@@ -1,6 +1,12 @@
 (ql:quickload :clinch)
+
+;; GLFL for windowing and I/O
 (ql:quickload :cl-glfw)
 
+;; String for the Vertex Shader
+;;   t1    is the texture sampler
+;;   tc1   are the texture coordinates
+;;   v_tc1 is the texture coordinates passed to fragment shader
 (setf vert-source
       "
 #version 120
@@ -14,6 +20,9 @@ varying vec2 v_tc1;
 
         }")
 
+;; String for the Fragment Shader
+;;   t1    is the texture sampler
+;;   v_tc1 is the texture coordinates from the fragment shader
 (setf frag-source
       "
 #version 120
@@ -40,6 +49,7 @@ varying vec2 v_tc1;
       (*node2*)
       (rot (coerce (* 2 pi (/ 1 360)) 'single-float)))
 
+  ;; On Keypress map the texture's raw data, convert it to a cairo surface and context, then clear and draw an X on it.
   (defun window-key-press (key action)
     (clinch::with-mapped-buffer (bits texture)
       (let* ((surf (cairo:create-image-surface-for-data bits :argb32 (car texture-size) (cdr texture-size) (* 4 (car texture-size)))))
@@ -58,7 +68,7 @@ varying vec2 v_tc1;
 	  (cairo:stroke))
 	(cairo:destroy surf))))
 
-
+  ;; On resize set the camera transform and load it.
   (defun window-size-callback (width height)
     (format t "Resize called with: w=~A h=~A~%" width height)
     (clinch::quick-set viewport 0 0 width height)
@@ -66,19 +76,21 @@ varying vec2 v_tc1;
 
     (setf camera (clinch::make-perspective-transform (/ (* 65 pi) 360) (/ width height) .5 100))
     (clinch::use-projection-transform camera)
-    
-  (defun start ()
-    (declare (optimize (speed 3)))
-    (glfw:do-window (:redbits 8
-			      :greenbits 8
-			      :bluebits 8
-			      :alphabits 8
-			      :depthbits 16
-			      :opengl-version-major 3
-			      :opengl-version-minor 1)
+
+    ;; The start point...    
+    (defun start ()
+      (declare (optimize (speed 3)))
+      (glfw:do-window (:redbits 8
+				:greenbits 8
+				:bluebits 8
+				:alphabits 8
+				:depthbits 16
+				:opengl-version-major 3
+				:opengl-version-minor 1)
 	
 	((print "init")
 
+	 ;; Create the pipeline (this sample has only one)
 	 (setf pipeline (clinch::make-pipeline  
 			 :init ((gl:load-identity)
 				(gl:clear-color 0.0 1.0 1.0 0.0)
@@ -90,17 +102,21 @@ varying vec2 v_tc1;
 				(clinch::rotate *node2* rot 0 1 0 t)
 				(clinch::render *root*))))
 
+	 ;; Create the root node
 	 (setf *root* (make-instance 'clinch::node))
 
+	 ;; create a node under the root node. 
 	 (setf *node1* (make-instance 'clinch::node :parent *root*))
 	 (clinch::translate *node1* -1 0 -2 t)
 	 
+	 ;; create another node another level down.
 	 (setf *node2* (make-instance 'clinch::node :parent *node1*))
 
-
+	 ;; set the window event handlers 
 	 (glfw:set-window-size-callback 'window-size-callback)
 	 (glfw:set-key-callback  'window-key-press)
 
+	 ;; Load the initial test image into a texture buffer.
 	 (cairo:with-png-surface ("test_pattern.png" surf)
 	   (let ((bits (cairo:image-surface-get-data surf :pointer-only t))
 		 (w (cairo:image-surface-get-width surf))
@@ -109,6 +125,7 @@ varying vec2 v_tc1;
 
 	     (setf texture (make-instance 'clinch:texture :width w :height h :stride 4 :count (* w h) :data bits :qtype :unsigned-char :target :pixel-unpack-buffer))))	 
 	 
+	 ;; create the shader. Note how uniforms and attributes are set
 	 (setf shader (make-instance 'clinch:shader
 	 			     :name "Shader01"
 	 			     :vertex-shader-text vert-source
@@ -135,6 +152,7 @@ varying vec2 v_tc1;
 						1.0 0.0)))
 
 	 ;; Create entity (the actual thing that gets drawn on screen)
+	 ;;   Notice how :values matches with the shader's uniforms and attributes.
 	 (setf box (make-instance 'clinch:entity
 				  :parent *node2*
 				  :indexes indexes
@@ -142,12 +160,12 @@ varying vec2 v_tc1;
 				  :values `((:attribute "tc1" ,tex-coord)
 					    (:attribute "t1" ,texture)
 					    (:vertices ,vertexes))))
+	 ;; set up the pipeline. Since it's the only one we only do it one before starting.
 	 (clinch::run-init pipeline)
 	 )
-      (clinch::run-loop pipeline (clinch::width viewport) (clinch::height viewport))
-      )
-    ;; End Program
-        
-    (print "closed")))
-
-
+	;; Main loop
+	(clinch::run-loop pipeline (clinch::width viewport) (clinch::height viewport))
+	)
+      ;; End Program
+      
+      (print "closed")))
