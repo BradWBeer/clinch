@@ -1,0 +1,34 @@
+* TODO
+
+** Test on several different Systems!
+
+*** Work out any major bugs I can't see on my machine.
+
+*** Get responses on what the users would like.
+
+** Make Cairo, Pango, and FreeImage optional.
+
+*** These dependencies are causing problems with my Window's users.
+
+** Fix "Out of memory error", on Syspops's machine.
+
+*** I assume others will have his issue.
+
+
+*** Also assuming it has something to do with my texture object.
+
+** Create a sane way to work with cameras.
+
+*** I'm open to ideas!
+
+** Create helper macros for the 2D vector libraries: With-Mapped-Texture-Context, Load-Texture-From-File, etc. 
+
+*** Again, users are important.
+
+** Look for performance issues.
+
+** Create more and better examples.
+
+** Get user feedback on the design.
+
+** ???? Please add more here, everyone!
