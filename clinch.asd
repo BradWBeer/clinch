@@ -1,4 +1,5 @@
 ;;;; clinch.asd
+;;;; Please see the licence.txt for the CLinch 
 
 (asdf:defsystem #:clinch
   :serial t

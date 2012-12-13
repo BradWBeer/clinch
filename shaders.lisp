@@ -1,4 +1,5 @@
 ;;;; shaders.lisp
+;;;; Please see the licence.txt for the CLinch
 
 (in-package #:clinch)
 
@@ -112,12 +113,13 @@
 
 (defmethod attach-uniform ((this shader) (uniform string) value)
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
-  (destructuring-bind (name type . id) (get-uniform-id this uniform)
+  (destructuring-bind (type . id) (cdr (get-uniform-id this uniform))
     
     (let ((f (case type
 	       (:float #'gl:uniformf)
 	       (:int #'gl:uniformi)
-	       (:matrix #'gl:uniform-matrix))))
+	       (:matrix (lambda (id value) (gl:uniform-matrix id 2 (transform value)))))))
+
       (if (listp value)
 	  (apply f id value)
 	  (apply f id (list value))))))
