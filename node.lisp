@@ -10,9 +10,9 @@
     :accessor children)
    (current-transform
     :accessor current-transform
-    :initform nil)
-   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required.")))
-    
+    :initform nil))
+   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required."))
+
 (defmethod initialize-instance :after ((this node) &key parent)
   (when parent
     (add-child parent this)))
@@ -44,10 +44,10 @@
   	      (m*  (or matrix (current-transform parent)) this)
   	      this)))
   (loop for child in (children this)
-       do (update child this :force force))
+     do (update child this :force force))
   
   (current-transform this))
-		     
+
 (defmethod render ((this node) &key parent matrix)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (changed? this)
@@ -59,9 +59,9 @@
 (defmethod render ((this list) &key parent matrix)
   "Render a list of rendables."
   (loop for i in this
-       do (render i :parent parent :matrix matrix)))
+     do (render i :parent parent :matrix matrix)))
 
-    
+
 (defmethod (setf node) :after ((other-transform transform) (this node))
   "Inherited function for setting changed?"
   (setf (changed? this) t))
@@ -113,6 +113,6 @@
 
 
 
-  
+
 
 
