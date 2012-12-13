@@ -1,33 +1,33 @@
-* Qix Design
+* CLinch Design
 
 ** Overview
 
-Qix is a simple, yet powerful 3d graphics engine for Lisp. In true Lisp fashion, it is more a build-your-own-engine hobby kit rather than striving to be a full graphics panacea. Much of the design is based on Horde3D. Although Horde3D is a very good design, it has limitations which it attempts to solve by adding domain specific languages. Items such as shaders, entities and, most importantly, the pipeline are specified using an XML language. Lisp, by being self-compiling seemed like a better fit than requiring (yet) another language.
+CLinch is a simple, yet powerful 3d graphics engine for Lisp. In true Lisp fashion, it is more a build-your-own-engine hobby kit rather than striving to be a full graphics panacea. Much of the design is based on Horde3D. Although Horde3D is a very good design, it has limitations which it attempts to solve by adding domain specific languages. Items such as shaders, entities and, most importantly, the pipeline are specified using an XML language. Lisp, by being self-compiling seemed like a better fit than requiring (yet) another language.
 
-Eventually I hope that Qix becomes a stable and fast workhorse tool for developing games, visualizations and productivity software. Eventually I have plans for a graphical shell which incorporates the strengths of Lisp, the command line and 3D. This is a first step towards this (and other) goals.  
+Eventually I hope that CLinch becomes a stable and fast workhorse tool for developing games, visualizations and productivity software. Eventually I have plans for a graphical shell which incorporates the strengths of Lisp, the command line and 3D. This is a first step towards this (and other) goals.  
 
 ** Design Goals
 
 *** Fast 
 
-Qix should be as fast or faster than most script-based graphics engines while requiring much less development time. While it may never rival professional C libraries, the ability to modify the 3D engine and environment from the REPL will allow skilled developers to create applications in a fast, intuitive, flexible way.
+CLinch should be as fast or faster than most script-based graphics engines while requiring much less development time. While it may never rival professional C libraries, the ability to modify the 3D engine and environment from the REPL will allow skilled developers to create applications in a fast, intuitive, flexible way.
 
 *** Simple
 
-Qix should be as simple as possible for someone familiar with 3D graphics programming to understand. I still remember how easy it was to write a single pixel to the screen in DOS and while I can't simplify to that degree (without losing modern power and flexibility), I can remove many of the most common difficulties. These include texture and vertex buffers, shader compiling and linking, shader variable passing, drawing text and 2D graphics, pipelines and 3D transformations. 
+CLinch should be as simple as possible for someone familiar with 3D graphics programming to understand. I still remember how easy it was to write a single pixel to the screen in DOS and while I can't simplify to that degree (without losing modern power and flexibility), I can remove many of the most common difficulties. These include texture and vertex buffers, shader compiling and linking, shader variable passing, drawing text and 2D graphics, pipelines and 3D transformations. 
 
 *** Intuitive
 
-Time spent looking for solutions is time spent, period. It ruins developer flow and can stop a project (especially a small one) indefinitely. Qix should have few basic primitives which solve the general cases well and allow for easy replacements when necessary. It should be well documented and consistent interface. 
+Time spent looking for solutions is time spent, period. It ruins developer flow and can stop a project (especially a small one) indefinitely. CLinch should have few basic primitives which solve the general cases well and allow for easy replacements when necessary. It should be well documented and consistent interface. 
 
 *** Flexible
 
-Qix should not depend on any one library. Currently it only supports OpenGL, but the framework can (in theory) support others. It should not rely on a particular windowing library and should work as a simplified replacement for the original graphics library interface. It should not be designed for any one type of application such as games, but should support any 2D or 3D application. It should be cross-platform (wherever possible) and not inflict any particular design onto its client applications.
+CLinch should not depend on any one library. Currently it only supports OpenGL, but the framework can (in theory) support others. It should not rely on a particular windowing library and should work as a simplified replacement for the original graphics library interface. It should not be designed for any one type of application such as games, but should support any 2D or 3D application. It should be cross-platform (wherever possible) and not inflict any particular design onto its client applications.
 
 
 ** Architecture
 
-Although Qix can be used as a complete graphics engine, most parts of Qix are independent. You can use most objects by themselves as best suits your application. For example, you can use a buffer object by itself. This also helps with testing by isolating the various parts of Qix. The following is in hierarchical order based on the default configuration. This is to explain it as clearly as possible, not to indicate a necessary design. 
+Although CLinch can be used as a complete graphics engine, most parts of CLinch are independent. You can use most objects by themselves as best suits your application. For example, you can use a buffer object by itself. This also helps with testing by isolating the various parts of CLinch. The following is in hierarchical order based on the default configuration. This is to explain it as clearly as possible, not to indicate a necessary design. 
 
 Most objects have children method which tries to behavior intelligently based on their type. Most objects also have a render method which will render itself then its children.
 
@@ -45,7 +45,7 @@ Entities are what are rendered and are also a subclass of node. They bring toget
 
 *** Viewports
 
-An application can have several viewports. As Qix does not force any particular windowing implementation, it can not have a window class. Once your window is set up, however, you can use the viewport handle drawing an area on screen. The most common children the cameras, which will be rendered in order unless then are not enabled.
+An application can have several viewports. As CLinch does not force any particular windowing implementation, it can not have a window class. Once your window is set up, however, you can use the viewport handle drawing an area on screen. The most common children the cameras, which will be rendered in order unless then are not enabled.
 
 *** Shaders
 
