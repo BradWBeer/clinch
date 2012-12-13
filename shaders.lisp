@@ -130,9 +130,6 @@
     (gl:uniform-matrix id 4 (transform matrix))))
 
 
-
-
-
 (defmethod bind-static-values-to-attribute ((this shader) name &rest vals)
   "It is possible to bind static information to an attribute. Your milage may vary."
   (let ((id (cddr (get-attribute-id this name))))
