@@ -10,7 +10,7 @@
 
 *** These dependencies are causing problems with my Window's users.
 
-** Fix "Out of memory error", on Syspops's machine.
+** Fix "Out of memory error", on Sykopomp's machine.
 
 *** I assume others will have his issue.
 
