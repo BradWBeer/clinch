@@ -18,7 +18,7 @@ CLinch should be as simple as possible for someone familiar with 3D graphics pro
 
 *** Intuitive
 
-Time spent looking for solutions is time spent, period. It ruins developer flow and can stop a project (especially a small one) indefinitely. CLinch should have few basic primitives which solve the general cases well and allow for easy replacements when necessary. It should be well documented and consistent interface. 
+Time spent looking for solutions is time spent, period. It ruins developer flow and can stop a project (especially a small one) indefinitely. CLinch should have few basic primitives which solve the general cases well and allow for easy replacements when necessary. It should be well documented and have a consistent interface. I will strive to keep abstraction leaks at a minimum. 
 
 *** Flexible
 
