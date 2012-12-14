@@ -1,5 +1,13 @@
 * CLinch Design
 
+** Add Following Important Points
+
+*** Simple integration with 2D vector graphics with Cairo
+
+*** Simple integration with fonts and positioning with Pango
+
+*** Simple file loading and saving with FreeImage
+
 ** Overview
 
 CLinch is a simple, yet powerful 3d graphics engine for Lisp. In true Lisp fashion, it is more a build-your-own-engine hobby kit rather than striving to be a full graphics panacea. Much of the design is based on Horde3D. Although Horde3D is a very good design, it has limitations which it attempts to solve by adding domain specific languages. Items such as shaders, entities and, most importantly, the pipeline are specified using an XML language. Lisp, by being self-compiling seemed like a better fit than requiring (yet) another language.
