@@ -31,4 +31,6 @@
 
 ** Get user feedback on the design.
 
+** Add a textured REPL for live-coding.
+
 ** ???? Please add more here, everyone!
