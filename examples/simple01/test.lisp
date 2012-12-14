@@ -38,7 +38,6 @@ varying vec2 v_tc1;
       (vertexes)
       (indexes)
       (shader)
-      (tex-id)
       (texture)
       (tex-coord)
       (texture-size)
@@ -75,7 +74,7 @@ varying vec2 v_tc1;
     (clinch::render viewport)
 
     (setf camera (clinch::make-perspective-transform (/ (* 65 pi) 360) (/ width height) .5 100))
-    (clinch::use-projection-transform camera)
+    (clinch::use-projection-transform camera))
 
     ;; The start point...    
     (defun start ()
