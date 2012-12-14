@@ -8,6 +8,15 @@ Eventually I hope that CLinch becomes a stable and fast workhorse tool for devel
 
 ** Design Goals
 
+*** Integration with 2D Tools for future REPL and Live Coding
+
+Integration with 2D vector graphics with Cairo
+
+Integration with fonts and positioning with Pango
+
+File loading and saving with FreeImage
+
+
 *** Fast 
 
 CLinch should be as fast or faster than most script-based graphics engines while requiring much less development time. While it may never rival professional C libraries, the ability to modify the 3D engine and environment from the REPL will allow skilled developers to create applications in a fast, intuitive, flexible way.
