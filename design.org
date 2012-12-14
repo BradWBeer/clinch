@@ -42,7 +42,7 @@ Most objects have children method which tries to behavior intelligently based on
 
 *** Transforms
 
-A transform is a 4x4 matrix which is used to hold and apply a C array of 16 floating values. Currently only single-floats are supported. It encapsulates the CFFI memory management using trivial-garbage. It also has basic arithmetic operations for 4x4 linear algebra and 4x1 vectors. (Note: only m*v is currently implemented) There are functions for rotate, translate, scale, multiply (m*), make-identity (or reset), transpose, determinate, invert, make-orthogonal-transform, make-frustum-transform, make-perspective-transform, multiply by vector (m*v), use-transform (for the OpenGL matrix stack) and get-current-gl-matrix. Modern transform functions for passing values to a shader are not yet supported, but should be soon.
+A transform is a 4x4 matrix which is used to hold and apply a C array of 16 floating values. Currently only single-floats are supported. It encapsulates the CFFI memory management using trivial-garbage. It also has basic arithmetic operations for 4x4 linear algebra and 4x1 vectors. (Note: only m*v is currently implemented) There are functions for rotate, translate, scale, multiply (m*), make-identity (or reset), transpose, determinate, invert, make-orthogonal-transform, make-frustum-transform, make-perspective-transform, multiply by vector (m*v), use-transform (for the OpenGL matrix stack) and get-current-gl-matrix. Modern transform functions for passing values to a shader are not yet tested, but should be soon.
 
 *** Nodes
 
