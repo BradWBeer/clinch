@@ -11,7 +11,7 @@
 	       #:trivial-garbage)
   :components ((:file "package")
 	       (:file "transform")
-	       (:file "shaders")
+	       (:file "shader")
 	       (:file "buffer")
 	       (:file "texture")
 	       (:file "node")
