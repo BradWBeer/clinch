@@ -3,6 +3,9 @@
 ;; GLFL for windowing and I/O
 (ql:quickload :cl-glfw)
 
+;; CL-Cairo for drawing and loading textures...
+(ql:quickload :cl-cairo2)
+
 ;; String for the Vertex Shader
 ;;   t1    is the texture sampler
 ;;   tc1   are the texture coordinates
