@@ -116,7 +116,11 @@ varying vec2 v_tc1;
 	 (glfw:set-key-callback  'window-key-press)
 
 	 ;; Load the initial test image into a texture buffer.
-	 (cairo:with-png-surface ("test_pattern.png" surf)
+	 (cairo:with-png-surface ((concatenate 'string 
+					       (directory-namestring
+						(asdf:system-relative-pathname :clinch "clinch.asd")) 
+					       "examples/simple01/test_pattern.png")
+				  surf)
 	   (let ((bits (cairo:image-surface-get-data surf :pointer-only t))
 		 (w (cairo:image-surface-get-width surf))
 		 (h (cairo:image-surface-get-height surf)))
