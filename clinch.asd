@@ -6,21 +6,10 @@
   :description "Describe CLinch here"
   :author "Brad Beer (WarWeasle)"
   :license "BSD"
-  :depends-on (#:cl-cairo2
-               #:xmls
-               #:cl-opengl
+  :version "0.1"
+  :depends-on (#:cl-opengl
 	       #:trivial-garbage)
-  :components ((:module pango
-                        :pathname "pango"
-                        :components ((:file "package")
-				     (:file "library")
-				     (:file "pango")))
-	       (:module freeimage
-			:pathname "freeimage"
-			:components ((:file "package")
-				     (:file "library")
-				     (:file "freeimage")))
-	       (:file "package")
+  :components ((:file "package")
 	       (:file "transform")
 	       (:file "shaders")
 	       (:file "buffer")
@@ -28,8 +17,6 @@
 	       (:file "node")
 	       (:file "entity")
 	       (:file "viewport")
-	       (:file "pipeline")
-	       (:file "text")
-	       (:file "drawing")))
+	       (:file "pipeline")))
 
 
