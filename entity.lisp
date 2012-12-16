@@ -47,8 +47,8 @@
 				    ((eql atr-or-uni :attribute) `(bind-static-values-to-attribute ,(shader this) ,name ,@value))
 				    ((eql atr-or-uni :vertices) 
 				     `(bind-buffer-to-vertex-array ,name))
-				    (eql atr-or-uni :normals) 
-				    `(bind-buffer-to-normal-array ,name)))
+				    ((eql atr-or-uni :normals) 
+				    `(bind-buffer-to-normal-array ,name))))
 		 
 		 (draw-with-index-buffer ,(indexes this))))))
 
