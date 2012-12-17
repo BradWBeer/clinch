@@ -126,7 +126,7 @@
 
 (defmethod bind-buffer-to-normal-array ((this buffer))
   "Use buffer in shader for the vertex array: The built-in variable gl_Vertex."
-  (gl:Enable-Client-State :VERTEX-ARRAY)
+  (gl:Enable-Client-State :NORMAL-ARRAY)
   (gl:bind-buffer (target this) (id this))
   (%gl:normal-pointer (qtype this) 0 (cffi:null-pointer)))
 
