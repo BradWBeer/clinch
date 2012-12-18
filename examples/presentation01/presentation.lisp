@@ -216,55 +216,8 @@ varying vec3  normal;
 					      0.0 0.0 1.0
 					      0.0 0.0 1.0)))
 
-	 (print "AAAA")
-
 	 (setf diff (/ 360 (length presentation)))
 	 (setf rad-diff (degrees->radians diff))
-	 
-	 ;; (loop
-	 ;;    with w = 800
-	 ;;    with h = 800
-	 ;;    for i from 1
-	 ;;    for image in presentation
-	 ;;    for degrees = (* i diff)
-	 ;;    for radians = (coerce (degrees->radians degrees) 'single-float)
-	 ;;    do 
-	 ;;      (let* ((node (make-instance 'clinch:node :parent hub))
-	 ;; 	     (w 800)
-	 ;; 	     (h 800)
-	 ;; 	     (texture (make-instance 'clinch:texture
-	 ;; 				     :width w
-	 ;; 				     :height h
-	 ;; 				     :stride 4
-	 ;; 				     :count (* w h)
-	 ;; 				     :qtype :unsigned-char
-	 ;; 				     :target :pixel-unpack-buffer)))
-		
-	 ;; 	(clinch:with-mapped-buffer (bits texture :write-only)
-	 ;; 	  (let ((surf (cairo:create-image-surface-for-data bits :argb32 w h (* w 4))))
-	 ;; 	    (unwind-protect 
-	 ;; 		 (cairo:with-context ((cairo:create-context surf))
-	 ;; 		   (clear-mapped-texture)
-
-	 ;; 		   (cairo:move-to (/ w 8) (/ w 16))
-	 ;; 		   (cairo:rel-move-to 83 125)
-	 ;; 		   (print-text '("span" nil
-	 ;; 				 ("span" (("font_desc" "Century Schoolbook L Roman bold 150") ("fgcolor" "#FF0000"))
-	 ;; 				  "Q")
-	 ;; 				 ("span" (("font_desc" "Century Schoolbook L Roman bold 150") ("fgcolor" "#00FF00"))
-	 ;; 				  "I")
-	 ;; 				 ("span" (("font_desc" "Century Schoolbook L Roman bold 150") ("fgcolor" "#0000FF"))
-	 ;; 				  "X"))
-	 ;; 			       :width (* w 3/4))
-			   
-	 ;; 		   )		     
-	 ;; 	      (cairo:destroy surf)))
-		  
-	 ;; 	  (clinch:translate node 0 0 9 t)
-	 ;; 	  (clinch:rotate node radians 1 0 0 t)
-	 ;; 	  (create-rectangle texture node))))
-
-	 ;; (print (clinch:children hub))
 	 
 	 (setf texture (make-instance 'clinch:texture
 				      :width 800
@@ -278,30 +231,6 @@ varying vec3  normal;
 	 (setf location 0)
 	 (draw-slide texture 0)
 
-	 
-
-      ;; (defun draw-slide (texture &optional (w 800) (h 800))
-      ;; 	(let* ((node (make-instance 'clinch:node :parent hub))
-      ;; 	       (w 800)
-      ;; 	       (h 800))
-	  
-      ;; 	  (clinch:with-mapped-buffer (bits texture :write-only)
-      ;; 	    (let ((surf (cairo:create-image-surface-for-data bits :argb32 w h (* w 4))))
-      ;; 	      (unwind-protect 
-      ;; 		   (cairo:with-context ((cairo:create-context surf))
-      ;; 		     (clear-mapped-texture)
-      ;; 		     (funcall (nth 1 presentation) 1 w h)
-      ;; 		     )		     
-      ;; 		(cairo:destroy surf)))
-	    
-      ;; 	    (clinch:translate node 0 0 9 t)
-      ;; 	    (create-rectangle texture)))
-	
-      ;; 	(print (clinch:children hub))
-
-
-
-	 (print "BBBB")
 	 (let ((rot (coerce (* 2 pi (/ 1 360)) 'single-float)))
 
 	   (setf pipeline (clinch:make-pipeline  
