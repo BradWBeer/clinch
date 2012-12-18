@@ -351,12 +351,7 @@ varying vec3  normal;
 	(style-qtext (("font_desc" "Century Schoolbook L Roman 30"))
 		     ("b" nil "Lists within lists, the gateway to all understanding..." ))
 	(rel-move-to 0 50)	 
-   ;; 	(style-qtext (("font_desc" "DejaVu Sans Mono 30"))
-   ;; 		     "(print 
-   ;; (if (awesome? 'Qix)\"
-   ;;  \"Yes it is!\"
-;;    \"No it is not!\")))")
-	(style-qtext (("font_desc" "DejaVu Sans Mono 30")) " ")
+   	(style-qtext (("font_desc" "DejaVu Sans Mono 30")) " ")
 	(qtext "First it must evaluate the awesome? function, then the if, finally the print."))
 
       (lambda (i w h)
