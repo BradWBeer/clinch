@@ -1,5 +1,3 @@
-(cl:defpackage #:clinch-cairo
-  (:use #:cl)
-  (:export
+(in-package #:clinch)
 
-   ))
+(export '())

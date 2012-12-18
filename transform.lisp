@@ -113,13 +113,13 @@
   "Transform Multiplication. If in-place is true, the first matrix will be modified. It still makes a temporary raw matrix until it is copied."
   (if in-place
       (progn
-	(m*m (transform this)
-	     (transform that)
+	(m*m (transform that)
+	     (transform this)
 	     (transform this))
 	this)
       (let ((ret (make-instance 'transform :qtype (qtype this))))
-	(m*m (transform this)
-	     (transform that)
+	(m*m (transform that)
+	     (transform this)
 	     (transform ret))
 	ret)))
 

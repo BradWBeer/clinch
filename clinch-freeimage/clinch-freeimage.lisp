@@ -1,4 +1,4 @@
-(in-package #:clinch-freeimage)
+(in-package #:clinch)
 
 
 (defmacro with-loaded-32bit-map ((path &key width height bitvar widthvar heightvar) &body body)
