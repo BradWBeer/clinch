@@ -211,7 +211,7 @@ varying vec3  normal;
 	 (draw-slide texture 0)
 
 	 (let ((rot (coerce (* 2 pi (/ 1 360)) 'single-float)))
-
+	   ;; defined rot, but never used? dju
 	   (setf pipeline (clinch:make-pipeline  
 			   :init ((gl:load-identity)
 				  (gl:clear-color 0.0 0.0 0.0 0.0)
