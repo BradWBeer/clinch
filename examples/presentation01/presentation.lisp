@@ -15,6 +15,9 @@
 (ql-as-needed :cl-glfw)
 
 (defvar presentation)
+(defvar vert-source)
+(defvar frag-source)
+
 ;; String for the Vertex Shader
 ;;   t1    is the texture sampler
 ;;   tc1   are the texture coordinates
