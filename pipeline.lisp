@@ -7,7 +7,9 @@
   "Creates a pipeline with init, loop and uninit functions.
   :loop adds w h variables which gives width and height respectively."
   `(list
-    (lambda (w h) ,@loop)
+    (lambda (w h) 
+      (declare (ignorable w h))
+	       ,@loop)
 
     (lambda () ,@init)
 
