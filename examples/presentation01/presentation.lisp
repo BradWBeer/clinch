@@ -1,13 +1,22 @@
-(ql:quickload :cl-cairo2)
+
+(defmacro ql-as-needed (package-name)
+  "only load package if not already in image"
+  `(unless (find-package ,package-name)
+     (ql:quickload ,package-name)))
+
+(ql-as-needed :cl-cairo2)
 (use-package :cairo)
-(ql:quickload :clinch)
+(ql-as-needed :clinch)
 
 ;; clinch-pango for drawing text. 
-(ql:quickload :clinch-pango)
+(ql-as-needed :clinch-pango)
 
 ;; GLFL for windowing and I/O
-(ql:quickload :cl-glfw)
+(ql-as-needed :cl-glfw)
 
+(defvar presentation)
+(defvar vert-source)
+(defvar frag-source)
 
 ;; String for the Vertex Shader
 ;;   t1    is the texture sampler
@@ -232,6 +241,7 @@ varying vec3  normal;
       (list
        
        (lambda (i w h)
+	 (declare (ignorable i h w))
 	 (move-to (/ w 8) (/ w 16))
 	 (rel-move-to 83 125)
 	 	 (clinch:print-text '("span" nil
@@ -243,6 +253,7 @@ varying vec3  normal;
 				"X"))
 			     :width (* w 3/4)))  
        (lambda (i w h)
+	 (declare (ignorable i h w))
 	 (move-to (/ w 8) (/ w 16))
 	 (qtext ("b" nil "1. ")
 		"It's the year 2012, and computers are a pain to use.")
@@ -264,6 +275,7 @@ varying vec3  normal;
 		" than half way."))
 
        (lambda (i w h)
+	 (declare (ignorable i h w))
 	 (move-to (/ w 8) (/ w 16))
 	 (style-qtext (("font_desc" "Century Schoolbook L Roman 40"))
 		      ("b" nil "What is the big idea?"))
@@ -287,6 +299,7 @@ varying vec3  normal;
 		"\"Raw\" Data"))
 
        (lambda (i w h)
+	 (declare (ignorable i h w))
 	 (move-to (/ w 8) (/ w 16))
 	 (style-qtext (("font_desc" "Century Schoolbook L Roman 30"))
 		      ("b" nil "Everything else is just these types! (think structures)"))
@@ -303,6 +316,7 @@ varying vec3  normal;
 		"Video Game -> Everything in a complex hierarchy of changes and user input."))
 
        (lambda (i w h)
+	 (declare (ignorable i h w))
 	 (move-to (/ w 16) (/ w 16))
 	 (rel-move-to 0 125)
 	 (clinch:print-text '("span" nil
@@ -315,6 +329,7 @@ varying vec3  normal;
 		       :width (* w 3/4)))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman 30"))
 		     ("b" nil "S-Expressions"))
@@ -324,6 +339,7 @@ varying vec3  normal;
 	(style-qtext (("font_desc" "DejaVu Sans Mono 40")) "(Hello (world))"))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman 30"))
 		     ("b" nil "S-Expressions"))
@@ -335,6 +351,7 @@ varying vec3  normal;
 	(qtext "Evaluates an S-Expression (or just expression) by using the first value as the function name."))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman 30"))
 		     ("b" nil "Everything returns a value: even IF STATEMENTS!" ))
@@ -347,6 +364,7 @@ varying vec3  normal;
       (style-qtext (("font_desc" "DejaVu Sans Mono 30")) "returns => \"Yes it is!\""))
       
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman 30"))
 		     ("b" nil "Lists within lists, the gateway to all understanding..." ))
@@ -355,6 +373,7 @@ varying vec3  normal;
 	(qtext "First it must evaluate the awesome? function, then the if, finally the print."))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 30"))  
 	"'  <- What is this?")
@@ -364,6 +383,7 @@ varying vec3  normal;
 	(style-qtext (("font_desc" "Century Schoolbook L Roman 30"))  "Ok, that doesn't help."))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 30"))  
 		     "' = (quote ...) => just returns what is behind it without evaluation.")
@@ -373,6 +393,7 @@ varying vec3  normal;
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 30"))  "You now know lisp!"))
       
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 30"))  
 		     "\"When making something, always start with a problem.\"")
@@ -386,6 +407,7 @@ varying vec3  normal;
 	(style-qtext (("font_desc" "Century Schoolbook L Roman 20"))  "(also I secretly want to make video games, don't tell anyone.)"))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 30"))  
 		     "Aircraft carriers")
@@ -397,6 +419,7 @@ varying vec3  normal;
 	(qtext "Card-board cutouts and a closed-circuit TV."))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 30"))  
 		     "Writers")
@@ -408,6 +431,7 @@ varying vec3  normal;
 	(qtext "They all take a different data format."))
 	
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 30"))  
 		     ("i" nil "Finally, ")
@@ -429,6 +453,7 @@ varying vec3  normal;
 	       "- \"What is Qix?\" No preconceptions."))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 		(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 30"))
 		     "Let me axe you again, what is Qix?")
@@ -453,6 +478,7 @@ varying vec3  normal;
 </rectangle>"))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 20"))
 		     "There is a problem....I don't know page width!")
@@ -488,6 +514,7 @@ varying vec3  normal;
 </rectangle>"))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 40"))
 		     "It went off the page didn't it?"))
@@ -495,6 +522,7 @@ varying vec3  normal;
 
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 30"))
 		     "Maybe there is a better way?")
@@ -516,6 +544,7 @@ varying vec3  normal;
 	          (stroke))))"))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 30"))
 		     "Ok, let's make it dynamic...")
@@ -541,6 +570,7 @@ varying vec3  normal;
 	             (stroke))))"))
           
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "One language to rule them all...")
@@ -552,6 +582,7 @@ varying vec3  normal;
 	(qtext "Also add event handling: key-press, mouse-click, etc..."))
       
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "So what's the big deal?")
@@ -563,6 +594,7 @@ varying vec3  normal;
 	(qtext "Video games? That's almost too easy!"))      
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "PARAGRAPH Function")
@@ -584,6 +616,7 @@ varying vec3  normal;
 		     ("u" nil "us!")))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "You now have formatted text and graphics...")
@@ -601,6 +634,7 @@ varying vec3  normal;
 	(qtext "Your data format and viewer is already there, and is infinitely extendable!"))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "Lisp Editor?")
@@ -615,6 +649,7 @@ varying vec3  normal;
 	(qtext "the " ("b" nil "REPL")))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "Version Control & Saving")
@@ -629,6 +664,7 @@ It also fits with the \"Video Control Interface\" so you can see changes over ti
 Perhaps we can even create a useful 3D display of multiple files branching."))
       
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "Data vs Display")
@@ -640,6 +676,7 @@ I'm still working on how to share display functions between different data.
 Which brings us to..."))
       
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "GUI")
@@ -653,6 +690,7 @@ I will use the term \"block\" for a 3D window or mesh.
 It " ("b" nil "will") " have buttons."))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "Interfacing with blocks")
@@ -666,6 +704,7 @@ The top just moves it.
 Again, is there a better way?"))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "Halos")
@@ -682,6 +721,7 @@ Again, is there a better way?"))
 The list is endless."))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(let* ((surf2 (cairo:image-surface-create-from-png (concatenate 'string 
 									(directory-namestring
 									 (asdf:system-relative-pathname :clinch "clinch.asd")) 
@@ -696,6 +736,7 @@ The list is endless."))
 
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "Command Line Functionality")
@@ -711,6 +752,7 @@ The list is endless."))
 	(qtext "(Yes, I know about tee and named pipes but that's " ("i" nil "hard") ".)"))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "What if I can hold my data in a block?")
@@ -727,6 +769,7 @@ This creates a new block with a line connecting it to the source data.
 You now have a block of sorted items."))
 	
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "What if I can hold my data in a block?")
@@ -738,6 +781,7 @@ Or you could just type it...
 	(qtext "Imagine not needing to choose."))
       
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "What if I can hold my data in block?")
@@ -754,6 +798,7 @@ Hmm...this is starting to get useful."))
 
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "What if I can hold my data in block?")
@@ -771,6 +816,7 @@ Hmm...this is starting to get useful.
 Build your own spreadsheet, anyone?"))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "Sharing Data")
@@ -790,6 +836,7 @@ What if I just sent you a blob of data?
    " ("b" nil "Email Replacement")))
 	
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 25"))
 		     "What is Lisp Missing?")
@@ -799,11 +846,13 @@ What if I just sent you a blob of data?
 	(qtext "Time/Effort/Designers/" ("b" nil "You")))
       
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 40"))
 		     "Questions/Comments?"))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 40"))
 		     "Technical Weeds")
@@ -814,6 +863,7 @@ Using Horde3D...
 I want to replace with simple OpenGL and later DirectX."))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 40"))
 		     "Architecture")
@@ -831,6 +881,7 @@ Material       -> Common Shader,  Uniforms, and Pixel Buffers (for reuse)
 Pipeline       -> The render loop, what to do and in what order."))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Century Schoolbook L Roman bold 40"))
 		     "How is this different?")
@@ -844,6 +895,7 @@ Pipeline is convoluted in XML, should really be a language anyway.
 My experience is there will be many other advantages to removing a layer of indirection/metaphor."))
 
       (lambda (i w h)
+	 (declare (ignorable i h w))
 	(move-to (/ w 8) (/ w 16))
 	(style-qtext (("font_desc" "Serif bold 125"))
 		     "Thank you!"))
