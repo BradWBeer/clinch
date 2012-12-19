@@ -4,7 +4,7 @@
 
 CLinch is a simple, yet powerful 3d graphics engine for Lisp. In true Lisp fashion, it is more a build-your-own-engine hobby kit rather than striving to be a full graphics panacea. Much of the design is based on Horde3D. Although Horde3D is a very good design, it has limitations which it attempts to solve by adding domain specific languages. Items such as shaders, entities and, most importantly, the pipeline are specified using an XML language. Lisp, by being self-compiling seemed like a better fit than requiring (yet) another language.
 
-Eventually I hope that CLinch becomes a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp and 3D. See my [Qix](https://github.com/BradWBeer/Qix) project for more information. (Currently this [presentation](http://www.youtube.com/watch?v=TV2kAcd5E20) contains much more information.) I also want CLinch to become a base for live-coding games and demos. 
+Eventually I hope that CLinch becomes a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp and 3D. See my [Qix](https://github.com/BradWBeer/Qix) project for more information. I also want CLinch to become a base for live-coding games and demos. 
 
 ### CLinch Extensions:
 
