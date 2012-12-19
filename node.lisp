@@ -38,13 +38,18 @@
 
 (defmethod update ((this node) &optional parent &key matrix force)
   "Update this and child nodes if changed."
-  (when (or force (changed? this))
-    (setf (current-transform this)
-  	  (if parent
-  	      (m*  (or matrix (current-transform parent)) this)
-  	      this)))
-  (loop for child in (children this)
-     do (update child this :force force))
+  (if (or force (changed? this))
+    (progn
+      (setf (current-transform this)
+	    (if parent
+		(m*  (or matrix (current-transform parent)) this)
+		this))
+      (setf force t))
+
+    (loop for child in (children this)
+       do (update child this :force force)))
+
+
   
   (current-transform this))
 
