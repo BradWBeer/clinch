@@ -93,19 +93,11 @@ varying vec3  normal;
        (location 0))
 
   
-  (defun draw-slide (texture slide &optional (w 800) (h 800))
-    (clinch:with-mapped-buffer (bits texture :write-only)
-      (let ((surf (cairo:create-image-surface-for-data bits :argb32 w h (* w 4))))
-	(unwind-protect 
-	     (cairo:with-context ((cairo:create-context surf))
-	       (clear-mapped-texture)
-	       (funcall (nth slide presentation) (1+ slide) w h)
-	       )		     
-	  (cairo:destroy surf)))))
+  (defun draw-slide (texture slide)
+    (clinch::with-context-for-texture  (texture :width-var w :height-var h)
+      (clear-mapped-texture)
+      (funcall (nth slide presentation) (1+ slide) w h)))
       
-      
-      
-
 
   (defun window-key-press (key action)
     (format t "window-key-press ~s ~s~%" key action)
