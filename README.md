@@ -14,6 +14,8 @@ Eventually I hope that CLinch becomes a stable and fast workhorse tool for devel
 
 * File loading and saving with FreeImage
 
+* 3D asset importing using ClassImp (Coming Soon!)
+
 
 ## Design Goals
 
