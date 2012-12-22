@@ -23,6 +23,9 @@
      
    #:viewport #:x #:y #:width #:height #:add-child #:resize #:quick-set
    
-   #:print-text #:with-paragraph		      
+   #:print-text #:with-paragraph
+   #:clear-cairo-context
+   #:with-surface-for-texture
+   #:with-context-for-texture
    ))
 
