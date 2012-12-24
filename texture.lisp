@@ -19,7 +19,7 @@
    (type
     :accessor qtype
     :initarg :qtype
-    :initform :unsigned-byte)
+    :initform :unsigned-char)
    (data-format
     :accessor data-format
     :initform :bgra
@@ -76,6 +76,14 @@
       tex-id)))
     
     
+(defmethod get-size ((this texture) &key)
+  "Calculates the number of VALUES (stride * vcount) or (stride * width * height) this buffer contains."
+  (* (stride this)
+     (if (and (vertex-count this) (not (zerop (vertex-count this))))
+	 (vertex-count this)
+	 (* (width this) (height this)))))
+     
+
 
 (defmethod bind ((this texture) &key )
   "Wrapper around glBindBuffer. Puts the texture into play."
