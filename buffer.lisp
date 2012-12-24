@@ -71,7 +71,7 @@
       ((cffi:pointerp data)
 
        (%gl:Buffer-Data target
-			(* (get-size this) (cffi:foreign-type-size type))
+			(size-in-bytes this)
 			data
 			usage)
        (setf loaded? t))
@@ -80,23 +80,23 @@
       (data
 
        (let ((p (cffi:foreign-alloc type :initial-contents data :count (get-size this))))
-	      (unwind-protect
-		   (progn (%gl:Buffer-Data target
-					   (* (get-size this) (cffi:foreign-type-size type))
-					   p
-					   usage)
-			  (setf loaded? t))
-		
-		(cffi:foreign-free p))))
+	 (unwind-protect
+	      (progn (%gl:Buffer-Data target
+				      (size-in-bytes this)
+				      p
+				      usage)
+		     (setf loaded? t))
+	   
+	   (cffi:foreign-free p))))
       
       ;; No Data?
       (t
 
        (%gl:Buffer-Data target
-			  (* (get-size this) (cffi:foreign-type-size type))
-			  (cffi:null-pointer)
-			  usage)
-	 (setf loaded? nil)))))
+			(size-in-bytes this)
+			(cffi:null-pointer)
+			usage)
+       (setf loaded? nil)))))
 
 
 (defmethod bind ((this buffer) &key )
@@ -112,8 +112,7 @@
 (defmethod size-in-bytes ((this buffer))
   "Calculates how many bytes this buffer consists of."
   (* 
-   (slot-value this 'vertex-count)
-   (slot-value this 'stride)
+   (get-size this)
    (cffi:foreign-type-size (slot-value this 'type))))
 
 
@@ -173,5 +172,4 @@
      (unwind-protect
 	  (progn ,@body)
        (clinch::unmap-buffer ,buffer))))
-  
-  
+
