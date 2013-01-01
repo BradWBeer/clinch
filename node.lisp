@@ -36,27 +36,23 @@
       (setf children
 	    (cons child children)))))
 
-(defmethod update ((this node) &optional parent &key matrix force)
+(defmethod update ((this node) &key parent matrix force)
   "Update this and child nodes if changed."
-  (if (or force (changed? this))
-    (progn
-      (setf (current-transform this)
-	    (if parent
-		(m*  (or matrix (current-transform parent)) this)
-		this))
-      (setf force t))
-
-    (loop for child in (children this)
-       do (update child this :force force)))
-
-
+  (when (or force (changed? this))
+    (setf (current-transform this)
+	  (if parent (m* this (current-transform parent))
+	      this))
+    (setf force t))
+  
+  (loop for child in (children this)
+     do (update child :parent this :force force))
   
   (current-transform this))
 
 (defmethod render ((this node) &key parent matrix)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (changed? this)
-    (update this parent :matrix matrix))
+    (update this :parent parent :matrix matrix))
   
   (loop for i in (children this)
      do (render i :parent this :matrix (current-transform this))))

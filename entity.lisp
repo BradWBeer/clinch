@@ -52,7 +52,7 @@
 		 
 		 (draw-with-index-buffer ,(indexes this))))))
 
-(defmethod update ((this entity) &optional parent &key matrix force)
+(defmethod update ((this entity) &key parent matrix force)
   )
 
 (defmethod render ((this entity) &key parent matrix projection)
