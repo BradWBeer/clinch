@@ -1,10 +1,16 @@
 (ql:quickload :clinch)
 
+(ql:quickload :clinch-freeimage)
+(ql:quickload :clinch-cairo)
+
 ;; GLFL for windowing and I/O
 (ql:quickload :cl-glfw)
 
 ;; CL-Cairo for drawing and loading textures...
 (ql:quickload :cl-cairo2)
+
+;; thread library
+(ql:quickload :bordeaux-threads)
 
 ;; String for the Vertex Shader
 ;;   t1    is the texture sampler
@@ -77,6 +83,8 @@ varying vec2 v_tc1;
     (clinch::render viewport)
 
     (setf camera (clinch::make-perspective-transform (/ (* 65 pi) 360) (/ width height) .5 100))
+
+    (clinch:translate camera 0 0 0 t)
     (clinch::use-projection-transform camera))
 
     ;; The start point...    
@@ -101,7 +109,8 @@ varying vec2 v_tc1;
 				(%gl:blend-func :src-alpha :one-minus-src-alpha))
 
 			 :loop ((gl:clear :color-buffer-bit :depth-buffer-bit)
-				(clinch::rotate *node2* rot 0 1 0 t)
+				(clinch::rotate *node1* rot 0 1 0 t)
+				;(clinch::rotate *node2* rot 0 1 0 t)
 				(clinch::render *root*))))
 
 	 ;; Create the root node
@@ -109,10 +118,11 @@ varying vec2 v_tc1;
 
 	 ;; create a node under the root node. 
 	 (setf *node1* (make-instance 'clinch::node :parent *root*))
-	 (clinch::translate *node1* -1 0 -2 t)
+	 (clinch::translate *root* 0 0 -10 t)
 	 
 	 ;; create another node another level down.
 	 (setf *node2* (make-instance 'clinch::node :parent *node1*))
+	 (clinch::translate *node2* 3 0 0 t)
 
 	 ;; set the window event handlers 
 	 (glfw:set-window-size-callback 'window-size-callback)
@@ -175,3 +185,8 @@ varying vec2 v_tc1;
       ;; End Program
       
       (print "closed")))
+
+
+(defun start-threaded ()
+  (bordeaux-threads:make-thread (lambda ()
+				  (start))))
