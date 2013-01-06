@@ -100,6 +100,8 @@ varying vec2 v_tc1;
 	
 	((print "init")
 
+	 (glfw:swap-interval 0)
+
 	 ;; Create the pipeline (this sample has only one)
 	 (setf pipeline (clinch::make-pipeline  
 			 :init ((gl:load-identity)
@@ -118,7 +120,7 @@ varying vec2 v_tc1;
 
 	 ;; create a node under the root node. 
 	 (setf *node1* (make-instance 'clinch::node :parent *root*))
-	 (clinch::translate *root* 0 0 -10 t)
+	 (clinch::translate *root* 0 0 -4 t)
 	 
 	 ;; create another node another level down.
 	 (setf *node2* (make-instance 'clinch::node :parent *node1*))
