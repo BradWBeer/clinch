@@ -23,11 +23,11 @@
 
 (defmethod changed? ((this node))
   "Has this node changed and not updated?"
-  (null (current-transform this)))
+  (null (slot-value this 'current-transform)))
 
 (defmethod (setf changed?) (val (this node))
   "Set this node to update later."
-  (setf (current-transform this) (when val nil)))
+  (setf (slot-value this 'current-transform) (if val nil t)))
 
 (defmethod add-child ((this node) child &key)
   "Add a child. Children must implement update and render."
