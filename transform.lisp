@@ -94,33 +94,47 @@
       (setf m (make-identity-transform (qtype this))))
     (trivial-garbage:finalize this (lambda () (cffi:foreign-free m)))))
 
-(eval
- `(defun m*m (a b dest)
-    "Raw cffi matrix multiplication."
-    (declare (optimize (speed 3)))
-    (cffi:with-foreign-object  (c :float 16)
-      ,@(loop for i from 0 to 3
-	   append (loop for j from 0 to 3
-		     collect `(setf (cffi:mem-aref c :float ,(+ (* j 4) i))
-				    (+ ,@(loop for k from 0 to 3
-					    collect `(* (cffi:mem-aref a :float ,(+ (* k 4) i)) 
-							(cffi:mem-aref b :float ,(+ (* j 4) k))))))))
-      (copy-foreign-array-data c dest 16)
-      dest)))
+(defmacro m*m (a b dest)
+  "Raw cffi matrix multiplication."
+  (declare (optimize (speed 3)))
+
+  (let ((c (gensym)))
+    `(cffi:with-foreign-object  (,c :float 16)
+       ,@(loop for i from 0 to 3
+	    append (loop for j from 0 to 3
+		      collect `(setf (cffi:mem-aref ,c :float ,(+ (* j 4) i))
+				     (+ ,@(loop for k from 0 to 3
+					     collect `(* (cffi:mem-aref ,a :float ,(+ (* k 4) i)) 
+							 (cffi:mem-aref ,b :float ,(+ (* j 4) k))))))))
+       (copy-foreign-array-data ,c ,dest 16)
+       ,dest)))
+
+(defmacro _m*m (a b dest)
+  "Raw cffi matrix multiplication."
+  (declare (optimize (speed 3)))
+  `(progn
+     ,@(loop for i from 0 to 3
+	 append (loop for j from 0 to 3
+		   collect `(setf (cffi:mem-aref ,dest :float ,(+ (* j 4) i))
+				  (+ ,@(loop for k from 0 to 3
+					  collect `(* (cffi:mem-aref ,a :float ,(+ (* k 4) i)) 
+						      (cffi:mem-aref ,b :float ,(+ (* j 4) k))))))))
+      ,dest))
 
 
 (defmethod m* ((this transform) (that transform) &optional in-place)
   "Transform Multiplication. If in-place is true, the first matrix will be modified. It still makes a temporary raw matrix until it is copied."
+  (declare (optimize (speed 3)))
   (if in-place
       (progn
-	(m*m (transform that)
-	     (transform this)
-	     (transform this))
+	(m*m (slot-value that 'transform)
+	     (slot-value this 'transform)
+	     (slot-value this 'transform))
 	this)
-      (let ((ret (make-instance 'transform :qtype (qtype this))))
-	(m*m (transform that)
-	     (transform this)
-	     (transform ret))
+      (let ((ret (make-instance 'transform :qtype (slot-value this 'type))))
+	(_m*m (slot-value that 'transform)
+	     (slot-value this 'transform)
+	     (slot-value ret 'transform))
 	ret)))
 
 (eval 
@@ -545,4 +559,3 @@
 	       (* y (cffi:mem-aref transform (qtype this) 6))
 	       (* z (cffi:mem-aref transform (qtype this) 10))
 	       (cffi:mem-aref transform (qtype this) 14))))))
-
