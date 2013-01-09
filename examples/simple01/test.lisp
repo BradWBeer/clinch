@@ -12,6 +12,16 @@
 ;; thread library
 (ql:quickload :bordeaux-threads)
 
+
+(defvar fps 60)
+(defvar frame-count 5000)
+(defvar current-count 0)
+(defvar start-time 0)
+(defvar last-time 1/60)
+(defvar current-time 1/30)
+(defvar delta-time 1/60)
+
+
 ;; String for the Vertex Shader
 ;;   t1    is the texture sampler
 ;;   tc1   are the texture coordinates
@@ -41,6 +51,8 @@ varying vec2 v_tc1;
             gl_FragColor = texture2D(t1, v_tc1);
         }")
 
+
+
 (let ((viewport (make-instance 'clinch::viewport))
       (pipeline)
       (camera)
@@ -55,7 +67,7 @@ varying vec2 v_tc1;
       (*root*)
       (*node1*)
       (*node2*)
-      (rot (coerce (* 2 pi (/ 1 360)) 'single-float)))
+      (rot (clinch::degrees->radians .01)))
 
   ;; On Keypress map the texture's raw data, convert it to a cairo surface and context, then clear and draw an X on it.
   (defun window-key-press (key action)
@@ -84,8 +96,11 @@ varying vec2 v_tc1;
 
     (setf camera (clinch::make-perspective-transform (/ (* 65 pi) 360) (/ width height) .5 100))
 
-    (clinch:translate camera 0 0 0 t)
-    (clinch::use-projection-transform camera))
+    ;;(clinch:translate camera 0 0 0 t)
+    (gl:matrix-mode :projection)
+    (gl:load-matrix camera)
+    (gl:matrix-mode :modelview)
+    (gl:load-identity))
 
     ;; The start point...    
     (defun start ()
@@ -120,11 +135,11 @@ varying vec2 v_tc1;
 
 	 ;; create a node under the root node. 
 	 (setf *node1* (make-instance 'clinch::node :parent *root*))
-	 (clinch::translate *root* 0 0 -4 t)
+	 (clinch::translate *root* 0 0 0)
 	 
 	 ;; create another node another level down.
 	 (setf *node2* (make-instance 'clinch::node :parent *node1*))
-	 (clinch::translate *node2* 3 0 0 t)
+	 (clinch::translate *node2* 0 0 -4)
 
 	 ;; set the window event handlers 
 	 (glfw:set-window-size-callback 'window-size-callback)
@@ -179,9 +194,22 @@ varying vec2 v_tc1;
 					    (:attribute "t1" ,texture)
 					    (:vertices ,vertexes))))
 	 ;; set up the pipeline. Since it's the only one we only do it one before starting.
+	 
 	 (clinch::run-init pipeline)
 	 )
 	;; Main loop
+	(incf current-count)
+	(setf last-time current-time)
+	(setf current-time (glfw:get-time))
+	(setf delta-time (- current-time last-time))
+
+	(when (zerop (mod current-count frame-count))
+	  (setf fps (/ frame-count
+		       (- current-time start-time)))
+	  (setf start-time current-time
+		current-count 0)
+	  (format t "FPS: ~A~%" fps))
+
 	(clinch::run-loop pipeline (clinch::width viewport) (clinch::height viewport))
 	)
       ;; End Program

@@ -8,13 +8,13 @@
   :license "BSD"
   :version "0.1"
   :depends-on (#:cl-opengl
-	       #:trivial-garbage)
+	       #:sb-cga)
   :components ((:file "package")
 	       (:file "transform")
+	       (:file "node")
 	       (:file "shader")
 	       (:file "buffer")
 	       (:file "texture")
-	       (:file "node")
 	       (:file "entity")
 	       (:file "viewport")
 	       (:file "pipeline")))

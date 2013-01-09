@@ -118,16 +118,28 @@
     (let ((f (case type
 	       (:float #'gl:uniformf)
 	       (:int #'gl:uniformi)
-	       (:matrix (lambda (id value) (gl:uniform-matrix id 2 (transform value)))))))
-
+	       (:matrix (lambda (id value)
+			  (gl:uniform-matrix id 2 (cond
+						    ((arrayp value) value)
+						    ((typep value 'node) (transform
+									  value))
+						    (t (error "Unknown Type in attach-uniform!")))))))))
+						      
+      
       (if (listp value)
 	  (apply f id value)
 	  (apply f id (list value))))))
 
-(defmethod attach-uniform ((this shader) (uniform string) (matrix transform))
+(defmethod attach-uniform ((this shader) (uniform string) (matrix array))
+  "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
+  (destructuring-bind (name type . id) (get-uniform-id this uniform)
+    (gl:uniform-matrix id 4 matrix)))
+
+(defmethod attach-uniform ((this shader) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
   (destructuring-bind (name type . id) (get-uniform-id this uniform)
     (gl:uniform-matrix id 4 (transform matrix))))
+
 
 
 (defmethod bind-static-values-to-attribute ((this shader) name &rest vals)

@@ -56,10 +56,13 @@
   )
 
 (defmethod render ((this entity) &key parent matrix projection)
-  (when (use-gl-stack? this)
+  (when (and (use-gl-stack? this)
+	     (or parent matrix))
     (gl:matrix-mode :modelview)
-    (when (or parent matrix)
-      (use-transform (or matrix parent))))
+    (gl:load-matrix (or matrix
+			(current-transform parent)
+			(transform parent))))
+      
   
   (funcall (slot-value this 'func) :parent-transform (or matrix parent) :projection-transform projection))
 

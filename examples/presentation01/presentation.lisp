@@ -14,6 +14,15 @@
 ;; GLFL for windowing and I/O
 (ql-as-needed :cl-glfw)
 
+(defvar fps 60)
+(defvar frame-count 1000)
+(defvar current-count 0)
+(defvar frame-times-array (make-array frame-count :element-type 'float :initial-element 1/60))
+(defvar last-time 1/60)
+(defvar current-time 1/30)
+(defvar delta-time 1/60)
+
+
 (defvar presentation)
 (defvar vert-source)
 (defvar frag-source)
@@ -46,7 +55,7 @@ uniform sampler2D t1;
 varying vec2 v_tc1;
 varying vec3  normal;
         void main() {
-            gl_FragColor = texture2D(t1, v_tc1) * max(.4, dot(normal, vec3(0, 0, 1)));
+            gl_FragColor = texture2D(t1, v_tc1) * max(.4, abs(dot(normal, vec3(0, 0, 1))));
         }")
 
 (defun degrees->radians (x)
@@ -77,8 +86,8 @@ varying vec3  normal;
 
 (let* ((shader)
        (viewport (make-instance 'clinch:viewport))
-       (lens   (make-instance 'clinch:transform))
-       (camera (make-instance 'clinch:node))
+       (lens   nil)
+       (camera nil)
        (hub    (make-instance 'clinch:node))
        (page)
        (vertexes)
@@ -90,7 +99,9 @@ varying vec3  normal;
        (pipeline)
        (diff)
        (rad-diff)
-       (location 0))
+       (location 0)
+       (rot nil)
+       (go?))
 
   
   (defun draw-slide (texture slide)
@@ -101,13 +112,8 @@ varying vec3  normal;
 
   (defun window-key-press (key action)
     (format t "window-key-press ~s ~s~%" key action)
-    (when (and (= action 1)
-	       (member key '(:left :right #\space)))
-	  (draw-slide texture (mod (case key
-				     (:left (decf location))
-				     (:right (incf location))
-				     (#\space (setf location 0)))
-				   (length presentation)))))
+    (unless (zerop action)
+      (setf go? (not go?))))
   
   (defun create-rectangle (texture &optional (node hub))
     (make-instance 'clinch:entity
@@ -128,7 +134,9 @@ varying vec3  normal;
     (clinch::render viewport)
 
     (setf lens (clinch::make-perspective-transform (/ (* 65 pi) 360) (/ width height) .5 100))
-    (clinch::use-projection-transform lens)
+    (gl:matrix-mode :projection)
+    (gl:load-matrix lens)
+    (gl:matrix-mode :modelview)
     (gl:load-identity))
 
 
@@ -143,15 +151,18 @@ varying vec3  normal;
 			      :opengl-version-major 3
 			      :opengl-version-minor 1)
 	((print "init")
-	 ;; set the window event handlers 
+
+	 ;; set the window event handlers
+	 (glfw:swap-interval 0)
+
 	 (glfw:set-window-size-callback 'window-size-callback)
 	 (glfw:set-key-callback  'window-key-press)
 
-	 (clinch:qreset camera)
-	 (clinch:qreset hub)
-	 (clinch:translate hub 0 0 -.8 t) 
+	 ;;(clinch:qreset camera)
+	 (clinch:set-identity-transform hub)
+	 (clinch:translate hub 0 0 -12 t) 
 	 (clinch:update hub)
-	 
+	 (setf go? nil) 
 
 	 ;; create the shader. Note how uniforms and attributes are set
 	 (setf shader (make-instance 'clinch:shader
@@ -162,7 +173,7 @@ varying vec3  normal;
 				     :attributes '(("tc1" :float))
 				     ))
 	 
-	 
+ 	 
 	 ;; create buffers....
 	 (setf vertexes (make-instance 'clinch:buffer 
 				       :Stride 3
@@ -190,35 +201,70 @@ varying vec3  normal;
 	 (setf diff (/ 360 (length presentation)))
 	 (setf rad-diff (degrees->radians diff))
 	 
-	 (setf texture (make-instance 'clinch:texture
-				      :width 800
-				      :height 800
-				      :stride 4
-				      :count (* 800 800)
-				      :qtype :unsigned-char
-				      :target :pixel-unpack-buffer))
 	      
-	 (setf entity (create-rectangle texture))
-	 (setf location 0)
-	 (draw-slide texture 0)
-
-	 (let ((rot (coerce (* 2 pi (/ 1 360)) 'single-float)))
-	   ;; defined rot, but never used? dju
-	   (setf pipeline (clinch:make-pipeline  
-			   :init ((gl:load-identity)
-				  (gl:clear-color 0.0 0.0 0.0 0.0)
-				  (gl:clear :color-buffer-bit :depth-buffer-bit)
-				  (gl:enable :blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d)
-				  (%gl:blend-func :src-alpha :one-minus-src-alpha))
-			   
-			   :loop ((gl:clear :color-buffer-bit :depth-buffer-bit)
-				  ;;(clinch:rotate hub rot 0 1 0 t)
-				  ;;(clinch:update hub)
-				  (clinch:render hub)))))
+	 (loop
+	    for i in presentation
+	    for x from 0
+	      do (let* ((spoke (make-instance 'clinch:node :parent hub))
+			(texture (make-instance 'clinch:texture
+						:width 800
+						:height 800
+						:stride 4
+						;;:count (* 800 800)
+						:qtype :unsigned-char
+						:target :pixel-unpack-buffer)))
+		   (create-rectangle texture spoke)
+		   (clinch:rotate    spoke (coerce (* x rad-diff) 'single-float)
+				     0 1 0 t)
+		   (clinch:translate spoke 0 0 10 t)
+		   (draw-slide texture x)))
+		       
+	 (setf rot (* 10 -2 clinch::+pi+ (/ 1 360)))
+	 ;; defined rot, but never used? dju
+	 (setf pipeline (clinch:make-pipeline  
+			 :init ((gl:load-identity)
+				(gl:clear-color 0.0 0.0 0.0 0.0)
+				(gl:clear :color-buffer-bit :depth-buffer-bit)
+				(gl:enable :blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d)
+				(%gl:blend-func :src-alpha :one-minus-src-alpha)
+				(clinch:update hub))
+			 
+			 :loop ((gl:clear :color-buffer-bit :depth-buffer-bit)
+				;; (when (zerop (mod count 20))
+				;;   (print (gc)))
+				;; (incf count)
+				;;(when go? (clinch:rotate hub rot 0 1 0 t))
+				;;(clinch:update hub)
+				(clinch:render hub))))
 	 (clinch:run-init pipeline)
 	 )
       ;; Main loop
-      (clinch:run-loop pipeline (clinch:width viewport) (clinch:height viewport)) 
+      (setf last-time current-time)
+      (setf current-time (glfw:get-time))
+      (setf delta-time (- current-time last-time))
+      (setf (elt frame-times-array current-count) delta-time)
+      (incf current-count)
+      (when (>= current-count frame-count)
+	(setf current-count 0)
+	(setf fps (/ frame-count (reduce #'+ frame-times-array)))
+	;(format t "FPS: ~A~%" fps)
+	)
+      
+      ;; (cond ((> delta-time 1/20) (gl:clear-color 1.0 0.0 0.0 0.0)
+      ;; 	                         (format t "RED: ~A of a second~%" delta-time))
+      ;; 	    ((> delta-time 1/60) (gl:clear-color 1.0 1.0 0.0 0.0)
+      ;; 	                         (format t "Yellow: ~A of a second~%" delta-time))	     
+      ;; 	    (t (gl:clear-color 0.0 0.0 0.0 0.0)))
+      
+      (gl:clear :color-buffer-bit :depth-buffer-bit)
+            ;;(incf count)
+      (when go? (clinch:rotate hub (coerce
+				    (* rot delta-time)
+				    'single-float) 0 1 0 t))
+      ;;(clinch:update hub)
+      (clinch:render hub)
+      
+      ;;(clinch:run-loop pipeline (clinch:width viewport) (clinch:height viewport)) 
       )
     ;; End Program
     (clinch:unload vertexes)
