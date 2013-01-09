@@ -2,9 +2,9 @@
 
 ## Overview
 
-CLinch is a simple, yet powerful 3d graphics engine for Lisp. In true Lisp fashion, it is more a build-your-own-engine hobby kit rather than striving to be a full graphics panacea. Much of the design is based on Horde3D. Although Horde3D is a very good design, it has limitations which it attempts to solve by adding domain specific languages. Items such as shaders, entities and, most importantly, the pipeline are specified using an XML language. Lisp, by being self-compiling seemed like a better fit than requiring (yet) another language.
+CLinch is a simple, yet powerful 3d graphics engine for Lisp. In true Lisp fashion, it is more a build-your-own-engine hobby kit rather than striving to be a full graphics panacea. Much of the design is based on Horde3D. Although Horde3D is a very good design, it has limitations which it attempts to solve by adding domain specific languages. Items such as shaders, entities and, most importantly, the pipeline are specified using an XML language. Lisp, by being self-compiling seems like a better fit than requiring (yet) another language.
 
-Eventually I hope that CLinch becomes a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp and 3D. See my [Qix](https://github.com/BradWBeer/Qix) project for more information. I also want CLinch to become a base for live-coding games and demos. 
+Eventually I hope CLinch becomes a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp and 3D. See my [Qix](https://github.com/BradWBeer/Qix) project for more information. 
 
 ### CLinch Extensions:
 
@@ -21,7 +21,7 @@ Eventually I hope that CLinch becomes a stable and fast workhorse tool for devel
 
 ### Fast 
 
-CLinch should be as fast or faster than most script-based graphics engines while requiring much less development time. While it may never rival professional C libraries, the ability to modify the 3D engine and environment from the REPL will allow skilled developers to create applications in a fast, intuitive, flexible way.
+CLinch should be as fast or faster than most script-based graphics engines while requiring much less development time. While it may never rival professional C libraries, the ability to modify the 3D engine and environment from the REPL will allow skilled developers to create applications in a fast, intuitive and flexible way.
 
 ### Simple
 
@@ -38,17 +38,15 @@ CLinch should not depend on any one library. Currently it only supports OpenGL, 
 
 ## Architecture
 
-Although CLinch can be used as a complete graphics engine, most parts of CLinch are independent. You can use most objects by themselves as best suits your application. For example, you can use a buffer object by itself. This also helps with testing by isolating the various parts of CLinch. The following is in hierarchical order based on the default configuration. This is to explain it as clearly as possible, not to indicate a necessary design. 
-
-Most objects have children method which tries to behavior intelligently based on their type. Most objects also have a render method which will render itself then its children.
+Although CLinch can be used as a complete graphics engine, most parts of CLinch are independent. You can use objects by themselves as best suits your application. For example, you can use a buffer object by itself. This also helps with testing by isolating the various parts of CLinch. The following is in hierarchical order based on the default configuration. This is to explain it as clearly as possible, not to indicate a necessary design. 
 
 ### Transforms
 
-A transform is a 4x4 matrix which is used to hold and apply a C array of 16 floating values. Currently only single-floats are supported. It encapsulates the CFFI memory management using trivial-garbage. It also has basic arithmetic operations for 4x4 linear algebra and 4x1 vectors. (Note: only m#v is currently implemented) There are functions for rotate, translate, scale, multiply (m#), make-identity (or reset), transpose, determinate, invert, make-orthogonal-transform, make-frustum-transform, make-perspective-transform, multiply by vector (m#v), use-transform (for the OpenGL matrix stack) and get-current-gl-matrix. Modern transform functions for passing values to a shader are not yet supported, but should be soon.
+A transform is a 4x4 matrix which is used to hold and apply a C array of 16 floating values. SB-CGA is used as the default linear algebra library and its arrays may be passed to the shader. There are funcions for creating various projection matrices.
 
 ### Nodes
 
-Nodes are not usually the topmost objects in the hierarchy, however they are the most important. Nodes abstract 3D transform "chains" and hierarchy. Nodes subclass transforms and can be modified the same way as transforms. They also may have children. Nodes are multiplied together in a hierarchy to create an effective transform which it stores in a hash by a list of all its parents. This allows a node to be reused in any way necessary. A node can be used in multiple places within a hierarchy (or tree) or even in several different ones. This is done by passing a list of parents to the update function. It will then append itself and call update on its children. In this way, the transforms are only calculated when they or their parent(s) have changed. 
+Nodes are not usually the topmost objects in the hierarchy, however they are the most important. Nodes abstract 3D transform "chains" and hierarchy. Nodes encapulate transforms and can be scaled, rotated, and translated. They also may have children. Nodes are multiplied together in a hierarchy to create an effective transform which it stores in a hash by a list of all its parents. This allows a node to be reused in any way necessary. A node can be used in multiple places within a hierarchy (or tree) or even in several different ones. This is done by passing a list of parents to the update function. It will then append itself and call update on its children. In this way, the transforms are only calculated when they or their parent(s) have changed. 
 
 ### Buffers
 
@@ -60,17 +58,17 @@ A subclass of Buffer, textures abstract the 2D textures and allow easy access to
 
 ### Shaders
 
-Shaders are the compiled output from text-based vertex and fragment shaders. They require a name, vertex shader source code, fragment shader source code, a list of uniforms and a list of attributes. Vertices and index buffers need not be specified if you are using them. 
+Shaders are the compiled output from text-based vertex and fragment shaders. They require a name, vertex shader source code, fragment shader source code, a list of uniforms and a list of attributes. Vertices and index buffers need not be specified if you are not using them. 
 
 ### Entities
 
-Entities are what are rendered and are also a subclass of node. They bring together the shader, buffers, textures, attributes and uniforms and transforms together into something which can be rendered on the screen. A shader and a (currently) an index buffer is required although they would be useless without at least one vertex buffer. Each member of values can be either an :attribute, :uniform or :vertices. 
+Entities are the rendered items. They bring together the shader, buffers, textures, attributes and uniforms and transforms together into something which can be rendered on the screen. A shader and a (currently) an index buffer is required although they would be useless without at least one vertex buffer. Each member of the VALUES slot can be either an :attribute, :uniform or :vertices. 
 
 ### Viewports
 
-An application can have several viewports. As CLinch does not force any particular windowing implementation, it can not have a window class. Once your window is set up, however, you can use the viewport handle drawing an area on screen. The most common children the cameras, which will be rendered in order unless then are not enabled.
+An application can have several viewports. As CLinch does not force any particular windowing implementation, it can not have a window class. Once your window is set up, however, you can use the viewport handle for drawing an area on screen. The most common children the cameras, which will be rendered in order unless then are not enabled.
 
 ### Pipelines
 
-A pipeline is a series of commands which create the scene with every call. Generally they clear the screen, render the root node and sorting items into the proper sequence. Unlike Horde3D, any set of Lisp can be used. Usually there is only one pipeline per viewport or application.
+A pipeline is a series of commands which create the scene with every call. Generally they clear the screen, render the root node and sort items into the proper sequence. Unlike Horde3D, any set of Lisp can be used. Usually there is only one pipeline per viewport or application.
 
