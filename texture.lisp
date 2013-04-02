@@ -112,5 +112,5 @@
   (gl:bind-texture :texture-2d (tex-id this)))
 
 
-(defmethod unload :after ((this texture) &key)
+(defmethod unload :before ((this texture) &key)
   (gl:delete-textures (list (tex-id this))))

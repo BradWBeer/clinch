@@ -29,6 +29,8 @@
 				       name
 				       vertex-shader-text
 				       fragment-shader-text
+				       keep-fragment-shader?
+				       keep-vertex-shader?
 				       attributes
 				       uniforms
 				       defines

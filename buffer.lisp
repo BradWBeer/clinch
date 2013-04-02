@@ -59,7 +59,7 @@
 
     ;; if they didn't give a vcount, see if we can derive one...
     (when (and (not vcount) (listp data))
-      (setf vcount (length data)))
+      (setf vcount (/ (length data) stride)))
     
     (unless id
       (setf id (car (gl:gen-buffers 1))))

@@ -10,14 +10,14 @@
    #:buffer #:id #:qtype #:usage #:stride #:vertex-count #:target #:loaded #:get-size #:size-in-bytes #:bind-buffer-to-vertex-array #:bind-buffer-to-attribute-array #:draw-with-index-buffer #:map-buffer #:unmap-buffer #:unload #:with-mapped-buffer
    
    #:texture #:tex-id #:width #:height #:data-format #:stride #:target #:bind #:map-buffer #:unmap-buffer #:bind-sampler  #:unload 
-   #:transform #:make-vector #:make-matrix #:degrees->radians #:radians->degrees #:qtype #:transform #:transform->list #:set-identity-transform #:qreset #:m* #:transpose #:determinate #:invert #:scale #:translate #:rotate #:make-orthogonal-transform #:make-frustum-transform  #:make-perspective-transform #:get-current-gl-matrix #:use-transform #:use-projection-transform #:M*V 
+   #:transform #:make-vector #:ray-triangle-intersect? #:make-matrix #:degrees->radians #:radians->degrees #:qtype #:transform #:transform->list #:set-identity-transform #:qreset #:m* #:transpose #:determinate #:invert #:scale #:translate #:rotate #:make-orthogonal-transform #:make-frustum-transform  #:make-perspective-transform #:get-current-gl-matrix #:use-transform #:use-projection-transform #:M*V 
 
    #:node #:children #:current-transform #:changed? #:update #:render 
 
 
    #:make-foreign-array #:make-identity-matrix #:list->matrix #:copy-foreign-array #:fill-foreign-array #:cached-matrix #:matrix #:get-current-matrix #:update-current-matrix #:read-gl-matrix #:get-current-gl-matrix #:use-matrix #:save-matrix  #:print-node-data #:m*m #:mT #:det #:m-1 
    
-   #:entity #:shader #:indexes #:render #:make-render-func #:slow-render 
+   #:entity #:shader #:indexes #:render #:make-render-func #:slow-render #:get-render-value
    
    #:make-pipeline #:pipeline-get-loop #:pipeline-get-init #:pipeline-get-uninit #:run-loop #:run-init #:run-uninit
      
@@ -28,6 +28,5 @@
    #:with-surface-for-texture
    #:with-context-for-texture
 
-   
    ))
 

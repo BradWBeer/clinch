@@ -11,6 +11,7 @@
 	       #:sb-cga)
   :components ((:file "package")
 	       (:file "transform")
+	       (:file "vector")
 	       (:file "node")
 	       (:file "shader")
 	       (:file "buffer")

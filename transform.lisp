@@ -15,11 +15,6 @@
 (defun radians->degrees (radians)
   (coerce (* 180 (/ radians pi)) 'single-float))
 
-(defun make-vector (a b c)
-  (sb-cga:vec (float a)
-	      (float b)
-	      (float c)))
-
 (defun make-matrix (m11 m12 m13 m14 
 		    m21 m22 m23 m24
 		    m31 m32 m33 m34
@@ -89,4 +84,45 @@
   ;;     return 1;
   ;; }
  
+;; Use this!!!!
+;; unProject(float winx, float winy, float winz,
+;;                           float[] modelMatrix, int moffset,
+;;                           float[] projMatrix, int poffset,
+;;                           int[] viewport, int voffset,
+;;                           float[] obj, int ooffset) {
+;;   float[] finalMatrix = new float[16];
+;;   float[] in = new float[4];
+;;   float[] out = new float[4];
 
+;;   Matrix.multiplyMM(finalMatrix, 0, projMatrix, poffset,
+;;     modelMatrix, moffset);
+;;   if (!Matrix.invertM(finalMatrix, 0, finalMatrix, 0))
+;;     return false;
+
+;;   in[0] = winx;
+;;   in[1] = winy;
+;;   in[2] = winz;
+;;   in[3] = 1.0f;
+
+;;   // Map x and y from window coordinates
+;;   in[0] = (in[0] - viewport[voffset]) / viewport[voffset + 2];
+;;   in[1] = (in[1] - viewport[voffset + 1]) / viewport[voffset + 3];
+
+;;   // Map to range -1 to 1
+;;   in[0] = in[0] * 2 - 1;
+;;   in[1] = in[1] * 2 - 1;
+;;   in[2] = in[2] * 2 - 1;
+
+;;   Matrix.multiplyMV(out, 0, finalMatrix, 0, in, 0);
+;;   if (out[3] == 0.0f)
+;;     return false;
+
+;;   out[0] /= out[3];
+;;   out[1] /= out[3];
+;;   out[2] /= out[3];
+;;   obj[ooffset] = out[0];
+;;   obj[ooffset + 1] = out[1];
+;;   obj[ooffset + 2] = out[2];
+
+;;   return true;
+;; }

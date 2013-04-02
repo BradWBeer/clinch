@@ -8,6 +8,9 @@
     :initform t
     :initarg :use-gl-stack?
     :reader use-gl-stack?)
+   (VAO
+     :initform nil
+     :reader VAO)
    (shader
     :initform nil
     :initarg :shader
@@ -29,7 +32,12 @@
 (defmethod print-object ((this entity) s)
   (format s "#<entity>"))
 
-(defmethod make-render-func ((this entity))
+(defmethod get-render-value ((this entity) name)
+  (second
+   (assoc name
+	  (clinch::render-values this))))
+
+(defmethod make-render-func ((this entity) &key)
   (setf (slot-value this 'func)
 	(eval `(lambda (&key parent-transform projection-transform)
 		 (declare (optimize (speed 3)))
@@ -51,6 +59,37 @@
 				    `(bind-buffer-to-normal-array ,name))))
 		 
 		 (draw-with-index-buffer ,(indexes this))))))
+
+;; (defmethod make-VAO-render-func ((this entity) &key)
+;;   (gl:bind-vertex-array
+;;    (setf (slot-value this 'VAO)
+;; 	 (car (gl:gen-vertex-arrays 1))))
+
+;;   (loop
+;;      )
+
+;;   (setf (slot-value this 'func)
+;; 	(eval `(lambda (&key parent-transform projection-transform)
+;; 		 (declare (optimize (speed 3)))
+;; 		 (gl:matrix-mode :modelview)
+;; 		 (use-shader ,(shader this))
+;; 		 ,@(loop
+;; 		      with tex-unit = 0
+;; 		      for (atr-or-uni name value) in (render-values this)
+;; 		      collect (cond ((eql atr-or-uni :uniform) `(attach-uniform ,(shader this) ,name ,@value))
+;; 				    ((and (eql atr-or-uni :attribute)
+;; 					  (typep value 'texture)) (prog1 `(bind-sampler ,value ,(shader this) ,name ,tex-unit) (incf tex-unit)))
+;; 				    ((and (eql atr-or-uni :attribute)
+;; 					  (typep value 'buffer)) 
+;; 				     `(bind-buffer-to-attribute-array ,value ,(shader this) ,name))
+;; 				    ((eql atr-or-uni :attribute) `(bind-static-values-to-attribute ,(shader this) ,name ,@value))
+;; 				    ((eql atr-or-uni :vertices) 
+;; 				     `(bind-buffer-to-vertex-array ,name))
+;; 				    ((eql atr-or-uni :normals) 
+;; 				    `(bind-buffer-to-normal-array ,name))))
+		 
+;; 		 (draw-with-index-buffer ,(indexes this))))))
+
 
 (defmethod update ((this entity) &key parent matrix force)
   )
