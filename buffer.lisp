@@ -173,3 +173,7 @@
 	  (progn ,@body)
        (clinch::unmap-buffer ,buffer))))
 
+(defmethod get-buffer-data ((this buffer))
+  (clinch:with-mapped-buffer (ptr this :read-only)
+    (loop for i from 0 to (1- (clinch:vertex-count this))
+       collect (cffi:mem-aref ptr (clinch:qtype this) i))))
