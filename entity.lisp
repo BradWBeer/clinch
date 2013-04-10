@@ -41,26 +41,60 @@
 		   (equal name (second i)))
 	   do (return (third i)))))
 
-(defmethod get-primitive ((this entity) name)
-  (let* ((buff      (get-render-value this name))
-	 (stride    (stride buff))
-	 (icount    (vertex-count (indexes this)))
-	 (itype     (qtype (indexes this)))
-	 (btype      (clinch:qtype buff)))
+;; (defmethod get-primitive ((this entity) name)
+;;   (let* ((buff      (get-render-value this name))
+;; 	 (stride    (stride buff))
+;; 	 (icount    (vertex-count (indexes this)))
+;; 	 (itype     (qtype (indexes this)))
+;; 	 (btype      (clinch:qtype buff)))
 
-    (clinch:with-mapped-buffer (iptr (indexes this) :read-only)
-      (clinch:with-mapped-buffer (bptr buff :read-only)
-	(print (/ icount 3))
-	(loop
-	   for i from 0 to (1- (/ icount 3))
-	   collect (loop for j from 0 to 2
-		      collect (loop
-				 with ret = (make-array stride :element-type 'single-float)
-				 for k from 0 to (1- stride)
-				 do (setf (elt ret k)
-					  (cffi:mem-aref bptr btype
-							 (+ k (* (cffi:mem-aref iptr itype (+ (* i stride) j)) stride))))
-				 finally (return ret))))))))
+;;     (clinch:with-mapped-buffer (iptr (indexes this) :read-only)
+;;       (clinch:with-mapped-buffer (bptr buff :read-only)
+;; 	(print (/ icount 3))
+;; 	(loop
+;; 	   for i from 0 to (1- (/ icount 3))
+;; 	   collect (loop for j from 0 to 2
+;; 		      collect (loop
+;; 				 with ret = (make-array stride :element-type 'single-float)
+;; 				 for k from 0 to (1- stride)
+;; 				 do (setf (elt ret k)
+;; 					  (cffi:mem-aref bptr btype
+;; 							 (+ k (* (cffi:mem-aref iptr itype (+ (* i stride) j)) stride))))
+;; 				 finally (return ret))))))))
+
+(defmethod get-primitive ((this entity) name)
+	   (let* ((buff      (get-render-value this name))
+		  (stride    (stride buff))
+		  (icount    (vertex-count (indexes this)))
+		  (itype     (qtype (indexes this)))
+		  (btype     (clinch:qtype buff))
+		  (iret      (make-array (/ icount 3)))
+		  (bret      (make-array (/ icount 3))))
+
+	     (clinch:with-mapped-buffer (iptr (indexes this) :read-only)
+	       (clinch:with-mapped-buffer (bptr buff :read-only)
+		 
+		 (dotimes (i (/ icount 3))
+		   (let ((iarr1 (make-array 3 :element-type 'integer))
+			 (barr1 (make-array 3)))
+		     
+		     (dotimes (j 3)
+		       (setf (elt iarr1 j) (cffi:mem-aref iptr itype (+ (* i 3) j)))
+
+		       (let ((barr2 (make-array stride :element-type 'single-float)))
+			 (dotimes (k stride)
+			   (setf (elt barr2 k)
+				 (cffi:mem-aref bptr btype (+ k (* (elt iarr1 j) stride)))))
+
+			 (setf (elt barr1 j) barr2)))
+		       
+		     (setf (elt iret i) iarr1)
+		     (setf (elt bret i) barr1)))))
+
+		   (values bret iret)))
+	     
+	     
+
 				   
 (defmethod triangle-intersection? ((this entity) start dir &key (vertex-name :vertices))
   (labels ((rec (primitives i distance u v index)

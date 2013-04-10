@@ -17,7 +17,7 @@
 
 (defmacro with-surface-for-texture ((texture &key (rw :write-only)
 					     (cairo-format :argb32)
-					     (surface-var 'cairo:*surface*)
+					     (surface-var 'cairo::*surface*)
 					     (width-var   (gensym))
 					     (height-var  (gensym))
 					     (bits-var    (gensym)))
@@ -46,8 +46,8 @@
 
 (defmacro with-context-for-texture ((texture &key (rw :write-only)
 					     (cairo-format :argb32)
-					     (surface-var 'cairo:*surface*)
-					     (context-var 'cairo:*context*)
+					     (surface-var 'cairo::*surface*)
+					     (context-var 'cairo::*context*)
 					     (width-var)
 					     (height-var))
 				    &body body)
