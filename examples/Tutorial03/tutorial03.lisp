@@ -51,7 +51,6 @@ void main() {
 
 
   (setf shader (make-instance 'clinch:shader
-				   :name "shader"
 				   :vertex-shader-text vertex-shader-source
 				   :fragment-shader-text fragment-shader-source
 				   :attributes '(("vertexColor" :float))
