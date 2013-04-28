@@ -2,16 +2,22 @@
 (ql:quickload :clinch)
 
 (defvar shader)
+(defvar alpha)
+
+;; alpha is the amount of alpha to use
+;; vertexColor is the color value of the vertex
+;; fragmentColor takes the vertexColors, mixes them by distance and sends them to the fragment shader
 (defvar vertex-shader-source
       "
 #version 120
 
-attribute vec4 vertexColor;
+uniform  float alpha;
+attribute vec3 vertexColor;
 varying   vec4 fragmentColor;
 
 void main() {
             gl_Position = ftransform();
-            fragmentColor = vertexColor;
+            fragmentColor = vec4(vertexColor, alpha);
         }")
 
 
@@ -34,6 +40,9 @@ void main() {
 (defvar triangle-color-buffer)
 
 (defun init ()
+
+  (setf alpha .5)
+
   (setf viewport (make-instance 'clinch:viewport))
   (glfw:set-window-size-callback #'window-size-callback)
 
@@ -45,7 +54,8 @@ void main() {
 				   :name "shader"
 				   :vertex-shader-text vertex-shader-source
 				   :fragment-shader-text fragment-shader-source
-				   :attributes '(("vertexColor" :float))))
+				   :attributes '(("vertexColor" :float))
+				   :uniforms   '(("alpha" :float))))
 
 
   (setf triangle-point-buffer 
@@ -63,10 +73,10 @@ void main() {
 
   (setf triangle-color-buffer 
 	(make-instance 'clinch:buffer 
-		       :Stride 4
-		       :data '(1.0 0.0 0.0 1.0
-			       0.0 1.0 0.0 1.0
-			       0.0 0.0 1.0 1.0)))
+		       :Stride 3
+		       :data '(1.0 0.0 0.0 
+			       0.0 1.0 0.0 
+			       0.0 0.0 1.0)))
 			       
 
   (setf triangle 
@@ -74,10 +84,14 @@ void main() {
 		       :shader  shader
 		       :indexes triangle-indices-buffer 
 		       :values `((:vertices ,triangle-point-buffer)
-				 (:attribute "vertexColor" ,triangle-color-buffer)))))
+				 (:attribute "vertexColor" ,triangle-color-buffer)
+				 (:uniform "alpha" alpha)))))
 
   
 (defun main-loop ()
+  (setf alpha (mod (+ alpha 1/60) 1.1))
+  
+  
   (gl:clear-color 0.0 0.0 0.0 0.0)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (clinch:render triangle))
