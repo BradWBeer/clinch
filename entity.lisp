@@ -94,11 +94,13 @@
 		   (values bret iret)))
 	     
 	     
-
+(defun rec (primitives i distance u v index)
+  )
 				   
 (defmethod triangle-intersection? ((this entity) start dir &key (vertex-name :vertices))
   (labels ((rec (primitives i distance u v index)
 	     (multiple-value-bind (new-distance new-u new-v)
+		 
 		 (ray-triangle-intersect? start dir (first (car primitives)) (second (car primitives)) (third (car primitives)))
 	       (when (and new-distance
 			  (or (null distance)
@@ -118,7 +120,8 @@
 	(eval `(lambda (&key parent-transform projection-transform)
 		 (declare (optimize (speed 3)))
 		 (gl:matrix-mode :modelview)
-		 (use-shader ,(shader this))
+		 (when ,(shader this)
+		   (use-shader ,(shader this)))
 		 ,@(loop
 		      with tex-unit = 0
 		      for (atr-or-uni name value) in (render-values this)
@@ -184,7 +187,8 @@
 (defmethod slow-render ((this entity))
   (gl:matrix-mode :modelview)
   ;;(use-transform this)
-  (use-shader (shader this))
+  (when (shader this)
+    (use-shader (shader this)))
   (loop
      with tex-unit = 0
      for (atr-or-uni name value) in (render-values this)
