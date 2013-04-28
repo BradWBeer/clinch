@@ -28,7 +28,7 @@
   (setf triangle 
 	(make-instance 'clinch:entity
 		       :indexes triangle-indices-buffer 
-		       :values `((:vertices triangle-point-buffer)))))
+		       :values `((:vertices ,triangle-point-buffer)))))
 
   
 (defun main-loop ()
