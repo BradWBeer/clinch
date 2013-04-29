@@ -17,9 +17,7 @@
 			  :greenbits 8
 			  :bluebits 8
 			  :alphabits 8
-			  :depthbits 16
-			  :opengl-version-major 3
-			  :opengl-version-minor 1)
+			  :depthbits 16)
       ((init))
     
     (main-loop))
