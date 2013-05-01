@@ -114,3 +114,12 @@
 
 (defmethod unload :before ((this texture) &key)
   (gl:delete-textures (list (tex-id this))))
+
+
+(defmacro with-mapped-texture ((name buffer &optional (access :READ-WRITE)) &body body)
+  "Convenience macro for mapping and unmapping the texture data.
+Name is the symbol name to use for the buffer pointer.
+Just a passthrough to with-mapped-buffer, but I keep forgetting to use with-mapped-buffer."
+  `(with-mapped-buffer (,name ,buffer ,access)
+     ,body))
+     
