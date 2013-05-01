@@ -12,8 +12,8 @@
 (defmacro degrees->radians (degrees)
   `(coerce (* 2 pi (/ ,degrees 360)) 'single-float))
 
-(defun radians->degrees (radians)
- `(coerce (* 180 (/ ,radians pi)) 'single-float))
+(defmacro radians->degrees (radians)
+  `(coerce (* 180 (/ ,radians pi)) 'single-float))
 
 (defun make-matrix (m11 m12 m13 m14 
 		    m21 m22 m23 m24
