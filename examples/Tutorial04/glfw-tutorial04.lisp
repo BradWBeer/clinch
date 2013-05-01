@@ -1,8 +1,16 @@
 (ql:quickload :cl-glfw)
 (ql:quickload :clinch)
 
-(defvar alpha)
 (defvar frame-count)
+
+;; ambientLight   The lowest amount of light to use. An RGB value.
+(defvar ambientLight '(.1 .1 .1))
+
+;; lightIntensity The maximum power of the light.    An RGB value.
+(defvar lightIntensity '(9.0 9.0 9.0))
+
+;; lightDirection The direction of the light source. An XYZ normal value.
+(defvar lightDirection '(0.5772705 0.5772705 0.5772705))
 
 ;; alpha is the amount of alpha to use
 ;; vertexColor is the color value of the vertex
@@ -11,14 +19,23 @@
   "
 #version 120
 
-uniform  float alpha;
+uniform   vec3 ambientLight;
+uniform   vec3 lightDirection;
+uniform   vec3 lightIntensity;
 attribute vec3 vertexColor;
 varying   vec4 fragmentColor;
 
 void main() {
             gl_Position = ftransform();
-            fragmentColor = vec4(vertexColor, alpha);
-        }")
+
+            float power = dot(normalize(lightDirection), gl_NormalMatrix * gl_Normal) ;
+            if(power > 0) {
+                fragmentColor = vec4(vertexColor * (ambientLight + (lightIntensity * power)), 1.0);
+            }
+            else {
+                fragmentColor = vec4(vertexColor * ambientLight, 1.0);
+            }
+}")
 
 
 (defvar fragment-shader-source
@@ -42,13 +59,12 @@ void main() {
 
 (defun init ()
 
-  (setf alpha 1.0)
   (setf frame-count 0)
 
   (setf viewport (make-instance 'clinch:viewport))
   (glfw:set-window-size-callback #'window-size-callback)
 
-  (gl:enable :blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d)
+  (gl:enable :blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d :cull-face)
   (%gl:blend-func :src-alpha :one-minus-src-alpha)
 
 
@@ -57,8 +73,11 @@ void main() {
 			      :vertex-shader-text vertex-shader-source
 			      :fragment-shader-text fragment-shader-source
 			      :attributes '(("vertexColor" :float))
-			      :uniforms   '(("alpha" :float))))
-
+			      :uniforms   '(("ambientLight" :float)
+					    ("lightIntensity" :float)
+					    ("lightDirection" :float))
+			      ))
+  
 
   (setf triangle-point-buffer 
 	(make-instance 'clinch:buffer 
@@ -105,6 +124,34 @@ void main() {
 			       20 21 22 
 			       22 21 23)))
 
+  (setf triangle-normal-buffer 
+	(make-instance 'clinch:buffer 
+		       :Stride 3
+		       :data '(0.0 0.0 1.0
+			       0.0 0.0 1.0
+			       0.0 0.0 1.0
+			       0.0 0.0 1.0
+			       0.0 -1.0 0.0
+			       0.0 -1.0 0.0
+			       0.0 -1.0 0.0
+			       0.0 -1.0 0.0
+			       0.0 0.0 -1.0
+			       0.0 0.0 -1.0
+			       0.0 0.0 -1.0
+			       0.0 0.0 -1.0
+			       0.0 1.0 0.0
+			       0.0 1.0 0.0
+			       0.0 1.0 0.0
+			       0.0 1.0 0.0
+			       1.0 0.0 0.0
+			       1.0 0.0 0.0
+			       1.0 0.0 0.0
+			       1.0 0.0 0.0
+			       -1.0 0.0 0.0
+			       -1.0 0.0 0.0
+			       -1.0 0.0 0.0
+			       -1.0 0.0 0.0)))
+
   (setf triangle-color-buffer 
 	(make-instance 'clinch:buffer 
 		       :Stride 3
@@ -132,6 +179,7 @@ void main() {
 			       1.0 0.0 1.0
 			       1.0 0.0 1.0
 			       1.0 0.0 1.0)))
+
   
   (setf node (make-instance 'clinch:node))
   
@@ -142,7 +190,11 @@ void main() {
 		       :indexes triangle-indices-buffer 
 		       :values `((:vertices ,triangle-point-buffer)
 				 (:attribute "vertexColor" ,triangle-color-buffer)
-				 (:uniform "alpha" alpha)))))
+				 (:normals ,triangle-normal-buffer)
+				 (:uniform "ambientLight" ambientLight)
+				 (:uniform "lightIntensity" lightIntensity)
+				 (:uniform "lightDirection" lightDirection)
+				 ))))
 
 
 (defun main-loop ()
