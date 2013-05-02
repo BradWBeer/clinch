@@ -226,7 +226,7 @@ void main() {
   (clinch::quick-set viewport 0 0 width height)
   (clinch::render viewport)
   
-  (setf projection-matrix (clinch::make-perspective-transform (/ clinch::+pi+ 4) (/ width height) .1 100))
+  (setf projection-matrix (clinch::make-perspective-transform (clinch:degrees->radians 65) (/ width height) .1 100))
   (print projection-matrix)
 
   (gl:matrix-mode :projection)
