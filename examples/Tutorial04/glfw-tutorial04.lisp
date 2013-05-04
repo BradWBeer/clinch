@@ -68,6 +68,8 @@ void main() {
 (defun init ()
 
   (setf frame-count 0)
+  ;; set the window event handlers
+  (glfw:swap-interval 1)
 
   (setf viewport (make-instance 'clinch:viewport))
   (glfw:set-window-size-callback #'window-size-callback)
@@ -204,7 +206,7 @@ void main() {
 
 (defun main-loop ()
   
-  (incf frame-count .01) 
+  (incf frame-count 1) 
 
   (clinch:set-identity-transform node)
   (clinch:rotate node (clinch:degrees->radians (mod frame-count 360) ) 0 0.8942871 0.44714355)
