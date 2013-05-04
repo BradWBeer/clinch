@@ -30,7 +30,7 @@
 (defvar lightIntensity '(.8 .8 .8))
 
 ;; lightDirection The direction of the light source. An XYZ normal value.
-(defvar lightDirection '(0.5772705 0.5772705 0.5772705))
+(defvar lightDirection '(-0.5772705 -0.5772705 -0.5772705))
 
 ;; vertexColor is the color value of the vertex
 (defvar cube-color-buffer)
@@ -49,7 +49,7 @@ varying   vec4 fragmentColor;
 void main() {
             gl_Position = ftransform();
 
-            float power = max(dot(lightDirection,
+            float power = max(dot(-lightDirection,
                                   normalize(gl_NormalMatrix * gl_Normal)),
                               0);
             fragmentColor = vec4(vertexColor * (ambientLight + (lightIntensity * power)), 1.0);
@@ -228,7 +228,7 @@ void main() {
   (clinch::quick-set viewport 0 0 width height)
   (clinch::render viewport)
   
-  (setf projection-matrix (clinch::make-perspective-transform (/ clinch::+pi+ 4) (/ width height) .1 100))
+  (setf projection-matrix (clinch::make-perspective-transform (clinch:degrees->radians 65) (/ width height) .1 100))
   (print projection-matrix)
 
   (gl:matrix-mode :projection)
