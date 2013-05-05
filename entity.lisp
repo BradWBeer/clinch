@@ -125,11 +125,12 @@
 		 ,@(loop
 		      with tex-unit = 0
 		      for (atr-or-uni name value) in (render-values this)
-		      collect (cond ((eql atr-or-uni :uniform) (if (atom value)
+		      collect (cond ((and (eql atr-or-uni :uniform)
+					  (typep value 'texture)) (prog1 `(bind-sampler ,value ,(shader this) ,name ,tex-unit) (incf tex-unit)))
+				    ((eql atr-or-uni :uniform) (if (atom value)
 								   `(attach-uniform ,(shader this) ,name ,value)
 								   `(attach-uniform ,(shader this) ,name ,@value)))
-				    ((and (eql atr-or-uni :attribute)
-					  (typep value 'texture)) (prog1 `(bind-sampler ,value ,(shader this) ,name ,tex-unit) (incf tex-unit)))
+
 				    ((and (eql atr-or-uni :attribute)
 					  (typep value 'buffer)) 
 				     `(bind-buffer-to-attribute-array ,value ,(shader this) ,name))

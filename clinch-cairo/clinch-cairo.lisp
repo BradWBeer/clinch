@@ -70,3 +70,12 @@
 	      (progn ,@body))
 	 (cairo:destroy ,context-var))))
 
+
+(defmethod create-texture-from-png (path)
+  ;; Load the png image into a texture buffer.
+  (cairo:with-png-surface (path surf)
+    (let ((bits (cairo:image-surface-get-data surf :pointer-only t))
+	  (w (cairo:image-surface-get-width surf))
+	  (h (cairo:image-surface-get-height surf)))
+      
+      (make-instance 'clinch:texture :width w :height h :stride 4 :count (* w h) :data bits :qtype :unsigned-char :target :pixel-unpack-buffer))))
