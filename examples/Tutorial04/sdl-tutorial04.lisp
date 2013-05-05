@@ -240,8 +240,8 @@ void main() {
 		:flags sdl-cffi::sdl-opengl
 		:resizable t
 		:double-buffer t
-		:title-caption "Tutorial 1"
-		:icon-caption "Tutorial 1")
+		:title-caption "Tutorial 4"
+		:icon-caption "Tutorial 4")
     (init)
     (window-size-callback 400 300)
     (setf (sdl:frame-rate) 60)

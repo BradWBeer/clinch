@@ -100,138 +100,135 @@ void main() {
 
 
   (setf shader (make-instance 'clinch:shader
-			      :name "shader"
-			      :vertex-shader-text vertex-shader-source
-			      :fragment-shader-text fragment-shader-source
-			      :attributes '(("textureCoord" :float))
-			      :uniforms   '(("texture01" :int)
-					    ("ambientLight" :float)
-			       		    ("lightIntensity" :float)
-					    ("lightDirection" :float))
-			      ))
+                  :name "shader"
+                  :vertex-shader-text vertex-shader-source
+                  :fragment-shader-text fragment-shader-source
+                  :attributes '(("textureCoord" :float))
+                  :uniforms   '(("texture01" :int)
+				("ambientLight" :float)
+                                ("lightIntensity" :float)
+				("lightDirection" :float))))
   
   (setf cube-indices-buffer 
-	(make-instance 'clinch:buffer :qtype :unsigned-int
-		       :target :element-array-buffer
-		       :Stride 1
-		       :data '(0  1  2 
-			       2  1  3
-			       4  5  6
-			       6  5  7
-			       8  9 10 
-			       10  9 11
-			       12 13 14 
-			       14 13 15
-			       16 17 18 
-			       18 17 19
-			       20 21 22 
-			       22 21 23)))
+    (make-instance 'clinch:buffer :qtype :unsigned-int
+               :target :element-array-buffer
+               :Stride 1
+               :data '(0  1  2 
+                   2  1  3
+                   4  5  6
+                   6  5  7
+                   8  9 10 
+                   10  9 11
+                   12 13 14 
+                   14 13 15
+                   16 17 18 
+                   18 17 19
+                   20 21 22 
+                   22 21 23)))
   
   (setf cube-point-buffer 
-	(make-instance 'clinch:buffer 
-		       :Stride 3
-		       :data '(-0.5 -0.5  0.5
-			        0.5 -0.5  0.5
-			       -0.5  0.5  0.5
-			        0.5  0.5  0.5
-			       -0.5 -0.5 -0.5
-			        0.5 -0.5 -0.5
-			       -0.5 -0.5  0.5
-			        0.5 -0.5  0.5
-			       -0.5  0.5 -0.5
-			        0.5  0.5 -0.5
-			       -0.5 -0.5 -0.5
-			        0.5 -0.5 -0.5
-			       -0.5  0.5  0.5
-			        0.5  0.5  0.5
-			       -0.5  0.5 -0.5
-			        0.5  0.5 -0.5
-			        0.5 -0.5  0.5
-			        0.5 -0.5 -0.5
-			        0.5  0.5  0.5
-			        0.5  0.5 -0.5
-			       -0.5 -0.5 -0.5 
-			       -0.5 -0.5  0.5 
-			       -0.5  0.5 -0.5 
-			       -0.5  0.5  0.5)))
+    (make-instance 'clinch:buffer 
+               :Stride 3
+               :data '(-0.5 -0.5  0.5
+                    0.5 -0.5  0.5
+                   -0.5  0.5  0.5
+                    0.5  0.5  0.5
+                   -0.5 -0.5 -0.5
+                    0.5 -0.5 -0.5
+                   -0.5 -0.5  0.5
+                    0.5 -0.5  0.5
+                   -0.5  0.5 -0.5
+                    0.5  0.5 -0.5
+                   -0.5 -0.5 -0.5
+                    0.5 -0.5 -0.5
+                   -0.5  0.5  0.5
+                    0.5  0.5  0.5
+                   -0.5  0.5 -0.5
+                    0.5  0.5 -0.5
+                    0.5 -0.5  0.5
+                    0.5 -0.5 -0.5
+                    0.5  0.5  0.5
+                    0.5  0.5 -0.5
+                   -0.5 -0.5 -0.5 
+                   -0.5 -0.5  0.5 
+                   -0.5  0.5 -0.5 
+                   -0.5  0.5  0.5)))
 
   (setf cube-normal-buffer 
-	(make-instance 'clinch:buffer 
-		       :Stride 3
-		       :data '(0.0 0.0 1.0
-			       0.0 0.0 1.0
-			       0.0 0.0 1.0
-			       0.0 0.0 1.0
-			       0.0 -1.0 0.0
-			       0.0 -1.0 0.0
-			       0.0 -1.0 0.0
-			       0.0 -1.0 0.0
-			       0.0 0.0 -1.0
-			       0.0 0.0 -1.0
-			       0.0 0.0 -1.0
-			       0.0 0.0 -1.0
-			       0.0 1.0 0.0
-			       0.0 1.0 0.0
-			       0.0 1.0 0.0
-			       0.0 1.0 0.0
-			       1.0 0.0 0.0
-			       1.0 0.0 0.0
-			       1.0 0.0 0.0
-			       1.0 0.0 0.0
-			       -1.0 0.0 0.0
-			       -1.0 0.0 0.0
-			       -1.0 0.0 0.0
-			       -1.0 0.0 0.0)))
+    (make-instance 'clinch:buffer 
+               :Stride 3
+               :data '(0.0 0.0 1.0
+                   0.0 0.0 1.0
+                   0.0 0.0 1.0
+                   0.0 0.0 1.0
+                   0.0 -1.0 0.0
+                   0.0 -1.0 0.0
+                   0.0 -1.0 0.0
+                   0.0 -1.0 0.0
+                   0.0 0.0 -1.0
+                   0.0 0.0 -1.0
+                   0.0 0.0 -1.0
+                   0.0 0.0 -1.0
+                   0.0 1.0 0.0
+                   0.0 1.0 0.0
+                   0.0 1.0 0.0
+                   0.0 1.0 0.0
+                   1.0 0.0 0.0
+                   1.0 0.0 0.0
+                   1.0 0.0 0.0
+                   1.0 0.0 0.0
+                   -1.0 0.0 0.0
+                   -1.0 0.0 0.0
+                   -1.0 0.0 0.0
+                   -1.0 0.0 0.0)))
 
   (setf cube-texture-coordinate-buffer 
-	(make-instance 'clinch:buffer 
-		       :Stride 2
-		       :data '(0.0 1.0
-			       1.0 1.0
-			       0.0 0.0
-			       1.0 0.0
-			       0.0 1.0
-			       1.0 1.0
-			       0.0 0.0
-			       1.0 0.0
-			       0.0 1.0
-			       1.0 1.0
-			       0.0 0.0
-			       1.0 0.0
-			       0.0 1.0
-			       1.0 1.0
-			       0.0 0.0
-			       1.0 0.0
-			       0.0 1.0
-			       1.0 1.0
-			       0.0 0.0
-			       1.0 0.0
-			       0.0 1.0
-			       1.0 1.0
-			       0.0 0.0
-			       1.0 0.0)))
+    (make-instance 'clinch:buffer 
+               :Stride 2
+               :data '(0.0 1.0
+                   1.0 1.0
+                   0.0 0.0
+                   1.0 0.0
+                   0.0 1.0
+                   1.0 1.0
+                   0.0 0.0
+                   1.0 0.0
+                   0.0 1.0
+                   1.0 1.0
+                   0.0 0.0
+                   1.0 0.0
+                   0.0 1.0
+                   1.0 1.0
+                   0.0 0.0
+                   1.0 0.0
+                   0.0 1.0
+                   1.0 1.0
+                   0.0 0.0
+                   1.0 0.0
+                   0.0 1.0
+                   1.0 1.0
+                   0.0 0.0
+                   1.0 0.0)))
 
-  (print "start")
   (setf texture01
-	(clinch::create-texture-from-png (concatenate 'string 
-						      (directory-namestring
-						       (asdf:system-relative-pathname :clinch "clinch.asd"))
-						      "examples/Tutorial05/lambda.png")))
-  (print "end")
+    (clinch::create-texture-from-png (concatenate 'string 
+                              (directory-namestring
+                               (asdf:system-relative-pathname :clinch "clinch.asd"))
+                              "examples/Tutorial05/lambda.png")))
 
   (setf cube 
-	(make-instance 'clinch:entity
-		       :parent node
-		       :shader  shader
-		       :indexes cube-indices-buffer 
-		       :values `((:vertices ,cube-point-buffer)
-				 (:attribute "textureCoord" ,cube-texture-coordinate-buffer)
-				 (:normals ,cube-normal-buffer)
-				 (:uniform "texture01" ,texture01)
-				 (:uniform "ambientLight" ambientLight)
-				 (:uniform "lightIntensity" lightIntensity)
-				 (:uniform "lightDirection" lightDirection))
-		       )))
+    (make-instance 'clinch:entity
+               :parent node
+               :shader  shader
+               :indexes cube-indices-buffer 
+               :values `((:vertices ,cube-point-buffer)
+                 (:attribute "textureCoord" ,cube-texture-coordinate-buffer)
+                 (:normals ,cube-normal-buffer)
+                 (:uniform "texture01" ,texture01)
+                 (:uniform "ambientLight" ambientLight)
+                 (:uniform "lightIntensity" lightIntensity)
+                 (:uniform "lightDirection" lightDirection))
+               )))
 
 
 (defun main-loop ()
@@ -270,11 +267,11 @@ void main() {
 (defun start ()
   (declare (optimize (speed 3)))
   (glfw:do-window (:title "Tutorial 5"
-			  :redbits 8
-			  :greenbits 8
-			  :bluebits 8
-			  :alphabits 8
-			  :depthbits 16)
+              :redbits 8
+              :greenbits 8
+              :bluebits 8
+              :alphabits 8
+              :depthbits 16)
     ((init))
     
     (main-loop))
