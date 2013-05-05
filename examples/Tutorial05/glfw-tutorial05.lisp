@@ -213,7 +213,10 @@ void main() {
 
   (print "start")
   (setf texture01
-	(clinch::create-texture-from-png "/home/brad/work/lisp/Test.png"))
+	(clinch::create-texture-from-png (concatenate 'string 
+						      (directory-namestring
+						       (asdf:system-relative-pathname :clinch "clinch.asd"))
+						      "examples/Tutorial05/lambda.png")))
   (print "end")
 
   (setf cube 
