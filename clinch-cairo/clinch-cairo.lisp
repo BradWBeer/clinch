@@ -48,8 +48,8 @@
 					     (cairo-format :argb32)
 					     (surface-var 'cairo::*surface*)
 					     (context-var 'cairo::*context*)
-					     (width-var)
-					     (height-var))
+					     (width-var (gensym))
+					     (height-var (gensym)))
 				    &body body)
   "Takes a texture object, maps its data and creates a cairo:surface AND a context for it then destroys the surface and context it when done.
        texture:      A texture object to operate on.
