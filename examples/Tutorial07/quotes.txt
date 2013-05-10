@@ -1,0 +1,103 @@
+"Programs must be written for people to read, and only incidentally for machines to execute."
+- Abelson & Sussman, SICP, preface to the first edition
+
+"That language is an instrument of human reason, and not merely a medium for the expression of thought, is a truth generally admitted."
+- George Boole, quoted in Iverson's Turing Award Lecture
+
+"the greatest single programming language ever designed"
+- Alan Kay, on Lisp
+
+"One of the most important and fascinating of all computer languages is Lisp (standing for "List Processing"), which was invented by John McCarthy around the time Algol was invented."
+- Douglas Hofstadter, Godel, Escher, Bach
+
+"Lisp is a programmable programming language."
+- John Foderaro, CACM, September 1991
+
+"One can even conjecture that Lisp owes its survival specifically to the fact that its programs are lists, which everyone, including me, has regarded as a disadvantage."
+- John McCarthy, "Early History of Lisp"
+
+"Lisp isn't a language, it's a building material."
+- Alan Kay
+
+"Greenspun's Tenth Rule of Programming: any sufficiently complicated C or Fortran program contains an ad hoc informally-specified bug-ridden slow implementation of half of Common Lisp."
+- Philip Greenspun
+
+"Including Common Lisp."
+- Robert Morris
+
+"Lisp is worth learning for the profound enlightenment experience you will have when you finally get it; that experience will make you a better programmer for the rest of your days, even if you never actually use Lisp itself a lot."
+- Eric Raymond, "How to Become a Hacker"
+
+"Some may say Ruby is a bad rip-off of Lisp or Smalltalk, and I admit that. But it is nicer to ordinary people."
+- Matz, LL2
+
+"We were not out to win over the Lisp programmers; we were after the C++ programmers. We managed to drag a lot of them about halfway to Lisp."
+- Guy Steele, Java spec co-author
+
+"Lisp has jokingly been called "the most intelligent way to misuse a computer". I think that description is a great compliment because it transmits the full flavor of liberation: it has assisted a number of our most gifted fellow humans in thinking previously impossible thoughts."
+- Edsger Dijkstra, CACM, 15:10 
+
+"Lisp is a programmer amplifier."
+- Martin Rodgers (first said by Chuck Moore about Forth)
+
+"Lisp ... made me aware that software could be close to executable mathematics."
+- L. Peter Deutsch
+
+
+"I object to doing things that computers can do."
+- Olin Shivers
+
+"Common Lisp, a happy amalgam of the features of previous Lisps"
+- Winston & Horn, Lisp
+
+"Imprisoned in every fat man a thin man is wildly signaling to be let out."
+- Cyril Connolly
+
+"Common Lisp is politics, not art."
+- Scott Fahlman
+
+"Lisp was far more powerful and flexible than any other language of its day; in fact, it is still a better design than most languages of today, twenty-five years later. Lisp freed ITS's hackers to think in unusual and creative ways. It was a major factor in their successes, and remains one of hackerdom's favorite languages."
+- Eric Raymond, in Open Sources on MIT's first OS, ITS
+
+"Lisp doesn't look any deader than usual to me."
+- David Thornley, reply to a question older than most languages
+
+"Most papers in computer science describe how their author learned what someone else already knew."
+- Peter Landin
+(This is a paraphrase. I'd appreciate it if anyone can tell me the exact quote.)
+
+"The only way to learn a new programming language is by writing programs in it."
+- Kernighan and Ritchie
+
+"If I had a nickel for every time I've written "for (i = 0; i < N; i++)" in C I'd be a millionaire."
+- Mike Vanier
+
+"SQL, Lisp, and Haskell are the only programming languages that I've seen where one spends more time thinking than typing."
+- Philip Greenspun
+
+"What about Forth!"
+- WarWeasle
+
+"Language designers are not intellectuals. They're not as interested in thinking as you might hope. They just want to get a language done and start using it."
+- Dave Moon
+
+"A man, a plan, a canoe, pasta, heros, rajahs, a coloratura, maps, snipe, percale, macaroni, a gag, a banana bag, a tan, a tag, a banana bag again (or a camel), a crepe, pins, Spam, a rut, a Rolo, cash, a jar, sore hats, a peon, a canal-- Panama!"
+- Guy Steele, CLTL2
+
+"The continuation that obeys only obvious stack semantics, O grasshopper, is not the true continuation."
+- Guy Steele
+
+"I have heard more than one LISP advocate state such subjective comments as, "LISP is the most powerful and elegant programming language in the world" and expect such comments to be taken as objective truth. I have never heard a Java, C++, C, Perl, or Python advocate make the same claim about their own language of choice."
+- A guy on Slashdot. What theory fits this data?
+
+"Although my own previous enthusiasm has been for syntactically rich languages, like the Algol family, I now see clearly and concretely the force of Minsky's 1970 Turing Lecture, in which he argued that Lisp's uniformity of structure and power of self reference gave the programmer capabilities whose content was well worth the sacrifice of visual form."
+- Robert Floyd, Turing Award Lecture, 1979
+
+"The key to performance is elegance, not battalions of special cases."
+- Jon Bentley and Doug McIlroy
+
+"Don't worry about what anybody else is going to do. The best way to predict the future is to invent it."
+- Alan Kay
+
+"I suppose I should learn Lisp, but it seems so foreign."
+- Paul Graham, Nov 1983
