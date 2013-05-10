@@ -301,7 +301,7 @@ void main() {
 
 (defun start ()
   (declare (optimize (speed 3)))
-  (glfw:do-window (:title "Tutorial 5"
+  (glfw:do-window (:title "Tutorial 6"
               :redbits 8
               :greenbits 8
               :bluebits 8
