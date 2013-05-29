@@ -25,9 +25,30 @@
     :accessor render-values)
    (func)))
 
-(defmethod initialize-instance :after ((this entity) &key (compile t) parent)
+(defun all-indices-used? (entity)
+  ;; TODO: Is the naming okay? The language used does not feel idiomatic/clear.
+  ;; TODO: Perhaps an error should be signalled instead of simply a warning?
+  "Asserts that all vertices are 'used' by the indices and that ~ 
+none of the indices are below or above the range 0 to (vertices_length/stride - 1)"
+  (let* ((vertices (get-render-value entity :vertices))
+         (indices (indexes entity))
+         (indices-data (get-buffer-data indices)))
+    (if    ;; Are the lists of the same length and do they contain the same elements?
+           ;; If so:
+           ;;  1. All vertices are 'used' by the indices
+           ;;  2. None of the indices are below or above the range 0 to (vertices_length/stride - 1)
+      (equalp (coerce (sort indices-data #'<) 'list)
+              (loop for i from 0 to (1- (vertex-count vertices))
+                 collect i))
+      t
+      (warn "Indices not used correctly in entity ~A" entity))))
+
+(defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
+  "Strict-index: ALL-INDICES-USED? on THIS"
   (when parent (add-child parent this))
-  (when compile (make-render-func this)))
+  (when compile (make-render-func this))
+  (when strict-index (all-indices-used? this)))
+
 
 (defmethod print-object ((this entity) s)
   (format s "#<entity>"))
