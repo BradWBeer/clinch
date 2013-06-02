@@ -138,7 +138,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 		   
 (defmethod make-render-func ((this entity) &key)
   (setf (slot-value this 'func)
-	(eval `(lambda (&key parent-transform projection-transform)
+	(compile nil `(lambda (&key parent-transform projection-transform)
 		 (declare (optimize (speed 3)))
 		 (gl:matrix-mode :modelview)
 		 (when ,(shader this)
