@@ -11,6 +11,9 @@
 (defun main-loop ()
   )
 
+(defun window-size-callback (width height)
+  (declare (ignore width height)))
+
 (defun start ()
   (sdl:with-init ()
     (sdl:window 400 300
