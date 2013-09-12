@@ -42,6 +42,13 @@
       (setf children
 	    (cons child children)))))
 
+(defmethod remove-child ((this node) child &key)
+  "Removes a child."
+  (with-accessors ((children children)) this
+    (setf children
+	  (remove child children))))
+
+
 (defmethod update ((this node) &key parent force)
   "Update this and child nodes if changed."
   (when (or force (changed? this))
@@ -57,14 +64,20 @@
 
 (defmethod render ((this node) &key parent)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
+
   (when (changed? this)
     (update this :parent parent))
   
+  (load-matrix this)
+
   (loop for i in (children this)
      do (render i :parent this)))
 
 (defmethod render ((this list) &key parent matrix)
   "Render a list of rendables."
+
+  (load-matrix this)
+
   (loop for i in this
      do (render i :parent parent :matrix matrix)))
 
@@ -141,6 +154,7 @@
 
 
 (defmethod load-matrix ((this node) &key)
+
   (gl:load-matrix (or (current-transform this)
 		      (transform this))))
 

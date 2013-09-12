@@ -10,7 +10,7 @@
    #:buffer #:id #:qtype #:usage #:stride #:vertex-count #:target #:loaded #:get-size #:size-in-bytes #:bind-buffer-to-vertex-array #:bind-buffer-to-attribute-array #:draw-with-index-buffer #:map-buffer #:unmap-buffer #:unload #:with-mapped-buffer #:get-buffer-data
    
    #:texture #:tex-id #:width #:height #:data-format #:stride #:target #:bind #:map-buffer #:unmap-buffer #:bind-sampler  #:unload #:with-mapped-texture
-   #:transform #:make-vector #:transform-point #:ray-triangle-intersect? #:make-matrix #:degrees->radians #:radians->degrees #:qtype #:transform #:transform->list #:set-identity-transform #:qreset #:m* #:transpose #:determinate #:invert #:scale #:translate #:rotate #:make-orthogonal-transform #:make-frustum-transform  #:make-perspective-transform #:unproject #:get-current-gl-matrix #:use-transform #:use-projection-transform #:M*V 
+   #:transform #:make-vector #:transform-point #:ray-triangle-intersect? #:make-matrix #:degrees->radians #:radians->degrees #:qtype #:transform #:transform->list #:set-identity-transform #:qreset #:m* #:transpose #:determinate #:invert #:scale #:translate #:rotate #:make-orthogonal-transform #:make-frustum-transform  #:make-perspective-transform #:unproject #:get-screen-direction #:get-current-gl-matrix #:use-transform #:use-projection-transform #:M*V 
 
    #:node #:children #:current-transform #:changed? #:update #:render 
 
@@ -21,7 +21,7 @@
    
    #:make-pipeline #:pipeline-get-loop #:pipeline-get-init #:pipeline-get-uninit #:run-loop #:run-init #:run-uninit
      
-   #:viewport #:x #:y #:width #:height #:add-child #:resize #:quick-set
+   #:viewport #:x #:y #:width #:height #:add-child #:remove-child #:resize #:quick-set
    
    #:print-text #:with-paragraph
    #:clear-cairo-context

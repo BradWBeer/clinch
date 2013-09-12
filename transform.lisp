@@ -72,12 +72,21 @@
 
 						     
 
-(defun unproject (x y width height transform)
+(defun unproject (x y width height inv-transform)
   (let* ((new-x (1- (/ (* 2 x) width)))
-	 (new-y (1- (/ (* 2 y) height)))
-	 (inv (sb-cga:inverse-matrix transform))
-	 (start (clinch:transform-point (clinch:make-vector new-x new-y 0) inv))
-	 (end   (clinch:transform-point (clinch:make-vector new-x new-y 1) inv)))
+	 (new-y (- (1- (/ (* 2 y) height))))
+	 (start (clinch:transform-point (clinch:make-vector new-x new-y 0) inv-transform))
+	 (end   (clinch:transform-point (clinch:make-vector new-x new-y 1) inv-transform)))
+
     (values start
 	    (sb-cga:normalize (sb-cga:vec- end start)))))
   
+
+(defun get-screen-direction (lens-1)
+  (let ((start-of-box (clinch:transform-point (clinch:make-vector 0 0 0)
+					lens-1))
+	(end-of-box   (clinch:transform-point (clinch:make-vector 0 0 1)
+						 lens-1)))
+    (values start-of-box
+	   (sb-cga:normalize (sb-cga:vec- end-of-box start-of-box)))))
+

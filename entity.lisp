@@ -200,12 +200,13 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
   )
 
 (defmethod render ((this entity) &key parent matrix projection)
-  (when (and (use-gl-stack? this)
-	     (or parent matrix))
-    (gl:matrix-mode :modelview)
-    (gl:load-matrix (or matrix
-			(current-transform parent)
-			(transform parent))))
+  ;; (when (and (use-gl-stack? this)
+  ;; 	     (or parent matrix))
+
+  ;;   (gl:matrix-mode :modelview)
+  ;;   (gl:load-matrix (or matrix
+  ;; 			(current-transform parent)
+  ;; 			(transform parent))))
       
   
   (funcall (slot-value this 'func) :parent-transform (or matrix parent) :projection-transform projection))
@@ -231,27 +232,31 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
   (draw-with-index-buffer (indexes this)))
 
 
-(defmethod ray-entity-intersect? ((this clinch:entity) start end &optional (primitive :vertices))
+(defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
 
-  (multiple-value-bind (points index) (clinch::get-primitive this :vertices)
-    (loop
-       with dist 
-       with u 
-       with v
-       with point
-       with point-number
-       for p from 0 to (1- (length points))
-       do (let ((pseq (elt points p)))
-	    (multiple-value-bind (new-dist new-u new-v)
-		(clinch::ray-triangle-intersect? start end (elt pseq 0) (elt pseq 1) (elt pseq 2))
-	      
-	      (when (and new-dist
-			 (or (null dist)
-			     (> dist new-dist)))
-		(setf dist         new-dist
-		      u            new-u
-		      v            new-v
-		      point-number p)
-		(when index
-		  (setf point (elt index p))))))
-       finally (return (when dist (values dist u v point point-number))))))
+  (multiple-value-bind (points index) (clinch::get-primitive this primitive)
+    (let ((transformed-points (map 'list (lambda (x)
+					   (map 'list (lambda (p) 
+							(clinch:transform-point p transform)) x)) points)))
+      (loop
+	 with dist 
+	 with u 
+	 with v
+	 with point
+	 with point-number
+	 for p from 0 to (1- (length transformed-points))
+	 do (let ((pseq (elt transformed-points p)))
+	      (multiple-value-bind (new-dist new-u new-v)
+		  (clinch::ray-triangle-intersect? start end (elt pseq 0) (elt pseq 1) (elt pseq 2))
+		
+		(when (and new-dist
+			   (or (null dist)
+			       (> dist new-dist)))
+		  (setf dist         new-dist
+			u            new-u
+			v            new-v
+			point-number p)
+		  (when index
+		    (setf point (elt index p))))))
+	 finally (return (when dist (values dist u v point point-number)))))))
+  
