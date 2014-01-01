@@ -198,9 +198,9 @@ void main() {
 		       :values `((:vertices ,cube-point-buffer)
 				 (:attribute "vertexColor" ,cube-color-buffer)
 				 (:normals ,cube-normal-buffer)
-				 (:uniform "ambientLight" ambientLight)
-				 (:uniform "lightIntensity" lightIntensity)
-				 (:uniform "lightDirection" lightDirection))
+				 (:uniform "ambientLight" ,ambientLight)
+				 (:uniform "lightIntensity" ,lightIntensity)
+				 (:uniform "lightDirection" ,lightDirection))
 		       )))
 
 
