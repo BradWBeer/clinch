@@ -225,13 +225,14 @@ void main() {
 		       :parent node
 		       :shader shader
 		       :indexes cube-indices-buffer 
-		       :values `((:vertices ,cube-point-buffer)
-				 (:attribute "textureCoord" ,cube-texture-coordinate-buffer)
-				 (:normals ,cube-normal-buffer)
-				 (:uniform "texture01" ,texture01)
-				 (:uniform "ambientLight" ambientLight)
-				 (:uniform "lightIntensity" lightIntensity)
-				 (:uniform "lightDirection" lightDirection))
+		       :values (list
+				(list :vertices cube-point-buffer)
+				(list :attribute "textureCoord" cube-texture-coordinate-buffer)
+				(list :normals cube-normal-buffer)
+				(list :uniform "texture01" texture01)
+				(list :uniform "ambientLight" ambientLight)
+				(list :uniform "lightIntensity" lightIntensity)
+				(list :uniform "lightDirection" lightDirection))
 		       )))
 
 

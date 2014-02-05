@@ -82,9 +82,9 @@ void main() {
 	(make-instance 'clinch:entity
 		       :shader  shader
 		       :indexes triangle-indices-buffer 
-		       :values `((:vertices ,triangle-point-buffer)
-				 (:attribute "vertexColor" ,triangle-color-buffer)
-				 (:uniform "alpha" alpha)))))
+		       :values (List (list :vertices triangle-point-buffer)
+				     (list :attribute "vertexColor" triangle-color-buffer)
+				     (list :uniform "alpha" alpha)))))
 
   
 (defun main-loop ()

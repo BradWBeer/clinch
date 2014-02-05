@@ -192,12 +192,13 @@ void main() {
 		       :parent node
 		       :shader  shader
 		       :indexes cube-indices-buffer 
-		       :values `((:vertices ,cube-point-buffer)
-				 (:attribute "vertexColor" ,cube-color-buffer)
-				 (:normals ,cube-normal-buffer)
-				 (:uniform "ambientLight" ambientLight)
-				 (:uniform "lightIntensity" lightIntensity)
-				 (:uniform "lightDirection" lightDirection))
+		       :values (list
+				(list :vertices cube-point-buffer)
+				(list :attribute "vertexColor" cube-color-buffer)
+				(list :normals cube-normal-buffer)
+				(list :uniform "ambientLight" ambientLight)
+				(list :uniform "lightIntensity" lightIntensity)
+				(list :uniform "lightDirection" lightDirection))
 		       )))
 
 
