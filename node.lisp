@@ -53,7 +53,8 @@
   "Update this and child nodes if changed."
   (when (or force (changed? this))
     (setf (current-transform this)
-	  (if parent (sb-cga:matrix* (transform this) (current-transform parent))
+	  (if parent
+	      (sb-cga:matrix* (current-transform parent) (transform this))
 	      (transform this)))
     (setf force t))
   
@@ -68,6 +69,8 @@
   (when (changed? this)
     (update this :parent parent))
   
+  (gl:matrix-mode :modelview)
+
   (load-matrix this)
 
   (loop for i in (children this)
@@ -116,14 +119,16 @@
 (defmethod scale ((this node) x y z &optional (in-place t))
   "Inherited function for setting changed?"
   (if in-place
-    (setf (transform this) (sb-cga:matrix* (sb-cga:scale* (float x)
-							 (float y)
-							 (float z))
-					  (transform this)))
+    (setf (transform this)
+	  (sb-cga:matrix*
+	   (sb-cga:scale* (float x)
+			  (float y)
+			  (float z))
+	   (transform this)))
     (sb-cga:matrix* (sb-cga:scale* (float x)
-							 (float y)
-							 (float z))
-					  (transform this))))
+				   (float y)
+				   (float z))
+		    (transform this))))
 
 (defmethod translate ((this node) x y z &optional (in-place t))
   "Inherited function for setting changed?"
