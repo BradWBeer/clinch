@@ -16,6 +16,9 @@
    (vert-shader
     :reader vert-shader
     :initform nil)
+   (geo-shader
+    :reader geo-shader
+    :initform nil)
    (attributes
     :reader attributes 
     :initform nil)
@@ -39,6 +42,7 @@
 
   (with-slots ((vs vert-shader)
   	       (fs frag-shader)
+	       (geo geo-shader)
   	       (program program)) this
     (setf vs (gl:create-shader :vertex-shader))
     (setf fs (gl:create-shader :fragment-shader))    
@@ -60,15 +64,29 @@
 					fragment-shader-text))
     (print "Compiling fragment shader...")
     (gl:compile-shader fs)
-    (print (gl:get-shader-info-log vs))
+    (print (gl:get-shader-info-log fs))
     (unless (gl:get-shader fs :compile-status)
       (error "Could not compile fragment shader!"))
+
+    (when geometry-shader-text
+      (gl:shader-source geo  (concatenate 'string
+					  (format nil "~{#define ~A~%~}" defines)
+					  (format nil "~{#undef ~A~%~}" undefs)
+					  geometry-shader-text))
+      (print "Compiling geometry shader...")
+      (gl:compile-shader geo)
+      (print (gl:get-shader-info-log geo))
+      (unless (gl:get-shader geo :compile-status)
+	(error "Could not compile fragment shader!")))
+
 
 
     (setf program (gl:create-program))
     ;; You can attach the same shader to multiple different programs.
     (gl:attach-shader program vs)
     (gl:attach-shader program fs)
+    (when geo
+      (gl:attach-shader program geo))
     ;; Don't forget to link the program after attaching the
     ;; shaders. This step actually puts the attached shader together
     ;; to form the program.
@@ -155,6 +173,7 @@
   "Unloads and releases all shader resources."
   (with-slots ((vs vert-shader)
 	       (fs frag-shader)
+	       (geo geo-shader)
 	       (program program)) this
 
     (when program
@@ -162,7 +181,8 @@
       (gl:detach-shader program fs))
 
     (when vs (gl:delete-shader vs))
-    (when vs (gl:delete-shader fs))
+    (when fs (gl:delete-shader fs))
+    (when geo (gl:delete-shader geo))
 
     (when program (gl:delete-program program))
 
