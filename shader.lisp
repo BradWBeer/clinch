@@ -32,6 +32,7 @@
 				       name
 				       vertex-shader-text
 				       fragment-shader-text
+				       geometry-shader-text
 				       keep-fragment-shader?
 				       keep-vertex-shader?
 				       attributes

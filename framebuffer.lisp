@@ -109,7 +109,7 @@
 (defmethod unload ((this render-buffer) &key)
   )
 
-(defmethod unload ((this shader) &key)
+(defmethod unload ((this frame-buffer) &key)
   "Unloads and releases all frame-buffer resources, also any renderbuffers"
   (with-slots ((id id)
 	       (color color)
