@@ -28,5 +28,7 @@
    #:with-surface-for-texture
    #:with-context-for-texture
 
+   #:frame-buffer #:render-buffer #:unbind
+
    ))
 

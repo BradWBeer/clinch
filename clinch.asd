@@ -18,6 +18,8 @@
 	       (:file "texture")
 	       (:file "entity")
 	       (:file "viewport")
-	       (:file "pipeline")))
+	       (:file "pipeline")
+	       (:file "renderbuffer")
+	       (:file "framebuffer")))
 
 
