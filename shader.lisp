@@ -70,6 +70,7 @@
       (error "Could not compile fragment shader!"))
 
     (when geometry-shader-text
+      (setf geo (gl:create-shader :geometry-shader))
       (gl:shader-source geo  (concatenate 'string
 					  (format nil "~{#define ~A~%~}" defines)
 					  (format nil "~{#undef ~A~%~}" undefs)
@@ -78,7 +79,7 @@
       (gl:compile-shader geo)
       (print (gl:get-shader-info-log geo))
       (unless (gl:get-shader geo :compile-status)
-	(error "Could not compile fragment shader!")))
+	(error "Could not compile geometry shader!")))
 
 
 
