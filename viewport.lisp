@@ -34,6 +34,7 @@
   (gl:viewport x y w h))
 
 (defmethod render ((this viewport) &key)
+
   (with-accessors ((x x)
 		   (y y)
 		   (w width)
