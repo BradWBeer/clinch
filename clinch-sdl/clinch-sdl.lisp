@@ -64,12 +64,11 @@
 	       (h height)) this
     
     (when (clear-color this)
-      
-      (gl:scissor 0 0 w h)
-      
-      (apply #'gl:clear-color (clear-color this))
-      (gl:clear :color-buffer-bit :depth-buffer-bit)))
-
+      (destructuring-bind (&optional (r 0) (g 0) (b 0) (a 1)) (clear-color this)
+	(gl:scissor 0 0 w h)
+	
+	(gl:clear-color r g b a)
+	(gl:clear :color-buffer-bit :depth-buffer-bit))))
   
   
   (loop for e in (children this)
