@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass viewport ()
+(defclass viewport (element)
   ((x
     :initform 0
     :initarg :x
@@ -19,11 +19,8 @@
    (height
     :initform 0
     :initarg :height
-    :accessor height)
-   (children
-    :initform nil
-    :initarg :children
-    :accessor children)))
+    :accessor height)))
+
 
 (defmethod resize ((this viewport) x y w h)
   (setf (x this) x

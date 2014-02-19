@@ -3,12 +3,8 @@
 
 (in-package #:clinch)
 
-(defclass node ()
-  ((children
-    :initform nil
-    :initarg  :children
-    :accessor children)
-   (transform
+(defclass node (element)
+  ((transform
     :accessor transform
     :initform  (sb-cga:identity-matrix)
     :initarg  :transform)

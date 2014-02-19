@@ -2,7 +2,7 @@
 (in-package :clinch)
 
 (defclass element ()
-  ((parent   :reader   parent
+  ((parent   :accessor   parent
 	     :initform  nil
 	     :initarg  :parent)
 
@@ -22,8 +22,8 @@
 
 (defmethod initialize-instance :after ((this element) &key attributes)
   
-  (with-slots ((children children)) this
-    (loop for c in children do (setf (slot-value c 'parent) this)))
+  ;; (with-slots ((children children)) this
+  ;;   (loop for c in children do (setf (slot-value c 'parent) this)))
   
   (when attributes (map nil
 			  (lambda (x) (setf (attribute this (first x)) (second x)))

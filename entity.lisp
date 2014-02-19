@@ -23,6 +23,10 @@
     :initform nil
     :initarg :values
     :accessor render-values)
+   (parent
+    :initform nil
+    :initarg :parent
+    :accessor parent)
    (func)))
 
 (defun all-indices-used? (entity)

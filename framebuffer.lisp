@@ -4,7 +4,7 @@
 (in-package #:clinch)
 
 
-(defclass frame-buffer ()
+(defclass frame-buffer (element)
   ((id :reader id
        :initform nil
        :initarg :id)

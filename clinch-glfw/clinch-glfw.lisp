@@ -1,4 +1,4 @@
-;;;; clinch-cairo.lisp
+;;;; clinch-glfw.lisp
 ;;;; Please see the licence.txt for the CLinch 
 
 (in-package #:clinch)
@@ -64,11 +64,11 @@
 	       (h height)) this
     
     (when (clear-color this)
-      
-      (gl:scissor 0 0 w h)
-      
-      (apply #'gl:clear-color (clear-color this))
-      (gl:clear :color-buffer-bit :depth-buffer-bit)))
+      (destructuring-bind (&optional (r 0) (g 0) (b 0) (a 1)) (clear-color this)
+	(gl:scissor 0 0 w h)
+	
+	(gl:clear-color r g b a)
+	(gl:clear :color-buffer-bit :depth-buffer-bit))))
 
   
   
@@ -87,25 +87,20 @@
 
   )
 
-;; (defmethod start ((this window))
-;;   (sdl:with-init ()
-;;     (sdl:window (width this) (height this)
-;; 		:flags sdl-cffi::sdl-opengl
-;; 		:double-buffer t
-;; 		:resizable t
-;; 		:title-caption "Clinch"
-;; 		:icon-caption "Clinch")
-;;     (init this)
-;;     (window-resize-callback this (width this) (height this))
-;;     (setf (sdl:frame-rate) 60)
-
-;;     (sdl:with-events ()
-;;       (:quit-event () t)
-;;       (:VIDEO-RESIZE-EVENT (:W W :H H) 
-;; 			   (window-resize-callback this w h))
-;;       (:idle ()         
-;; 	     (main-loop this)
-;; 	     (sdl:update-display)))
-;;     (clean-up this)))
-
+(defmethod start ((this window))
+  (declare (optimize (speed 3)))
+  (glfw:do-window (:title "Tutorial 5"
+              :redbits 8
+              :greenbits 8
+              :bluebits 8
+              :alphabits 8
+              :depthbits 16)
+      
+      ((glfw:set-window-size-callback (lambda (width height) (window-resize-callback this width height)))
+       (init this))
+    
+    (main-loop this))
+  
+  ;; End Program
+  (clean-up this))
 
