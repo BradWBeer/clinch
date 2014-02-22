@@ -53,7 +53,6 @@
       format: The OpenGL Format of the Color Data. blue-green-red-alpha is default and prefered for simplicity.
       wrap-s & wrap-t: Wrap texture vertical or horizontal.
       mag-filter & min-filter: Magnification an minimization method."
-
   
   (with-slots ((tex-id tex-id)
 	       (w width)
@@ -62,6 +61,10 @@
 	       (dtype type)) this
     
     (unless tex-id (setf tex-id (car (gl:gen-textures 1))))
+    
+    (let ((o tex-id))
+      (trivial-garbage:finalize this (lambda () (gl:delete-textures (list o)))))
+    
     
     (gl:bind-texture :texture-2d (tex-id this))
     (gl:tex-parameter :texture-2d :texture-wrap-s wrap-s)
@@ -113,6 +116,8 @@
 
 
 (defmethod unload :before ((this texture) &key)
+
+  (trivial-garbage:cancel-finalization this)
   (gl:delete-textures (list (tex-id this))))
 
 

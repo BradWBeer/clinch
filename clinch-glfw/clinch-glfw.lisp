@@ -15,7 +15,8 @@
 	   :reader height)
    (clear-color :accessor clear-color
 	       :initform nil
-	       :initarg  :clear-color)))
+	       :initarg  :clear-color)
+   (garbage :initform (make-hash-table))))
 
 
 (defmethod attribute :around ((this window) key)

@@ -21,11 +21,22 @@
    (clear-color
     :accessor clear-color
     :initform nil
-    :initarg  :clear-color)))
+    :initarg  :clear-color)
+   (enables
+    :accessor enables
+    :initarg  :enables
+    :initform '(:blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d :cull-face :scissor-test))
+   (disables
+    :accessor disables
+    :initarg  :disables
+    :initform nil)
+   (blend-fun
+    :accessor blend-func
+    :initarg  :blend-func
+    :initform '(:src-alpha :one-minus-src-alpha))))
 
 
 (defmethod initialize-instance :after ((this viewport) &key))
-
 
 (defmethod resize ((this viewport) x y w h)
   (setf (x this) x
@@ -61,15 +72,15 @@
 
 (defmethod render ((this viewport) &key)
 
-  (gl:enable :blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d :cull-face :scissor-test)
-  (%gl:blend-func :src-alpha :one-minus-src-alpha)
+  (when (disables this)   (apply #'gl:disable     (disables this)))
+  (when (enables  this)   (apply #'gl:enable      (enables this)))
+  (when (blend-func this) (apply #'%gl:blend-func (blend-func this)))
   
 
   (with-accessors ((x x)
 		   (y y)
 		   (w width)
 		   (h height)) this
-    (format t "x: ~A y: ~A w: ~A h: ~A~%" x y w h)
 
     (gl:scissor x y w h)
     (gl:viewport x y w h)
@@ -105,15 +116,13 @@
   (when (id       this)      (format s ":id ~S "   (id this)))
   (when (x        this)      (format s ":x ~S "   (x this)))
   (when (y        this)      (format s ":y ~S "   (y this)))
-  ;; (when (width this)         (format s ":width ~S "   (width this)))
-  ;; (when (height   this)      (format s ":height ~S "   (height this)))
+  (when (slot-value this 'width)         (format s ":width ~S "   (width this)))
+  (when (slot-value this 'height)      (format s ":height ~S "   (height this)))
   ;; (when (clinch:transform   this)      (format s ":transform ~S "   (clinch:transform this)))
   ;;(when (camera   this)      (format s ":camera ~S "   (camera this)))
   
   (when (children this) (format s "~{~%~S~}" (children this)))
   (format s ")"))
-
-
 
 
 (defmacro viewport (&rest args)

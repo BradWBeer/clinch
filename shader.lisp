@@ -33,8 +33,6 @@
 				       vertex-shader-text
 				       fragment-shader-text
 				       geometry-shader-text
-				       keep-fragment-shader?
-				       keep-vertex-shader?
 				       attributes
 				       uniforms
 				       defines
@@ -87,6 +85,7 @@
     ;; You can attach the same shader to multiple different programs.
     (gl:attach-shader program vs)
     (gl:attach-shader program fs)
+
     (when geo
       (gl:attach-shader program geo))
     ;; Don't forget to link the program after attaching the
@@ -112,7 +111,27 @@
 
     
     (when name (setf (slot-value this 'name) name))
-    ))
+
+    (let ((v fs)
+	  (f fs)
+	  (g geo)
+	  (p program))
+
+    (trivial-garbage:finalize this
+			      (lambda () (when p
+					   (when v
+					     (gl:detach-shader p v)
+					     (gl:delete-shader v))
+					   
+					   (when f
+					     (gl:delete-shader f)
+					     (gl:detach-shader p f))
+					   
+					   (when g
+					     (gl:detach-shader p g)
+					     (gl:delete-shader g))
+					   
+					   (gl:delete-program p)))))))
 
 
 
@@ -173,21 +192,29 @@
 
 (defmethod unload ((this shader) &key)
   "Unloads and releases all shader resources."
+  (trivial-garbage:cancel-finalization this)
+  
   (with-slots ((vs vert-shader)
 	       (fs frag-shader)
 	       (geo geo-shader)
 	       (program program)) this
 
     (when program
-      (gl:detach-shader program vs)
-      (gl:detach-shader program fs))
 
-    (when vs (gl:delete-shader vs))
-    (when fs (gl:delete-shader fs))
-    (when geo (gl:delete-shader geo))
+      (when vs
+	(gl:detach-shader program vs)
+	(gl:delete-shader vs))
+      
+      (when fs
+	(gl:delete-shader fs)
+	(gl:detach-shader program fs))
 
-    (when program (gl:delete-program program))
+      (when geo
+	(gl:detach-shader program geo)
+	(gl:delete-shader geo))
 
+      (gl:delete-program program))
+    
     (setf (slot-value this 'uniforms) nil
 	  (slot-value this 'attributes) nil
 	  (slot-value this 'name) nil)))

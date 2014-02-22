@@ -29,8 +29,6 @@
 			  (lambda (x) (setf (attribute this (first x)) (second x)))
 			  attributes)))
 
-  
-
 
 (defmacro element (&rest args)
   

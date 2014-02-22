@@ -8,7 +8,8 @@
   :license "MIT"
   :version "0.1"
   :depends-on (#:cl-opengl
-	       #:sb-cga)
+	       #:sb-cga
+	       #:trivial-garbage)
   :components ((:file "package")
 	       (:file "clinch")
 	       (:file "element")

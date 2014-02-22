@@ -33,6 +33,10 @@
     (unless id
       (setf id (car (gl:gen-framebuffers 1))))
 
+    (let ((o id))
+      (trivial-garbage:finalize this (lambda () (gl:Delete-Framebuffers (list o)))))
+
+
     (when color-attachments
       (if (listp color-attachments)
 	  (setf color color-attachments)
@@ -106,11 +110,11 @@
   "Wrapper around glBindFrameBuffer. Puts the Framebuffer into play."
   (gl:bind-framebuffer (target this) 0))
 
-(defmethod unload ((this render-buffer) &key)
-  )
-
 (defmethod unload ((this frame-buffer) &key)
   "Unloads and releases all frame-buffer resources, also any renderbuffers"
+
+  (trivial-garbage:cancel-finalization this)
+
   (with-slots ((id id)
 	       (color color)
 	       (depth depth)
@@ -122,8 +126,8 @@
 	 (lambda (x) (typecase x (render-buffer (unload x))))
 	 color)
 
-    (when depth (typecase depth (render-buffer (unload depth))))
-    (when stencil (typecase depth (render-buffer (unload stencil))))
+    (when depth (unload depth))
+    (when stencil (unload stencil))
 
     (setf id      nil
 	  color   nil

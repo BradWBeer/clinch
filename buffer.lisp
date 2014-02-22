@@ -49,6 +49,7 @@
               NOTE: use :element-array-buffer if you are creating an index buffer.
       usage:  Tells OpenGL how often you wish to access the buffer. 
      loaded: Has data been put into the buffer. Buffers without data is just future storage, just be sure to set it before you use it."
+  
   (with-slots ((type    type)
 	       (id      id)
 	       (vcount  vertex-count)
@@ -64,6 +65,10 @@
     (unless id
       (setf id (car (gl:gen-buffers 1))))
     
+    (let ((o id))
+      (trivial-garbage:finalize this (lambda () (format *standard-output* "finialized! ~A" id)
+					     (gl:delete-buffers (list o)))))
+
     (gl:bind-buffer target id)
 
     (cond
@@ -163,6 +168,7 @@
 
 (defmethod unload ((this buffer) &key)
   "Release buffer resources."
+  (trivial-garbage:cancel-finalization this)
   (gl:delete-buffers (list (id this))))
 
 (defmacro with-mapped-buffer ((name buffer &optional (access :READ-WRITE)) &body body)

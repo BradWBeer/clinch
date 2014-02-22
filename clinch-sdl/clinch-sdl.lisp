@@ -1,4 +1,4 @@
-;;;; clinch-cairo.lisp
+;;;; clinch-sdl.lisp
 ;;;; Please see the licence.txt for the CLinch 
 
 (in-package #:clinch)
@@ -15,7 +15,8 @@
 	   :reader height)
    (clear-color :accessor clear-color
 	       :initform nil
-	       :initarg  :clear-color)))
+	       :initarg  :clear-color)
+   (garbage :initform (make-hash-table))))
 
 
 (defmethod attribute :around ((this window) key)
