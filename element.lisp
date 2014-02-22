@@ -22,12 +22,14 @@
 
 (defmethod initialize-instance :after ((this element) &key attributes)
   
-  ;; (with-slots ((children children)) this
-  ;;   (loop for c in children do (setf (slot-value c 'parent) this)))
+  (with-slots ((children children)) this
+    (loop for c in children do (setf (slot-value c 'parent) this)))
   
   (when attributes (map nil
 			  (lambda (x) (setf (attribute this (first x)) (second x)))
 			  attributes)))
+
+  
 
 
 (defmacro element (&rest args)
@@ -87,7 +89,7 @@
 
 
 (defmethod render ((this element) &key)
-  (print "element:render")
+
   (loop for c in (children this)
        do (render c)))
 

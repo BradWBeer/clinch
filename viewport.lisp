@@ -24,6 +24,9 @@
     :initarg  :clear-color)))
 
 
+(defmethod initialize-instance :after ((this viewport) &key))
+
+
 (defmethod resize ((this viewport) x y w h)
   (setf (x this) x
 	(y this) y
@@ -66,6 +69,7 @@
 		   (y y)
 		   (w width)
 		   (h height)) this
+    (format t "x: ~A y: ~A w: ~A h: ~A~%" x y w h)
 
     (gl:scissor x y w h)
     (gl:viewport x y w h)
@@ -101,9 +105,9 @@
   (when (id       this)      (format s ":id ~S "   (id this)))
   (when (x        this)      (format s ":x ~S "   (x this)))
   (when (y        this)      (format s ":y ~S "   (y this)))
-  (when (width this)         (format s ":width ~S "   (width this)))
-  (when (height   this)      (format s ":height ~S "   (height this)))
-  (when (clinch:transform   this)      (format s ":transform ~S "   (clinch:transform this)))
+  ;; (when (width this)         (format s ":width ~S "   (width this)))
+  ;; (when (height   this)      (format s ":height ~S "   (height this)))
+  ;; (when (clinch:transform   this)      (format s ":transform ~S "   (clinch:transform this)))
   ;;(when (camera   this)      (format s ":camera ~S "   (camera this)))
   
   (when (children this) (format s "~{~%~S~}" (children this)))
