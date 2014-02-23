@@ -27,7 +27,7 @@
     (setf (slot-value this 'renderbuffer-id) (car (gl:gen-renderbuffers 1))))
 
   (let ((o (slot-value this 'renderbuffer-id)))
-    (trivial-garbage:finalize this (lambda () (gl:delete-buffers (list o)))))
+    (trivial-garbage:finalize this (lambda (m) (gl:delete-buffers (list o)))))
 
   (update this))
 

@@ -66,7 +66,7 @@
       (setf id (car (gl:gen-buffers 1))))
     
     (let ((o id))
-      (trivial-garbage:finalize this (lambda () (format *standard-output* "finialized! ~A" id)
+      (trivial-garbage:finalize this (lambda (m) (format *standard-output* "finialized! ~A" id)
 					     (gl:delete-buffers (list o)))))
 
     (gl:bind-buffer target id)
