@@ -32,7 +32,7 @@
    #:element #:parent #:attribute #:ELEMENT-BACK #:ELEMENT-FRONT #:ELEMENT-PUSH-BACK #:ELEMENT-GET-CHILD
    #:ELEMENT-GET-CHILD #:ELEMENT-PUSH-FRONT #:ELEMENT-POP-BACK #:ELEMENT-POP-FRONT
    #:ELEMENT-REMOVE-CHILD #:ELEMENT-REMOVE-CHILD #:ELEMENT-REPLACE-CHILD
-   #:ELEMENT-NEXT-SIBLING #:ELEMENT-PREVIOUS-SIBLING
-   #:window #:clear-color #:attribute #:init #:clean-up #:enable #:disable #:blend-func
+   #:ELEMENT-NEXT-SIBLING #:ELEMENT-PREVIOUS-SIBLING #:start 
+   #:window #:clear-color #:attribute #:init #:clean-up #:enable #:disable #:blend-func #:window-width #:window-height #:*parent*
    ))
 

@@ -39,11 +39,16 @@
     (otherwise (call-next-method))))
 
 
-(defmacro window (&rest args)
+(defmacro window (&body args)
   
   (multiple-value-bind (keys children) (clinch::split-keywords args)
     
-    `(make-instance 'window ,@keys :children (list ,@children))))
+    (print keys)
+    (print children)
+
+    `(let ((*parent* (make-instance 'window ,@keys)))
+       ,@children
+       *parent*)))
 
 
 (defmethod print-object ((this window) s)
@@ -51,7 +56,9 @@
   (format s "(window ")
   (when (name     this)     (format s ":name ~S " (name this)))
   (when (id       this)      (format s ":id ~S "   (id this)))
+  (when (slot-value this 'clear-color) (format s ":clear-color '~S " (clear-color this)))
   (when (children this) (format s "~{~%~S~}" (children this)))
+
   (format s ")"))
 
 
@@ -95,7 +102,9 @@
               :greenbits 8
               :bluebits 8
               :alphabits 8
-              :depthbits 16)
+              :depthbits 16
+	      :width (width this)
+	      :height (height this))
       
       ((glfw:set-window-size-callback (lambda (width height) (window-resize-callback this width height)))
        (init this))

@@ -2,7 +2,7 @@
 (in-package :clinch)
 
 (defclass element ()
-  ((parent   :accessor   parent
+  ((parent   :reader    parent
 	     :initform  nil
 	     :initarg  :parent)
 
@@ -20,8 +20,13 @@
    (attribute :initform nil)))
 
 
-(defmethod initialize-instance :after ((this element) &key attributes)
+(defmethod initialize-instance :after ((this element) &key attributes parent)
   
+  (print (parent this))
+  (print #'element-push-back)
+  (print this)
+  (when (parent this) (element-push-back (parent this) this))
+
   (with-slots ((children children)) this
     (loop for c in children do (setf (slot-value c 'parent) this)))
   
@@ -29,12 +34,21 @@
 			  (lambda (x) (setf (attribute this (first x)) (second x)))
 			  attributes)))
 
+(defmethod (setf parent) ((parent element) (this element))
 
-(defmacro element (&rest args)
+  (print this)
+
+  (setf (slot-value this 'parent) parent)
+  (element-push-back (slot-value parent 'children) this))
+
+;; just for testing and example purposes only. 
+(defmacro element (&body args)
   
   (multiple-value-bind (keys children) (clinch::split-keywords args)
     
-    `(make-instance 'element ,@keys :children (list ,@children))))
+    `(let ((*parent* (make-instance 'element ,@keys :parent *parent*)))
+       ,@children
+       *parent*)))
     
 
 (defmethod attribute ((this element) key)
@@ -100,7 +114,8 @@
   (car (children this)))
 
 (defmethod element-push-back ((this element) (child element))
-  )
+
+  (setf (slot-value this 'children) (append (slot-value this 'children) (list child))))
 
 (defmethod element-get-child ((this element) (i integer))
 

@@ -36,7 +36,11 @@
     :initform '(:src-alpha :one-minus-src-alpha))))
 
 
-(defmethod initialize-instance :after ((this viewport) &key))
+(defmethod initialize-instance :after ((this viewport) &key)
+
+  (print "CREATED THE VIEWPORT!")
+  (print (parent this))
+  )
 
 (defmethod resize ((this viewport) x y w h)
   (setf (x this) x
@@ -65,13 +69,12 @@
 (defmethod (setf height) (new-val (this viewport))
   (setf (slot-value this 'height) new-val))
 
-(defmethod update ((this viewport) &key parent force)
+(defmethod update :before ((this viewport) &key parent force)
   "Update this and child nodes if changed."
-  
   )
 
 (defmethod render ((this viewport) &key)
-
+  
   (when (disables this)   (apply #'gl:disable     (disables this)))
   (when (enables  this)   (apply #'gl:enable      (enables this)))
   (when (blend-func this) (apply #'%gl:blend-func (blend-func this)))
@@ -81,13 +84,13 @@
 		   (y y)
 		   (w width)
 		   (h height)) this
-
+    (format t "x = ~A y = ~A w = ~A h = ~A~%" x y w h)
     (gl:scissor x y w h)
     (gl:viewport x y w h)
 
     (when (clear-color this)
       (destructuring-bind (&optional (r 0) (g 0) (b 0) (a 1)) (clear-color this)
-	(gl:scissor 0 0 w h)
+	(gl:scissor x y w h)
 	
 	(gl:clear-color r g b a)
 	(gl:clear :color-buffer-bit :depth-buffer-bit)))
@@ -118,6 +121,7 @@
   (when (y        this)      (format s ":y ~S "   (y this)))
   (when (slot-value this 'width)         (format s ":width ~S "   (width this)))
   (when (slot-value this 'height)      (format s ":height ~S "   (height this)))
+  (when (slot-value this 'clear-color)      (format s ":clear-color '~S "   (clear-color this)))
   ;; (when (clinch:transform   this)      (format s ":transform ~S "   (clinch:transform this)))
   ;;(when (camera   this)      (format s ":camera ~S "   (camera this)))
   
@@ -125,10 +129,12 @@
   (format s ")"))
 
 
-(defmacro viewport (&rest args)
+(defmacro viewport (&body args)
   
   (multiple-value-bind (keys children) (split-keywords args)
     
-    `(make-instance 'viewport ,@keys :children (list ,@children))))
+    `(let ((*parent* (make-instance 'viewport ,@keys :parent *parent*)))
+       ,@children
+       *parent*)))
 
 
