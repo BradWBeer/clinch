@@ -27,6 +27,14 @@
     :initform nil
     :initarg :parent
     :accessor parent)
+   (vertices
+    :initform nil
+    :initarg  :vertices
+    :accessor vertices)
+   (normals
+    :initform nil
+    :initarg  :normals
+    :accessor normals)
    (func)))
 
 (defun all-indices-used? (entity)
@@ -50,7 +58,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 (defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
   "Strict-index: ALL-INDICES-USED? on THIS"
   (when parent (add-child parent this))
-  (when compile (make-render-func this))
+  ;(when compile (make-render-func this))
   (when strict-index (all-indices-used? this)))
 
 
@@ -172,8 +180,13 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 
 (defmethod tmp ((this entity) &key)
   (gl:matrix-mode :modelview)
+
   (when (shader this)
     (use-shader (shader this)))
+
+  (when (vertices this) (bind-buffer-to-vertex-array (vertices this)))
+  (when (normals this) (bind-buffer-to-vertex-array (normals this)))
+
   (loop
      with tex-unit = 0
      for (atr-or-uni name value) in (render-values this)
@@ -186,11 +199,8 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 		    (bind-buffer-to-attribute-array value (shader this) name))
 		   ((eql atr-or-uni :attribute) (if (atom value)
 						    (bind-static-values-to-attribute (shader this) name value)
-						    (bind-static-values-to-attribute (shader this) name value)))
-		   ((eql atr-or-uni :vertices) 
-		    (bind-buffer-to-vertex-array name))
-		   ((eql atr-or-uni :normals) 
-		    (bind-buffer-to-normal-array name))))
+						    (bind-static-values-to-attribute (shader this) name value)))))
+
   
   (draw-with-index-buffer (indexes this)))
 
@@ -290,3 +300,8 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 		    (setf point (elt index p))))))
 	 finally (return (when dist (values dist u v point point-number)))))))
   
+
+(defmacro entity (&body rest)
+
+  `(make-instance 'entity ,@rest :parent *parent*))
+     

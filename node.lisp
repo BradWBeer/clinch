@@ -14,8 +14,7 @@
    (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required."))
 
 (defmethod initialize-instance :after ((this node) &key parent)
-  (when parent
-    (add-child parent this)))
+  )
 
 
 (defmethod print-object ((this node) s)
@@ -159,3 +158,12 @@
   (gl:load-matrix (or (current-transform this)
 		      (transform this))))
 
+(defmacro node (&body args)
+
+  (multiple-value-bind (keys children) (split-keywords args)
+    
+    `(let ((*parent* (make-instance 'node ,@keys :parent *parent*)))
+       ,@children
+       *parent*)))
+
+			

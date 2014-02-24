@@ -149,6 +149,7 @@
 
 (defmethod draw-with-index-buffer ((this buffer))
   "Use this buffer as an index array and draw somthing."
+
   (gl:bind-buffer (target this) (id this))
   (%gl:draw-elements :triangles (Vertex-Count this)
 		     (qtype this)
@@ -183,3 +184,8 @@
   (clinch:with-mapped-buffer (ptr this :read-only)
     (loop for i from 0 to (1- (clinch:vertex-count this))
        collect (cffi:mem-aref ptr (clinch:qtype this) i))))
+
+
+(defmacro buffer (&body rest)
+
+  `(make-instance 'buffer ,@rest))

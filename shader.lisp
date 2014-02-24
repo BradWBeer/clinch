@@ -220,4 +220,7 @@
 	  (slot-value this 'name) nil)))
 
 
+(defmacro shader (&body rest)
+
+  `(make-instance 'shader ,@rest))
 

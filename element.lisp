@@ -17,14 +17,13 @@
    (name     :reader   name
 	     :initform nil
 	     :initarg  :name)
-   (attribute :initform nil)))
+   (attribute :initform nil)
+   (changed  :reader changed?
+	     :initform t)))
 
 
 (defmethod initialize-instance :after ((this element) &key attributes parent)
   
-  (print (parent this))
-  (print #'element-push-back)
-  (print this)
   (when (parent this) (element-push-back (parent this) this))
 
   (with-slots ((children children)) this
@@ -34,9 +33,13 @@
 			  (lambda (x) (setf (attribute this (first x)) (second x)))
 			  attributes)))
 
-(defmethod (setf parent) ((parent element) (this element))
 
-  (print this)
+(defmethod (setf changed?) (val (this element))
+  "Set this node to update later."
+  (setf (slot-value this 'changed) t))
+
+
+(defmethod (setf parent) ((parent element) (this element))
 
   (setf (slot-value this 'parent) parent)
   (element-push-back (slot-value parent 'children) this))

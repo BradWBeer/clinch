@@ -4,9 +4,9 @@
 (in-package #:clinch)
 
 (defclass window (element)
-  ((projection-matrix :initform nil
-		      :initarg :projection-matrix
-		      :accessor projection-matrix)
+  ((title :accessor title
+	  :initform NIL
+	  :initarg :title)
    (width :initform 800
 	  :initarg :width
 	  :reader width)
@@ -22,8 +22,11 @@
 (defmethod attribute :around ((this window) key)
   
   (cond
-    ((eql 'window-width key)    (values (width this) this))
-    ((eql 'window-height key)   (values (height this) this))
+    ((or (eql 'window-width key)
+	 (eql 'width key)) (values (width this) this))
+
+    ((or (eql 'window-height key)
+	 (eql 'height key))   (values (height this) this))
     (t (call-next-method))))
 
 
@@ -40,19 +43,39 @@
 
 
 (defmacro window (&body args)
-  
   (multiple-value-bind (keys children) (clinch::split-keywords args)
     
-    (print keys)
-    (print children)
+    (let ((sym (gensym)))
+      `(let* ((*parent* (make-instance 'window ,@keys)))
+	 
+	 (declare (optimize (speed 3)))
+	 (sdl:with-init ()
+	   (sdl:window (width *parent*) (height *parent*)
+		       :flags sdl-cffi::sdl-opengl
+		       :double-buffer t
+		       :resizable t
+		       :title-caption (title *parent*)
+		       :icon-caption  (title *parent*))
+	   ,@children
+	   (init *parent*)
+	   (window-resize-callback *parent* (width *parent*) (height *parent*))
+	   (setf (sdl:frame-rate) 60)
+	   
+	   (sdl:with-events ()
+	     (:quit-event () t)
+	     (:VIDEO-RESIZE-EVENT (:W W :H H) 
+				  (window-resize-callback *parent* w h))
+	     (:idle ()         
+		    (main-loop *parent*)
+		    (sdl:update-display)))
+	   (clean-up *parent*))))))
 
-    `(let ((*parent* (make-instance 'window ,@keys)))
-       ,@children
-       *parent*)))
+
 
 (defmethod print-object ((this window) s)
 
   (format s "(window ")
+  (when (title     this)    (format s ":title ~S " (title this)))
   (when (name     this)     (format s ":name ~S " (name this)))
   (when (id       this)      (format s ":id ~S "   (id this)))
   (when (slot-value this 'clear-color) (format s ":clear-color '~S" (clear-color this)))
@@ -92,25 +115,5 @@
 
   )
 
-(defmethod start ((this window))
-  (sdl:with-init ()
-    (sdl:window (width this) (height this)
-		:flags sdl-cffi::sdl-opengl
-		:double-buffer t
-		:resizable t
-		:title-caption "Clinch"
-		:icon-caption "Clinch")
-    (init this)
-    (window-resize-callback this (width this) (height this))
-    (setf (sdl:frame-rate) 60)
-
-    (sdl:with-events ()
-      (:quit-event () t)
-      (:VIDEO-RESIZE-EVENT (:W W :H H) 
-			   (window-resize-callback this w h))
-      (:idle ()         
-	     (main-loop this)
-	     (sdl:update-display)))
-    (clean-up this)))
 
 

@@ -4,9 +4,9 @@
 (in-package #:clinch)
 
 (defclass window (element)
-  ((projection-matrix :initform nil
-		      :initarg :projection-matrix
-		      :accessor projection-matrix)
+  ((title :accessor title
+	  :initform NIL
+	  :initarg :title)
    (width :initform 800
 	  :initarg :width
 	  :reader width)
@@ -15,15 +15,20 @@
 	   :reader height)
    (clear-color :accessor clear-color
 	       :initform nil
-	       :initarg  :clear-color)
-   (garbage :initform (make-hash-table))))
+	       :initarg  :clear-color)))
 
+
+(defmethod initialize-instance :after ((this window) &key)
+  )
 
 (defmethod attribute :around ((this window) key)
   
   (cond
-    ((eql 'window-width key)    (values (width this) this))
-    ((eql 'window-height key)   (values (height this) this))
+    ((or (eql 'window-width key)
+	 (eql 'width key)) (values (width this) this))
+
+    ((or (eql 'window-height key)
+	 (eql 'height key))   (values (height this) this))
     (t (call-next-method))))
 
 
@@ -43,19 +48,32 @@
   
   (multiple-value-bind (keys children) (clinch::split-keywords args)
     
-    (print keys)
-    (print children)
+    (let ((sym (gensym)))
+    `(let* ((*parent* (make-instance 'window ,@keys))
+	    (,sym *parent*))
+       
+       (declare (optimize (speed 3)))
+       (glfw:do-window (:title (title *parent*)
+			       :width (width *parent*)
+			       :height (height *parent*)
+			       :redbits 8
+			       :greenbits 8
+			       :bluebits 8
+			       :alphabits 8
+			       :depthbits 16)
+	   (,@children
+	    (init ,sym))
 
-    `(let ((*parent* (make-instance 'window ,@keys)))
-       ,@children
-       *parent*)))
+	 (main-loop ,sym))
+       (clean-up ,sym)))))
 
 
 (defmethod print-object ((this window) s)
 
   (format s "(window ")
+  (when (title     this)    (format s ":title ~S " (title this)))
   (when (name     this)     (format s ":name ~S " (name this)))
-  (when (id       this)      (format s ":id ~S "   (id this)))
+  (when (id       this)     (format s ":id ~S "   (id this)))
   (when (slot-value this 'clear-color) (format s ":clear-color '~S " (clear-color this)))
   (when (children this) (format s "~{~%~S~}" (children this)))
 
@@ -64,7 +82,9 @@
 
 (defmethod init ((this window))
   (gl:enable :blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d :cull-face)
-  (%gl:blend-func :src-alpha :one-minus-src-alpha))
+  (%gl:blend-func :src-alpha :one-minus-src-alpha)
+
+  (window-resize-callback this (width this) (height this)))
 
 (defmethod render ((this window) &key) 
   
@@ -87,30 +107,11 @@
 (defmethod window-resize-callback ((this window) width height)
   
   )
-
+  
 (defmethod main-loop ((this window))
   (render this))
 
 (defmethod clean-up ((this window))
 
   )
-
-(defmethod start ((this window))
-  (declare (optimize (speed 3)))
-  (glfw:do-window (:title "Tutorial 5"
-              :redbits 8
-              :greenbits 8
-              :bluebits 8
-              :alphabits 8
-              :depthbits 16
-	      :width (width this)
-	      :height (height this))
-      
-      ((glfw:set-window-size-callback (lambda (width height) (window-resize-callback this width height)))
-       (init this))
-    
-    (main-loop this))
-  
-  ;; End Program
-  (clean-up this))
 

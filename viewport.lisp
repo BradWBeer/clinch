@@ -33,14 +33,36 @@
    (blend-fun
     :accessor blend-func
     :initarg  :blend-func
-    :initform '(:src-alpha :one-minus-src-alpha))))
+    :initform '(:src-alpha :one-minus-src-alpha))
+   (projection-transform
+    :accessor projection-transform
+    :initform (make-instance 'node)
+    :initarg  :projection-transform)
+   (camera-node
+    :accessor camera-node
+    :initform nil
+    :initarg  :camera-node)))
 
 
 (defmethod initialize-instance :after ((this viewport) &key)
 
-  (print "CREATED THE VIEWPORT!")
-  (print (parent this))
   )
+
+
+(defmethod attribute :around ((this viewport) key)
+  
+  (cond
+    ((eql 'width key) (if (width this)
+			  (values (width this) this)
+			  (call-next-method)))
+
+    ((eql 'height key) (if (height this)
+			  (values (height this) this)
+			  (call-next-method)))
+
+    (t (call-next-method))))
+
+
 
 (defmethod resize ((this viewport) x y w h)
   (setf (x this) x
@@ -79,25 +101,30 @@
   (when (enables  this)   (apply #'gl:enable      (enables this)))
   (when (blend-func this) (apply #'%gl:blend-func (blend-func this)))
   
-
   (with-accessors ((x x)
 		   (y y)
 		   (w width)
 		   (h height)) this
-    (format t "x = ~A y = ~A w = ~A h = ~A~%" x y w h)
+    
     (gl:scissor x y w h)
     (gl:viewport x y w h)
-
+    
     (when (clear-color this)
       (destructuring-bind (&optional (r 0) (g 0) (b 0) (a 1)) (clear-color this)
 	(gl:scissor x y w h)
 	
 	(gl:clear-color r g b a)
 	(gl:clear :color-buffer-bit :depth-buffer-bit)))
+    
+    (gl:matrix-mode :projection)
+    (gl:load-matrix  (projection-transform this))
+    (gl:matrix-mode :modelview)
+    (gl:load-identity)
+    
   
     (loop for c in (children this)
-       if (active c)
-       do (render c :w (width this) :h (height this)))))
+       ;if (active c)
+       do (render c))))
 
 (defmethod quick-set ((this viewport) x y w h)
   (setf (x this) x

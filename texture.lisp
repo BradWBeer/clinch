@@ -128,3 +128,7 @@ Just a passthrough to with-mapped-buffer, but I keep forgetting to use with-mapp
   `(with-mapped-buffer (,name ,buffer ,access)
      ,body))
      
+
+(defmacro texture (&body rest)
+
+  `(make-instance 'texture ,@rest))
