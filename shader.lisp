@@ -20,10 +20,10 @@
     :reader geo-shader
     :initform nil)
    (attributes
-    :reader attributes 
+    :reader shader-attribute 
     :initform nil)
   (uniforms
-    :reader uniforms 
+    :reader shader-uniform
     :initform nil))
    
   (:documentation "Creates and keeps track of the shader objects. Requires an UNLOAD call when you are done. Bind Buffer functions are in Buffer.l"))
@@ -222,6 +222,15 @@
 	  (slot-value this 'name) nil
 	  (slot-value this 'attributes) nil
 	  (slot-value this 'uniforms) nil)))
+
+
+(defmethod (setf shader-attribute) (value (this shader) key)
+
+  (setf (gethash key (slot-value this 'shader-attribute)) value))
+
+(defmethod (setf shader-uniform) (value (this shader) key)
+
+  (setf (gethash key (slot-value this 'shader-uniform)) value))
 
 
 (defmacro gl-shader (&body rest)
