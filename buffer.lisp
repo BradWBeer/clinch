@@ -137,7 +137,8 @@
 
 (defmethod bind-buffer-to-attribute-array ((this buffer) (shader shader) name)
   "Bind buffer to a shader attribute."
-  (let ((id (cddr (get-attribute-id shader name))))
+
+  (let ((id (cdr (get-attribute-id shader name))))
     
     (gl:enable-vertex-attrib-array id)
     (gl:bind-buffer (target this) (id this))

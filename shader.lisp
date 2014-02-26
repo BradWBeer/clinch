@@ -22,9 +22,10 @@
    (attributes
     :reader attributes 
     :initform nil)
-   (uniforms
+  (uniforms
     :reader uniforms 
     :initform nil))
+   
   (:documentation "Creates and keeps track of the shader objects. Requires an UNLOAD call when you are done. Bind Buffer functions are in Buffer.l"))
 
 
@@ -93,29 +94,29 @@
     ;; to form the program.
     (gl:link-program program)
 
-    (setf (slot-value this 'attributes)
-    	  (loop for (name type) in attributes
-    	     collect (cons
-    		      name
-		      (cons type
-			    (gl:get-attrib-location program name)))))
+    (when attributes
+      (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
+      (loop for (name type) in attributes
+	   do (setf (gethash name (slot-value this 'attributes))
+		    (cons type
+			  (gl:get-attrib-location program name)))))
+      
 
-    (setf (slot-value this 'uniforms)
-    	  (loop for (name type) in uniforms
-	     do (print (list name type))
-	       
-    	     collect (cons
-    		      name
-		      (cons type
-			    (gl:Get-Uniform-Location program name)))))
+    (when uniforms
+      (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
+      (loop for (name type) in uniforms
+	 do (setf (gethash name (slot-value this 'uniforms))
+		  (cons type
+			(gl:Get-Uniform-Location program name)))))
+      
 
-    
     (when name (setf (slot-value this 'name) name))
 
     (let ((v fs)
 	  (f fs)
 	  (g geo)
 	  (p program))
+
 
     (trivial-garbage:finalize this
 			      (lambda (m) (when p
@@ -141,20 +142,19 @@
 
 (defmethod get-uniform-id ((this shader) uniform)
   "Shaders pass information by using named values called Uniforms and Attributes. This gets the gl id of a uniform name."
-  (assoc uniform
-	 (uniforms this)
-	 :test #'equal))
+  (gethash uniform
+	 (slot-value this 'uniforms)))
 
 (defmethod get-attribute-id ((this shader) attribute)
   "Shaders pass information by using named values called Uniforms and Attributes. This gets the gl id of a attribute name."
-  (assoc attribute
-	 (attributes this)
-	 :test #'equal))
+  (gethash attribute
+	   (slot-value this 'attributes)))
 
 
 (defmethod attach-uniform ((this shader) (uniform string) value)
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
-  (destructuring-bind (type . id) (cdr (get-uniform-id this uniform))
+
+  (destructuring-bind (type . id) (get-uniform-id this uniform)
     
     (let ((f (case type
 	       (:float #'gl:uniformf)
@@ -173,19 +173,21 @@
 
 (defmethod attach-uniform ((this shader) (uniform string) (matrix array))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
-  (destructuring-bind (name type . id) (get-uniform-id this uniform)
+
+  (destructuring-bind (type . id) (get-uniform-id this uniform)
     (gl:uniform-matrix id 4 matrix)))
 
 (defmethod attach-uniform ((this shader) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
-  (destructuring-bind (name type . id) (get-uniform-id this uniform)
+
+  (destructuring-bind (type . id) (get-uniform-id this uniform)
     (gl:uniform-matrix id 4 (transform matrix))))
 
 
 
 (defmethod bind-static-values-to-attribute ((this shader) name &rest vals)
   "It is possible to bind static information to an attribute. Your milage may vary."
-  (let ((id (cddr (get-attribute-id this name))))
+  (let ((id (cdr (get-attribute-id this name))))
     (gl:disable-vertex-attrib-array id)
     (apply #'gl:vertex-attrib id vals)))
 
@@ -217,7 +219,9 @@
     
     (setf (slot-value this 'uniforms) nil
 	  (slot-value this 'attributes) nil
-	  (slot-value this 'name) nil)))
+	  (slot-value this 'name) nil
+	  (slot-value this 'attributes) nil
+	  (slot-value this 'uniforms) nil)))
 
 
 (defmacro gl-shader (&body rest)
