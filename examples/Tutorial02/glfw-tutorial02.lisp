@@ -10,7 +10,7 @@
 
 
 (defun init ()
-  (setf viewport (make-instance 'clinch:viewport))
+  (setf viewport (make-instance 'clinch:viewport :disables nil :enables nil :blend-func nil))
   (glfw:set-window-size-callback #'window-size-callback)
 
   (setf triangle-point-buffer 
@@ -29,7 +29,7 @@
   (setf triangle 
 	(make-instance 'clinch:entity
 		       :indexes triangle-indices-buffer 
-		       :values `((:vertices ,triangle-point-buffer)))))
+		       :vertices triangle-point-buffer)))
 
   
 (defun main-loop ()

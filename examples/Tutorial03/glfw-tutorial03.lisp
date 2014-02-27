@@ -81,10 +81,10 @@ void main() {
   (setf triangle 
 	(make-instance 'clinch:entity
 		       :shader  shader
-		       :indexes triangle-indices-buffer 
-		       :values (list (list :vertices triangle-point-buffer)
-				     (list :attribute "vertexColor" triangle-color-buffer)
-				     (list :uniform "alpha" alpha)))))
+		       :indexes triangle-indices-buffer
+		       :vertices triangle-point-buffer
+		       :values `((:attribute "vertexColor" ,triangle-color-buffer)
+				 (:uniform "alpha" ,alpha)))))
 
   
 (defun main-loop ()

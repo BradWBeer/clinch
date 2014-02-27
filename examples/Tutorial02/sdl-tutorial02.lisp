@@ -28,7 +28,7 @@
   (setf triangle 
 	(make-instance 'clinch:entity
 		       :indexes triangle-indices-buffer 
-		       :values `((:vertices ,triangle-point-buffer)))))
+		       :vertices triangle-point-buffer)))
 
   
 (defun main-loop ()
@@ -45,6 +45,7 @@
   )
 
 (defun window-size-callback (width height)
+
   (clinch::quick-set viewport 0 0 width height)
   (clinch::render viewport)
   

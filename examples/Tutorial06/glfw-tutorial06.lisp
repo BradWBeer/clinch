@@ -249,16 +249,14 @@ void main() {
     (make-instance 'clinch:entity
                :parent node
                :shader  shader
-               :indexes cube-indices-buffer 
-               :values (list
-			(list :vertices cube-point-buffer)
-			(list :attribute "textureCoord" cube-texture-coordinate-buffer)
-			(list :normals cube-normal-buffer)
-			(list :uniform "texture01" texture01)
-			(list :uniform "ambientLight" ambientLight)
-			(list :uniform "lightIntensity" lightIntensity)
-			(list :uniform "lightDirection" lightDirection))
-               )))
+               :indexes cube-indices-buffer
+	       :vertices cube-point-buffer
+	       :normals cube-normal-buffer
+               :values `((:attribute "textureCoord"   ,cube-texture-coordinate-buffer)
+			 (:uniform   "texture01"      ,texture01)
+			 (:uniform   "ambientLight"   ,ambientLight)
+			 (:uniform   "lightIntensity" ,lightIntensity)
+			 (:uniform   "lightDirection" ,lightDirection)))))
 
 
 (defun main-loop ()
