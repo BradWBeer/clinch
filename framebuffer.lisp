@@ -34,7 +34,7 @@
       (setf id (car (gl:gen-framebuffers 1))))
 
     (let ((o id))
-      (trivial-garbage:finalize this (lambda (m) (gl:Delete-Framebuffers (list o)))))
+      (trivial-garbage:finalize this (lambda () (gl:Delete-Framebuffers (list o)))))
 
 
     (when color-attachments

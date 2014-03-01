@@ -185,7 +185,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
     (use-shader (shader this)))
 
   (when (vertices this) (bind-buffer-to-vertex-array (vertices this)))
-  (when (normals this) (bind-buffer-to-vertex-array (normals this)))
+  (when (normals this) (bind-buffer-to-normal-array (normals this)))
 
   (loop
      with tex-unit = 0

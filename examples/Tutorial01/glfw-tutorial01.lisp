@@ -1,26 +1,9 @@
-(ql:quickload :cl-glfw)
-(ql:quickload :clinch)
-
-(defun init ()
-  )
-
-(defun main-loop ()
-  )
-
-(defun clean-up ()
-  )
+(ql:quickload :CLinch)
+(ql:quickload :CLinch-glfw)
+(use-package :clinch)
 
 (defun start ()
-  (declare (optimize (speed 3)))
-  (glfw:do-window (:title "Tutorial 1"
-			  :redbits 8
-			  :greenbits 8
-			  :bluebits 8
-			  :alphabits 8
-			  :depthbits 16)
-      ((init))
-    
-    (main-loop))
-  
-  ;; End Program
-  (clean-up))
+
+  (window :title "Tutorial 1"))
+
+(start)

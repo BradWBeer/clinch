@@ -119,7 +119,7 @@
 
 
     (trivial-garbage:finalize this
-			      (lambda (m) (when p
+			      (lambda () (when p
 					   (when v
 					     (gl:detach-shader p v)
 					     (gl:delete-shader v))

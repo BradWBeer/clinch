@@ -46,30 +46,52 @@
 
 (defmacro window (&body args)
   
-  (multiple-value-bind (keys children) (clinch::split-keywords args)
-    
-    (let ((sym (gensym)))
-    `(let* ((*parent* (make-instance 'window ,@keys))
-	    (,sym *parent*))
-       
-       (declare (optimize (speed 3)))
-       (glfw:do-window (:title (title *parent*)
-			       :width (width *parent*)
-			       :height (height *parent*)
-			       :redbits 8
-			       :greenbits 8
-			       :bluebits 8
-			       :alphabits 8
-			       :depthbits 16)
-	   (,@children
-	    (init ,sym))
+  (let ((f-count (gensym))
+	(start-time (gensym))
+	(last-time (gensym)))
+	
+    (multiple-value-bind (keys children) (clinch::split-keywords args)
+	  
+      `(let* ((*parent* (make-instance 'window ,@keys))
+	      (*root*   *parent*)
+	      (,f-count 0)
+	      (*time*   (glfw:get-time))
+	      (*delta-time* (coerce 0 'single-float))
+	      (,start-time   *time*)
+	      (,last-time ,start-time)	      
+	      (*frame-rate* (coerce 0 'single-float)))	 
 
-	 (main-loop ,sym))
-       (clean-up ,sym)))))
-
-
+	 (declare (optimize (speed 3)))
+	 (glfw:do-window (:title (title *parent*)
+				 :width (width *parent*)
+				 :height (height *parent*)
+				 :redbits 8
+				 :greenbits 8
+				 :bluebits 8
+				 :alphabits 8
+				 :depthbits 16
+				 :refresh-rate 0)
+	     (,@children
+	      (init *parent*))
+	   
+	   ;; figure out framerate...
+	   (setf ,f-count (mod (1+ ,f-count) 100))
+	   (setf *time*  (glfw:get-time))
+	   (setf *delta-time* (coerce (- *time* ,last-time) 'single-float))
+	   
+	   (when (zerop ,f-count)
+	     
+	     (setf *frame-rate*
+		   (coerce (/ (- *time* ,start-time) 100) 'single-float)
+		   ,start-time *time*))
+	   
+	   (main-loop *parent*)
+	   (setf ,last-time *time*))
+	 (clean-up *parent*)))))
+  
+  
 (defmethod print-object ((this window) s)
-
+  
   (format s "(window ")
   (when (title     this)    (format s ":title ~S " (title this)))
   (when (name     this)     (format s ":name ~S " (name this)))
@@ -81,28 +103,35 @@
 
 
 (defmethod init ((this window))
+
+  ;;(glfw:swap-interval 0)
   (gl:enable :blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d :cull-face)
   (%gl:blend-func :src-alpha :one-minus-src-alpha)
 
   (window-resize-callback this (width this) (height this)))
 
 (defmethod render ((this window) &key) 
-  
+
+  (when (before-render this)
+    (funcall (before-render this) this))
+
   (with-slots ((w width)
 	       (h height)) this
     
     (when (clear-color this)
-      (destructuring-bind (&optional (r 0) (g 0) (b 0) (a 1)) (clear-color this)
-	(gl:scissor 0 0 w h)
-	
-	(gl:clear-color r g b a)
-	(gl:clear :color-buffer-bit :depth-buffer-bit))))
-
-  
+      
+      (gl:scissor 0 0 w h)
+      
+      (apply #'gl:clear-color (clear-color this))
+      (gl:clear :color-buffer-bit :depth-buffer-bit)))
   
   (loop for e in (children this)
        do (render e))
-  )
+
+  (when (after-render this)
+    (funcall (after-render this) this)))
+
+  
 
 (defmethod window-resize-callback ((this window) width height)
   

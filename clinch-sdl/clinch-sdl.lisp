@@ -43,10 +43,23 @@
 
 
 (defmacro window (&body args)
-  (multiple-value-bind (keys children) (clinch::split-keywords args)
+
+  (let ((f-count (gensym))
+	(start-time (gensym))
+	(last-time (gensym)))
     
-    (let ((sym (gensym)))
-      `(let* ((*parent* (make-instance 'window ,@keys)))
+    
+    (multiple-value-bind (keys children) (clinch::split-keywords args)
+    
+      `(let* ((*parent* (make-instance 'window ,@keys))
+	      (*root*   *parent*)
+	      (,f-count 0)
+	      (*time*   (sdl:sdl-get-ticks))
+	      (*delta-time* (coerce 0 'single-float))
+	      (,start-time   (/ *time* 1000))
+	      (,last-time ,start-time)	      
+	      (*frame-rate* (coerce 0 'single-float)))
+
 	 
 	 (declare (optimize (speed 3)))
 	 (sdl:with-init ()
@@ -65,10 +78,24 @@
 	     (:quit-event () t)
 	     (:VIDEO-RESIZE-EVENT (:W W :H H) 
 				  (window-resize-callback *parent* w h))
-	     (:idle ()         
+	     (:idle ()
+
+		    ;; figure out framerate...
+		    (setf ,f-count (mod (1+ ,f-count) 100))
+		    (setf *time*  (/ (sdl:sdl-get-ticks) 1000))
+		    (setf *delta-time* (coerce (- *time* ,last-time) 'single-float))
+		    
+		    (when (zerop ,f-count)
+	     
+		      (setf *frame-rate*
+			    (coerce (/ (- *time* ,start-time) 100) 'single-float)
+			    ,start-time *time*))
+		    		    
 		    (main-loop *parent*)
-		    (sdl:update-display)))
-	   (clean-up *parent*))))))
+		    (sdl:update-display)
+
+		    (setf ,last-time *time*))))
+	 (clean-up *parent*)))))
 
 
 
@@ -88,21 +115,26 @@
   (%gl:blend-func :src-alpha :one-minus-src-alpha))
 
 (defmethod render ((this window) &key) 
-  
+
+  (when (before-render this)
+    (funcall (before-render this) this))
+
   (with-slots ((w width)
 	       (h height)) this
     
     (when (clear-color this)
-      (destructuring-bind (&optional (r 0) (g 0) (b 0) (a 1)) (clear-color this)
-	(gl:scissor 0 0 w h)
-	
-	(gl:clear-color r g b a)
-	(gl:clear :color-buffer-bit :depth-buffer-bit))))
-  
+      
+      (gl:scissor 0 0 w h)
+      
+      (apply #'gl:clear-color (clear-color this))
+      (gl:clear :color-buffer-bit :depth-buffer-bit)))
   
   (loop for e in (children this)
        do (render e))
-  )
+
+  (when (after-render this)
+    (funcall (after-render this) this)))
+
 
 (defmethod window-resize-callback ((this window) width height)
   

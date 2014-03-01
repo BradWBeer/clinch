@@ -36,7 +36,7 @@
     :initform '(:src-alpha :one-minus-src-alpha))
    (projection-transform
     :accessor projection-transform
-    :initform (make-instance 'node)
+    :initform nil
     :initarg  :projection-transform)
    (camera-node
     :accessor camera-node
@@ -116,14 +116,14 @@
 	(gl:clear-color r g b a)
 	(gl:clear :color-buffer-bit :depth-buffer-bit)))
     
-    (gl:matrix-mode :projection)
-    (gl:load-matrix  (projection-transform this))
-    (gl:matrix-mode :modelview)
-    (gl:load-identity)
+    (when (projection-transform this)
+      (gl:matrix-mode :projection)
+      (gl:load-matrix (projection-transform this))
+      (gl:matrix-mode :modelview))
+    ;;(gl:load-identity)
     
-  
+    
     (loop for c in (children this)
-       ;if (active c)
        do (render c))))
 
 (defmethod quick-set ((this viewport) x y w h)

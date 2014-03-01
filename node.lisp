@@ -61,6 +61,14 @@
 (defmethod render ((this node) &key parent)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
 
+  (when (once this)
+    (funcall (once this) this)
+    (setf (once this) nil))
+
+  (when (before-render this)
+    (let ((*parent* this))
+      (funcall (before-render this) this)))
+
   (when (changed? this)
     (update this :parent parent))
   
@@ -69,7 +77,11 @@
   (load-matrix this)
 
   (loop for i in (children this)
-     do (render i :parent this)))
+     do (render i :parent this))
+
+  (when (after-render this)
+        (let ((*parent* this))
+	  (funcall (after-render this) this))))
 
 (defmethod render ((this list) &key parent matrix)
   "Render a list of rendables."

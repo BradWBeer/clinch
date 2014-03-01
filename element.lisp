@@ -19,7 +19,16 @@
 	     :initarg  :name)
    (attribute :initform nil)
    (changed  :reader changed?
-	     :initform t)))
+	     :initform t)
+   (before-render :initform nil
+		  :initarg :before-render
+		  :accessor before-render)
+   (after-render :initform nil
+		  :initarg :after-render
+		  :accessor after-render)
+   (once          :initform nil
+		  :initarg :once
+		  :accessor once)))
 
 
 (defmethod initialize-instance :after ((this element) &key attributes parent)
@@ -32,6 +41,7 @@
   (when attributes (map nil
 			  (lambda (x) (setf (attribute this (first x)) (second x)))
 			  attributes)))
+
 
 
 (defmethod (setf changed?) (val (this element))
@@ -105,8 +115,18 @@
 
 (defmethod render ((this element) &key)
 
+  (when (once this)
+    (funcall (once this) this)
+    (setf (once this) nil))
+
+  (when (before-render this)
+    (funcall (before-render this) this))
+
   (loop for c in (children this)
-       do (render c)))
+       do (render c))
+
+  (when (after-render this)
+    (funcall (after-render this) this)))
 
 (defmethod unload ((this element) &key) )
 
