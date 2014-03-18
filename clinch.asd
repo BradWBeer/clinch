@@ -5,11 +5,14 @@
   :serial t
   :description "Describe CLinch here"
   :author "Brad Beer (WarWeasle)"
-  :license "BSD"
+  :license "MIT"
   :version "0.1"
   :depends-on (#:cl-opengl
-	       #:sb-cga)
+	       #:sb-cga
+	       #:trivial-garbage)
   :components ((:file "package")
+	       (:file "clinch")
+	       (:file "element")
 	       (:file "transform")
 	       (:file "vector")
 	       (:file "node")

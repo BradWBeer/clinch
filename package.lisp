@@ -17,7 +17,7 @@
 
    #:make-foreign-array #:make-identity-matrix #:list->matrix #:copy-foreign-array #:fill-foreign-array #:cached-matrix #:matrix #:get-current-matrix #:update-current-matrix #:read-gl-matrix #:get-current-gl-matrix #:use-matrix #:save-matrix  #:print-node-data #:m*m #:mT #:det #:m-1 
    
-   #:entity #:shader #:render-values #:indexes #:render #:make-render-func #:slow-render #:get-render-value #:ray-entity-intersect?
+   #:entity #:shader #:gl-shader #:render-values #:indexes #:render #:make-render-func #:slow-render #:render-value #:ray-entity-intersect?
    
    #:make-pipeline #:pipeline-get-loop #:pipeline-get-init #:pipeline-get-uninit #:run-loop #:run-init #:run-uninit
      
@@ -29,6 +29,10 @@
    #:with-context-for-texture
 
    #:frame-buffer #:render-buffer #:unbind
-
+   #:element #:parent #:attribute #:ELEMENT-BACK #:ELEMENT-FRONT #:ELEMENT-PUSH-BACK #:ELEMENT-GET-CHILD
+   #:ELEMENT-GET-CHILD #:ELEMENT-PUSH-FRONT #:ELEMENT-POP-BACK #:ELEMENT-POP-FRONT #:*root* #:*time* #:*delta-time*
+   #:ELEMENT-REMOVE-CHILD #:ELEMENT-REMOVE-CHILD #:ELEMENT-REPLACE-CHILD
+   #:ELEMENT-NEXT-SIBLING #:ELEMENT-PREVIOUS-SIBLING #:start #:title
+   #:window #:clear-color #:attribute #:init #:clean-up #:enable #:disable #:blend-func #:window-width #:window-height #:*parent*
    ))
 

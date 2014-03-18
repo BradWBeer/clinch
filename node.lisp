@@ -3,12 +3,8 @@
 
 (in-package #:clinch)
 
-(defclass node ()
-  ((children
-    :initform nil
-    :initarg  :children
-    :accessor children)
-   (transform
+(defclass node (element)
+  ((transform
     :accessor transform
     :initform  (sb-cga:identity-matrix)
     :initarg  :transform)
@@ -18,8 +14,7 @@
    (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required."))
 
 (defmethod initialize-instance :after ((this node) &key parent)
-  (when parent
-    (add-child parent this)))
+  )
 
 
 (defmethod print-object ((this node) s)
@@ -66,6 +61,14 @@
 (defmethod render ((this node) &key parent)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
 
+  (when (once this)
+    (funcall (once this) this)
+    (setf (once this) nil))
+
+  (when (before-render this)
+    (let ((*parent* this))
+      (funcall (before-render this) this)))
+
   (when (changed? this)
     (update this :parent parent))
   
@@ -74,7 +77,11 @@
   (load-matrix this)
 
   (loop for i in (children this)
-     do (render i :parent this)))
+     do (render i :parent this))
+
+  (when (after-render this)
+        (let ((*parent* this))
+	  (funcall (after-render this) this))))
 
 (defmethod render ((this list) &key parent matrix)
   "Render a list of rendables."
@@ -163,3 +170,12 @@
   (gl:load-matrix (or (current-transform this)
 		      (transform this))))
 
+(defmacro node (&body args)
+
+  (multiple-value-bind (keys children) (split-keywords args)
+    
+    `(let ((*parent* (make-instance 'node ,@keys :parent *parent*)))
+       ,@children
+       *parent*)))
+
+			

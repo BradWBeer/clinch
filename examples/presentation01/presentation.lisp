@@ -120,10 +120,11 @@ varying vec3  normal;
 		   :parent node
 		   :indexes indexes
 		   :shader shader
-		   :values `((:attribute "tc1" ,tex-coord)
-			     (:attribute "t1" ,texture)
-			     (:vertices ,vertexes)
-			     (:normals ,normals)
+		   :values  (list
+			     (list :attribute "tc1" tex-coord)
+			     (list :attribute "t1" texture)
+			     (list :vertices vertexes)
+			     (list :normals normals)
 			     )))
 
 
