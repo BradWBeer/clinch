@@ -350,6 +350,23 @@
                (:FIF-EXR 29) (:FIF-J2K 30) (:FIF-JP2 31) (:FIF-PFM 32)
                (:FIF-PICT 33) (:FIF-RAW 34)) 
 
+(CFFI:DEFCENUM FREE-IMAGE-MDMODEL
+  (:FIMD-NODATA -1)
+  (:FIMD-COMMENTS 0)	;; single comment or keywords
+  (:FIMD-EXIF-MAIN 1)	;; Exif-TIFF metadata
+  (:FIMD-EXIF-EXIF 2)	;; Exif-specific metadata
+  (:FIMD-EXIF-GPS 3)	;; Exif GPS metadata
+  (:FIMD-EXIF-MAKERNOTE 4)	;; Exif maker note metadata
+  (:FIMD-EXIF-INTEROP 5)	;; Exif interoperability metadata
+  (:FIMD-IPTC 6)	;; IPTC/NAA metadata
+  (:FIMD-XMP 7)	;; Abobe XMP metadata
+  (:FIMD-GEOTIFF	 8)	;; GeoTIFF metadata
+  (:FIMD-ANIMATION  9)	;; Animation metadata
+  (:FIMD-CUSTOM	10)	;; Used to attach other metadata types to a dib
+  (:FIMD-EXIF-RAW  11))	;; Exif metadata as a raw buffer
+
+
+
 (CFFI:DEFCFUN ("FreeImage_Initialise" FREEIMAGE-INITIALISE) :VOID
               (LOAD_LOCAL_PLUGINS_ONLY :POINTER)) 
 
@@ -496,8 +513,8 @@
  (FIF :INT)) 
 
 (CFFI:DEFCFUN ("FreeImage_OpenMultiBitmap" FREEIMAGE-OPENMULTIBITMAP) :POINTER
-              (FIF :INT) (FILENAME :STRING) (CREATE_NEW :POINTER)
-              (READ_ONLY :POINTER) (KEEP_CACHE_IN_MEMORY :POINTER) (FLAGS :INT)) 
+              (FIF :INT) (FILENAME :STRING) (CREATE_NEW :INT)
+              (READ_ONLY :INT) (KEEP_CACHE_IN_MEMORY :INT) (FLAGS :INT)) 
 
 (CFFI:DEFCFUN
  ("FreeImage_OpenMultiBitmapFromHandle" FREEIMAGE-OPENMULTIBITMAPFROMHANDLE)

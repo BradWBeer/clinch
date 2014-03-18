@@ -35,7 +35,15 @@
     :initform nil
     :initarg  :normals
     :accessor normals)
-   (func)))
+   (before-render :initform nil
+		  :initarg :before-render
+		  :accessor before-render)
+   (after-render :initform nil
+		 :initarg :after-render
+		 :accessor after-render)
+   (once          :initform nil
+		  :initarg :once
+		  :accessor once)))
 
 (defun all-indices-used? (entity)
   ;; TODO: Is the naming okay? The language used does not feel idiomatic/clear.
@@ -65,14 +73,22 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 (defmethod print-object ((this entity) s)
   (format s "#<entity>"))
 
-(defmethod get-render-value ((this entity) name)
-  (or (second
-       (assoc name
-	      (clinch::render-values this)))
-      (loop for i in (clinch::render-values this)
-	   if (and (>= 3 (length i))
-		   (equal name (second i)))
-	   do (return (third i)))))
+(defun assoc-on-second (item lst) 
+  (or (when (equal item (cadar lst))
+	(car lst))
+      (assoc-on-second item (cdr lst))))
+
+(defmethod render-value ((this entity) name)
+  (third 
+   (assoc-on-second name (clinch::render-values this))))
+  
+(defmethod (setf render-value) (new-value (this entity) name)
+  (setf (third (assoc-on-second
+		name
+		(clinch::render-values this)))
+	new-value))
+
+
 
 ;; (defmethod get-primitive ((this entity) name)
 ;;   (let* ((buff      (get-render-value this name))
@@ -247,8 +263,20 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
   ;;   (gl:load-matrix (or matrix
   ;; 			(current-transform parent)
   ;; 			(transform parent))))
-      
-  (tmp this))
+  (when (once this)
+    (funcall (once this) this)
+    (setf (once this) nil))
+  
+  (when (before-render this)
+    (let ((*parent* this))
+      (funcall (before-render this) this)))
+
+  (tmp this)
+
+  (when (after-render this)
+    (let ((*parent* this))
+      (funcall (after-render this) this))))
+
 ;;(funcall (slot-value this 'func) :parent-transform (or matrix parent) :projection-transform projection))
 
 (defmethod slow-render ((this entity))

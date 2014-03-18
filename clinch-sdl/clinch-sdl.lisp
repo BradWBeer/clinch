@@ -58,7 +58,8 @@
 	      (*delta-time* (coerce 0 'single-float))
 	      (,start-time   (/ *time* 1000))
 	      (,last-time ,start-time)	      
-	      (*frame-rate* (coerce 0 'single-float)))
+	      (*frame-rate* (coerce 0 'single-float))
+	      (*frame-count* 0))	 
 
 	 
 	 (declare (optimize (speed 3)))
@@ -81,7 +82,7 @@
 	     (:idle ()
 
 		    ;; figure out framerate...
-		    (setf ,f-count (mod (1+ ,f-count) 100))
+		    (setf ,f-count (mod (incf *frame-count*) 100))
 		    (setf *time*  (/ (sdl:sdl-get-ticks) 1000))
 		    (setf *delta-time* (coerce (- *time* ,last-time) 'single-float))
 		    

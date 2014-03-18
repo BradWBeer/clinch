@@ -37,25 +37,23 @@
 
 
 (defun load-animation (path)
-  (let* ((atype (freeimage_getfiletype path 0))
-	 (multi-bitmap (cffi:with-foreign-objects ((bool :int))
-			 (setf (cffi:mem-aref bool :int) 0)
-			 (freeimage_openmultibitmap atype path false true false bool)))
-	 (page-count (FreeImage_GetPageCount multi-bitmap)))
-    (loop for i from 0 to (1- page-count)
-       collect (let* ((page (freeimage_lockpage multi-bitmap i))
-		      (time (* 10
-			       (cffi:with-foreign-object (data :pointer)
-				 (freeimage_getmetadata :FIMD-ANIMATION page "FrameTime" data)
-				 (cffi:mem-aref (FreeImage_GetTagValue (cffi:mem-aref data :pointer)) :int32))))
-		      (bitmap (freeimage_convertto32bits page)))
-		 (FreeImage_FlipVertical bitmap)
+  (let* ((atype (freeimage::freeimage-getfiletype path 0))
+	 (multi-bitmap (freeimage::freeimage-openmultibitmap (cffi:foreign-enum-value 'freeimage::free-image-format atype) path 0 1 0 0))
+	 (page-count (Freeimage::Freeimage-GetPageCount multi-bitmap)))
+    (loop with total-time = 0
+       for i from 0 to (1- page-count)
+       collect (let* ((page (freeimage::freeimage-lockpage multi-bitmap i))
+		      (time (cffi:with-foreign-object (data :pointer)
+			      (freeimage::freeimage-getmetadata (cffi:foreign-enum-value 'freeimage::FREE-IMAGE-MDMODEL :FIMD-ANIMATION)  page "FrameTime" data)
+			      (cffi:mem-aref (Freeimage::Freeimage-GetTagValue (cffi:mem-aref data :pointer)) :int32)))
+		      (bitmap (freeimage::freeimage-convertto32bits page)))
+		 (Freeimage::Freeimage-FlipVertical bitmap)
 
-		 (list (load-2d-image nil
-				      (freeimage_getbits bitmap)
-				      (freeimage_getwidth bitmap)
-				      (freeimage_getheight bitmap))
-		       time)))))
+		 (list (make-instance 'texture
+				      :data (freeimage::freeimage-getbits bitmap)
+				      :width (freeimage::freeimage-getwidth bitmap)
+				      :height (freeimage::freeimage-getheight bitmap))
+		       (incf total-time (/ time 1000)))))))
 
 
 
