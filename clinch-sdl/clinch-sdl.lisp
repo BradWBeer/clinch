@@ -30,7 +30,7 @@
     (t (call-next-method))))
 
 
-(defmethod (setf atribute) :around (new-val (this window) key)
+(defmethod (setf attribute) :around (new-val (this window) key)
 
   (unless (slot-value 'attribute this)
     (setf (slot-value 'attribute this) (make-hash-table)))
