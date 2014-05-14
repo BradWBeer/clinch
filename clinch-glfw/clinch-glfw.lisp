@@ -52,15 +52,15 @@
 	
     (multiple-value-bind (keys children) (clinch::split-keywords args)
 	  
-      `(let* ((*parent* (make-instance 'window ,@keys))
-	      (*root*   *parent*)
-	      (,f-count 0)
+      `(let* ((,f-count 0)
 	      (*time*   (glfw:get-time))
 	      (*delta-time* (coerce 0 'single-float))
 	      (,start-time   *time*)
 	      (,last-time ,start-time)	      
 	      (*frame-rate* (coerce 0 'single-float))
-	      (*frame-count* 0))	 
+	      (*frame-count* 0)
+	      (*parent* (make-instance 'window ,@keys))
+	      (*root*   *parent*))	 
 
 	 (declare (optimize (speed 3)))
 	 (glfw:do-window (:title (title *parent*)

@@ -73,9 +73,9 @@
     (update this :parent parent))
   
   (gl:matrix-mode :modelview)
-
+  
   (load-matrix this)
-
+  
   (loop for i in (children this)
      do (render i :parent this))
 
@@ -87,7 +87,7 @@
   "Render a list of rendables."
 
   (load-matrix this)
-
+  
   (loop for i in this
      do (render i :parent parent :matrix matrix)))
 

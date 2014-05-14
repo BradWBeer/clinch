@@ -263,6 +263,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
   ;;   (gl:load-matrix (or matrix
   ;; 			(current-transform parent)
   ;; 			(transform parent))))
+
   (when (once this)
     (funcall (once this) this)
     (setf (once this) nil))

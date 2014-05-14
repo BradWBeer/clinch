@@ -13,6 +13,12 @@
    (height :initform 600
 	   :initarg :height
 	   :reader height)
+   (key-up :initform nil
+	   :initarg :key-up
+	   :accessor key-up)
+   (key-down :initform nil
+	     :initarg :key-down
+	     :accessor key-down)
    (clear-color :accessor clear-color
 	       :initform nil
 	       :initarg  :clear-color)))
@@ -51,15 +57,15 @@
     
     (multiple-value-bind (keys children) (clinch::split-keywords args)
     
-      `(let* ((*parent* (make-instance 'window ,@keys))
-	      (*root*   *parent*)
-	      (,f-count 0)
+      `(let* ((,f-count 0)
 	      (*time*   (sdl:sdl-get-ticks))
 	      (*delta-time* (coerce 0 'single-float))
 	      (,start-time   (/ *time* 1000))
 	      (,last-time ,start-time)	      
 	      (*frame-rate* (coerce 0 'single-float))
-	      (*frame-count* 0))	 
+	      (*frame-count* 0)
+	      (*parent* (make-instance 'window ,@keys))
+	      (*root*   *parent*))	 
 
 	 
 	 (declare (optimize (speed 3)))
@@ -67,10 +73,11 @@
 	   (sdl:window (width *parent*) (height *parent*)
 		       :flags sdl-cffi::sdl-opengl
 		       :double-buffer t
-		       :resizable t
+		       :RESIZABLE t
 		       :title-caption (title *parent*)
 		       :icon-caption  (title *parent*))
 	   ,@children
+	   (sdl:enable-unicode)
 	   (init *parent*)
 	   (window-resize-callback *parent* (width *parent*) (height *parent*))
 	   (setf (sdl:frame-rate) 60)
@@ -78,9 +85,14 @@
 	   (sdl:with-events ()
 	     (:quit-event () t)
 	     (:VIDEO-RESIZE-EVENT (:W W :H H) 
+				  (print "RESIZE WINDOW!!!")
 				  (window-resize-callback *parent* w h))
+	     (:KEY-DOWN-EVENT (:STATE STATE :SCANCODE SCANCODE :KEY KEY :MOD MOD :UNICODE UNICODE)
+			      (if (key-down *parent*) (funcall (key-down *parent*) *parent* (list :STATE STATE :SCANCODE SCANCODE :KEY KEY :MOD MOD :UNICODE UNICODE))))
+	     (:KEY-UP-EVENT (:STATE STATE :SCANCODE SCANCODE :KEY KEY :MOD MOD :UNICODE UNICODE)
+			    (if (key-up *parent*) (funcall (key-up *parent*) *parent* (list :STATE STATE :SCANCODE SCANCODE :KEY KEY :MOD MOD :UNICODE UNICODE))))
 	     (:idle ()
-
+		    
 		    ;; figure out framerate...
 		    (setf ,f-count (mod (incf *frame-count*) 100))
 		    (setf *time*  (/ (sdl:sdl-get-ticks) 1000))
@@ -147,6 +159,8 @@
 (defmethod clean-up ((this window))
 
   )
+
+
 
 
 
