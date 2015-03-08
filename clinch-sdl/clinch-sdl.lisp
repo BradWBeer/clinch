@@ -125,6 +125,8 @@
 
 (defmethod init ((this window))
   (gl:enable :blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d :cull-face)
+  (gl:polygon-mode :front-and-back :fill)
+
   (%gl:blend-func :src-alpha :one-minus-src-alpha))
 
 (defmethod render ((this window) &key) 

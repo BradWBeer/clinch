@@ -52,7 +52,8 @@
 (defmethod (setf parent) ((parent element) (this element))
 
   (setf (slot-value this 'parent) parent)
-  (element-push-back (slot-value parent 'children) this))
+  ;(element-push-back (slot-value parent 'children) this)
+  )
 
 ;; just for testing and example purposes only. 
 (defmacro element (&body args)
@@ -90,10 +91,12 @@
 
 (defmethod (setf children) (children (this element))
   
-    (setf (slot-value this 'children) children)
-
-    (loop for e in children
-       do (setf (parent e) this)))
+  (print "Element's setf called!")
+  (setf (slot-value this 'children) children)
+  
+  (loop for e in children
+     if (typep e 'clinch:element)
+     do (setf (parent e) this)))
 
 
 
@@ -137,7 +140,6 @@
   (car (children this)))
 
 (defmethod element-push-back ((this element) (child element))
-
   (setf (slot-value this 'children) (append (slot-value this 'children) (list child))))
 
 (defmethod element-get-child ((this element) (i integer))

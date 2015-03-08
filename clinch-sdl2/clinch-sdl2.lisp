@@ -21,7 +21,9 @@
 	     :accessor key-down)
    (clear-color :accessor clear-color
 	       :initform nil
-	       :initarg  :clear-color)))
+	       :initarg  :clear-color)
+   (hWin)
+   (gContext)))
 
 
 
@@ -48,17 +50,17 @@
     (otherwise (call-next-method))))
 
 
-(defmacro window (&body args)
+(defmacro window ((&key (title "Clinch SDL2") (width 800) (height 600) fullscreen resizable)
+			&body args)
 
   (let ((f-count (gensym))
 	(start-time (gensym))
-	(last-time (gensym)))
-    
+	(last-time (gensym)))    
     
     (multiple-value-bind (keys children) (clinch::split-keywords args)
     
       `(let* ((,f-count 0)
-	      (*time*   (sdl:sdl-get-ticks))
+	      (*time*   (sdl2:get-ticks))
 	      (*delta-time* (coerce 0 'single-float))
 	      (,start-time   (/ *time* 1000))
 	      (,last-time ,start-time)	      
@@ -69,46 +71,71 @@
 
 	 
 	 (declare (optimize (speed 3)))
-	 (sdl:with-init ()
-	   (sdl:window (width *parent*) (height *parent*)
-		       :flags sdl-cffi::sdl-opengl
-		       :double-buffer t
-		       :RESIZABLE t
-		       :title-caption (title *parent*)
-		       :icon-caption  (title *parent*))
-	   ,@children
-	   (sdl:enable-unicode)
-	   (init *parent*)
-	   (window-resize-callback *parent* (width *parent*) (height *parent*))
-	   (setf (sdl:frame-rate) 60)
-	   
-	   (sdl:with-events ()
-	     (:quit-event () t)
-	     (:VIDEO-RESIZE-EVENT (:W W :H H) 
-				  (print "RESIZE WINDOW!!!")
-				  (window-resize-callback *parent* w h))
-	     (:KEY-DOWN-EVENT (:STATE STATE :SCANCODE SCANCODE :KEY KEY :MOD MOD :UNICODE UNICODE)
-			      (if (key-down *parent*) (funcall (key-down *parent*) *parent* (list :STATE STATE :SCANCODE SCANCODE :KEY KEY :MOD MOD :UNICODE UNICODE))))
-	     (:KEY-UP-EVENT (:STATE STATE :SCANCODE SCANCODE :KEY KEY :MOD MOD :UNICODE UNICODE)
-			    (if (key-up *parent*) (funcall (key-up *parent*) *parent* (list :STATE STATE :SCANCODE SCANCODE :KEY KEY :MOD MOD :UNICODE UNICODE))))
-	     (:idle ()
-		    
-		    ;; figure out framerate...
-		    (setf ,f-count (mod (incf *frame-count*) 100))
-		    (setf *time*  (/ (sdl:sdl-get-ticks) 1000))
-		    (setf *delta-time* (coerce (- *time* ,last-time) 'single-float))
-		    
-		    (when (zerop ,f-count)
-	     
-		      (setf *frame-rate*
-			    (coerce (/ (- *time* ,start-time) 100) 'single-float)
-			    ,start-time *time*))
-		    		    
-		    (main-loop *parent*)
-		    (sdl:update-display)
+	 (let ((*local-stdout* *standard-output*))
+	   (sdl2:with-init (:everything)
+	     (let ((*standard-output* *local-stdout*))
+	       (sdl2:with-window (win :title ,title :w ,width :h ,height :flags '(:shown :opengl :resizable))
+		 (sdl2:with-gl-context (gl-context win)
+		   (sdl2:gl-make-current win gl-context)
+		   
+		   (setf (slot-value *parent* 'hwin) win
+			 (slot-value *parent* 'gContext) gl-context)
+		   
 
-		    (setf ,last-time *time*))))
-	 (clean-up *parent*)))))
+		   ,@children
+
+		   (init *parent*)
+		   (window-resize-callback *parent* (width *parent*) (height *parent*))
+
+		   (sdl2:with-event-loop (:method :poll)
+		     (:quit () t)
+	      
+		     (:keydown
+		      (:keysym keysym)
+		      )
+		     
+		     (:keyup
+		      (:keysym keysym)
+		     )
+		     
+		     (:mousemotion
+		      (:x x :y y :xrel xrel :yrel yrel :state state)
+		      (format t "Mouse motion abs(rel): ~a (~a), ~a (~a)~%Mouse state: ~a~%"
+		     	      x xrel y yrel state)
+		      )
+		     
+		     (:controlleraxismotion
+		      (:which controller-id :axis axis-id :value value)
+		      (format t "Controller axis motion: Controller: ~a, Axis: ~a, Value: ~a~%"
+		     	      controller-id axis-id value))
+		     
+		     (:controllerbuttondown
+		      (:which controller-id)
+		      )
+		     
+		     (:idle
+		      
+		      ;; figure out framerate...
+		      (setf ,f-count (mod (incf *frame-count*) 100))
+		      (setf *time*  (/ (sdl2:get-ticks) 1000))
+		      (setf *delta-time* (coerce (- *time* ,last-time) 'single-float))
+		      
+		      (when (zerop ,f-count)
+			
+		      	(setf *frame-rate*
+		      	      (coerce (/ (- *time* ,start-time) 100) 'single-float)
+		      	      ,start-time *time*))
+		      
+		      (main-loop *parent*)
+		      (gl:flush)
+		      (sdl2:gl-swap-window win)
+		     
+		      (setf ,last-time *time*))
+		     ))
+		 
+		 
+		 
+		 (clean-up *parent*)))))))))
 
 
 
