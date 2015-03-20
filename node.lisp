@@ -10,8 +10,12 @@
     :initarg  :transform)
    (current-transform
     :accessor current-transform
-    :initform nil))
-   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required."))
+    :initform nil)
+   (enabled
+    :accessor enabled
+    :initform t
+    :initarg :enabled))
+  (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required."))
 
 (defmethod initialize-instance :after ((this node) &key parent)
   )
@@ -60,45 +64,45 @@
 
 (defmethod render ((this node) &key parent)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
+  (when (enabled this)
+    (when (once this)
+      (funcall (once this) this)
+      (setf (once this) nil))
 
-  (when (once this)
-    (funcall (once this) this)
-    (setf (once this) nil))
+    (when (before-render this)
+      (let ((*parent* this))
+	(funcall (before-render this) this)))
 
-  (when (before-render this)
-    (let ((*parent* this))
-      (funcall (before-render this) this)))
+    (when (changed? this)
+      (update this :parent parent))
+    
+    (gl:matrix-mode :modelview)
+    
+    (load-matrix this)
+    
+    (loop for i in (children this)
+       do (render i :parent this))
 
-  (when (changed? this)
-    (update this :parent parent))
-  
-  (gl:matrix-mode :modelview)
-  
-  (load-matrix this)
-  
-  (loop for i in (children this)
-     do (render i :parent this))
-
-  (when (after-render this)
-        (let ((*parent* this))
-	  (funcall (after-render this) this))))
+    (when (after-render this)
+      (let ((*parent* this))
+	(funcall (after-render this) this)))))
 
 (defmethod render ((this list) &key parent matrix)
   "Render a list of rendables."
-
-  (load-matrix this)
-  
-  (loop for i in this
-     do (render i :parent parent :matrix matrix)))
+  (when (enabled this)
+    (load-matrix this)
+    
+    (loop for i in this
+       do (render i :parent parent :matrix matrix))))
 
 
 (defmethod (setf transform)  ((other-node array) (this node))
   "Inherited function for setting changed?"
-   (setf (slot-value this 'transform)
-	 other-node)
-   (setf (changed? this) t)
-   (transform this))
-  
+  (setf (slot-value this 'transform)
+	other-node)
+  (setf (changed? this) t)
+  (transform this))
+
 (defmethod set-identity-transform ((this node) &key)
   "Inherited function for setting changed?"
   (setf (transform this) (sb-cga:identity-matrix)))
@@ -106,36 +110,36 @@
 (defmethod m* ((this node) (that node) &optional (in-place t))
   "Inherited function for setting changed?"
   (if in-place
-    (setf (transform this) (sb-cga:matrix* (transform that) (transform this)))
-    (sb-cga:matrix* (transform that) (transform this))))
+      (setf (transform this) (sb-cga:matrix* (transform that) (transform this)))
+      (sb-cga:matrix* (transform that) (transform this))))
 
 (defmethod transpose ((this node) &optional (in-place t))
   "Inherited function for setting changed?"
   (if in-place
       (setf (transform this) (sb-cga:transpose-matrix (transform this)))
       (sb-cga:transpose-matrix (transform this))))
-      
+
 
 (defmethod invert ((this node) &optional (in-place t))
   "Inherited function for setting changed?"
   (if in-place
       (setf (transform this) (sb-cga:inverse-matrix (transform this)))
       (sb-cga:inverse-matrix (transform this))))
-      
+
 
 (defmethod scale ((this node) x y z &optional (in-place t))
   "Inherited function for setting changed?"
   (if in-place
-    (setf (transform this)
-	  (sb-cga:matrix*
-	   (sb-cga:scale* (float x)
-			  (float y)
-			  (float z))
-	   (transform this)))
-    (sb-cga:matrix* (sb-cga:scale* (float x)
-				   (float y)
-				   (float z))
-		    (transform this))))
+      (setf (transform this)
+	    (sb-cga:matrix*
+	     (sb-cga:scale* (float x)
+			    (float y)
+			    (float z))
+	     (transform this)))
+      (sb-cga:matrix* (sb-cga:scale* (float x)
+				     (float y)
+				     (float z))
+		      (transform this))))
 
 (defmethod translate ((this node) x y z &optional (in-place t))
   "Inherited function for setting changed?"
@@ -145,24 +149,24 @@
 								(float z))
 					     (transform this)))
       (sb-cga:matrix* (sb-cga:translate* (float x)
-				     (float y)
-				     (float z))
+					 (float y)
+					 (float z))
 		      (transform this))))
 
 (defmethod rotate ((this node) rad x y z &optional (in-place t))
   "Inherited function for setting changed?"
-    (if in-place
+  (if in-place
       (setf (transform this)
 	    (sb-cga:matrix* (sb-cga:rotate-around
 			     (make-vector (float x)
 					  (float y)
 					  (float z)) (float rad))
 			    (transform this)))
-	    (sb-cga:matrix* (sb-cga:rotate-around
-			     (make-vector (float x)
-					  (float y)
-					  (float z)) (float rad))
-			    (transform this))))
+      (sb-cga:matrix* (sb-cga:rotate-around
+		       (make-vector (float x)
+				    (float y)
+				    (float z)) (float rad))
+		      (transform this))))
 
 
 (defmethod load-matrix ((this node) &key)
@@ -178,4 +182,4 @@
        ,@children
        *parent*)))
 
-			
+
