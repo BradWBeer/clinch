@@ -4,7 +4,7 @@
 (in-package #:clinch)
 
 
-(defclass frame-buffer (element)
+(defclass frame-buffer (element refcount)
   ((id :reader id
        :initform nil
        :initarg :id)
@@ -32,10 +32,6 @@
 
     (unless id
       (setf id (car (gl:gen-framebuffers 1))))
-
-    (let ((o id))
-      (trivial-garbage:finalize this (lambda () (gl:Delete-Framebuffers (list o)))))
-
 
     (when color-attachments
       (if (listp color-attachments)
@@ -112,8 +108,6 @@
 
 (defmethod unload ((this frame-buffer) &key)
   "Unloads and releases all frame-buffer resources, also any renderbuffers"
-
-  (trivial-garbage:cancel-finalization this)
 
   (with-slots ((id id)
 	       (color color)

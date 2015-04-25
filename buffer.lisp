@@ -8,7 +8,7 @@
     (:unsigned-char :unsigned-byte)
     (otherwise type)))
 
-(defclass buffer ()
+(defclass buffer (refcount)
   ((id
     :reader id
     :initform nil
@@ -65,10 +65,6 @@
     (unless id
       (setf id (car (gl:gen-buffers 1))))
     
-    (let ((o id))
-      (trivial-garbage:finalize this (lambda () (format *standard-output* "finialized! ~A" id)
-					     (gl:delete-buffers (list o)))))
-
     (gl:bind-buffer target id)
 
     (cond
@@ -170,7 +166,6 @@
 
 (defmethod unload ((this buffer) &key)
   "Release buffer resources."
-  (trivial-garbage:cancel-finalization this)
   (gl:delete-buffers (list (id this))))
 
 (defmacro with-mapped-buffer ((name buffer &optional (access :READ-WRITE)) &body body)

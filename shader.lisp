@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass shader ()
+(defclass shader (refcount)
   ((name
     :reader name
     :initform nil)
@@ -112,30 +112,7 @@
 			(gl:Get-Uniform-Location program name)))))
       
 
-    (when name (setf (slot-value this 'name) name))
-
-    (let ((v fs)
-	  (f fs)
-	  (g geo)
-	  (p program))
-
-
-    (trivial-garbage:finalize this
-			      (lambda () (when p
-					   (when v
-					     (gl:detach-shader p v)
-					     (gl:delete-shader v))
-					   
-					   (when f
-					     (gl:delete-shader f)
-					     (gl:detach-shader p f))
-					   
-					   (when g
-					     (gl:detach-shader p g)
-					     (gl:delete-shader g))
-					   
-					   (gl:delete-program p)))))))
-
+    (when name (setf (slot-value this 'name) name))))
 
 
 (defmethod use-shader ((this shader) &key)

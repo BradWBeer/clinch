@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass node (element)
+(defclass node (element refcount)
   ((transform
     :accessor transform
     :initform  (sb-cga:identity-matrix)
@@ -173,6 +173,13 @@
 
   (gl:load-matrix (or (current-transform this)
 		      (transform this))))
+
+(defmethod unload ((this node) &key)
+  "Release node resources."
+  
+  (loop for i in (children this)
+       do (when (typep i 'refcount)
+	    (unref i))))
 
 (defmacro node (&body args)
 

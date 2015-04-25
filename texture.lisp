@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass texture (buffer)
+(defclass texture (buffer refcount)
   ((tex-id
     :accessor tex-id
     :initform nil
@@ -62,10 +62,6 @@
     
     (unless tex-id (setf tex-id (car (gl:gen-textures 1))))
     
-    (let ((o tex-id))
-      (trivial-garbage:finalize this (lambda () (gl:delete-textures (list o)))))
-    
-    
     (gl:bind-texture :texture-2d (tex-id this))
     (gl:tex-parameter :texture-2d :texture-wrap-s wrap-s)
     (gl:tex-parameter :texture-2d :texture-wrap-t wrap-t)
@@ -117,7 +113,6 @@
 
 (defmethod unload :before ((this texture) &key)
 
-  (trivial-garbage:cancel-finalization this)
   (gl:delete-textures (list (tex-id this))))
 
 

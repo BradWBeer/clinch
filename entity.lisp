@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass entity ()
+(defclass entity (refcount)
   ((use-gl-stack
     :initform t
     :initarg :use-gl-stack?
@@ -329,6 +329,11 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 		    (setf point (elt index p))))))
 	 finally (return (when dist (values dist u v point point-number)))))))
   
+(defmethod unload ((this entity) &key)
+  "Release entity resources."
+
+  )
+
 
 (defmacro entity (&body rest)
 

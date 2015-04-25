@@ -4,7 +4,7 @@
 (in-package #:clinch)
 
 
-(defclass render-buffer ()
+(defclass render-buffer (refcount)
   ((renderbuffer-id
     :reader renderbuffer-id
     :initform nil
@@ -26,9 +26,6 @@
   (unless (slot-value this 'renderbuffer-id)
     (setf (slot-value this 'renderbuffer-id) (car (gl:gen-renderbuffers 1))))
 
-  (let ((o (slot-value this 'renderbuffer-id)))
-    (trivial-garbage:finalize this (lambda (m) (gl:delete-buffers (list o)))))
-
   (update this))
 
 (defmethod update ((this render-buffer) &key)
@@ -44,7 +41,6 @@
   (gl:bind-renderbuffer :renderbuffer 0))
 
 (defmethod unload ((this render-buffer) &key)
-  (trivial-garbage:cancel-finalization this)
   (gl:delete-renderbuffers (list (slot-value this 'renderbuffer-id))))
   
 
