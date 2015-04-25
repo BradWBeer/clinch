@@ -52,7 +52,8 @@
 (defmethod (setf parent) ((parent element) (this element))
 
   (setf (slot-value this 'parent) parent)
-  (element-push-back (slot-value parent 'children) this))
+  ;;(element-push-back (slot-value parent 'children) this)
+  )
 
 ;; just for testing and example purposes only. 
 (defmacro element (&body args)

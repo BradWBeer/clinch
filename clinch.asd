@@ -23,6 +23,7 @@
 	       (:file "viewport")
 	       (:file "pipeline")
 	       (:file "renderbuffer")
-	       (:file "framebuffer")))
+	       (:file "framebuffer")
+	       (:file "shapes")))
 
 

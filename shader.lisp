@@ -93,9 +93,12 @@
     ;; shaders. This step actually puts the attached shader together
     ;; to form the program.
     (gl:link-program program)
-
+    
+    (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
+    (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
+      
     (when attributes
-      (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
+
       (loop for (name type) in attributes
 	   do (setf (gethash name (slot-value this 'attributes))
 		    (cons type
@@ -103,7 +106,6 @@
       
 
     (when uniforms
-      (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
       (loop for (name type) in uniforms
 	 do (setf (gethash name (slot-value this 'uniforms))
 		  (cons type
