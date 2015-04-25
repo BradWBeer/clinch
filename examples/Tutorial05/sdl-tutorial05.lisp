@@ -1,5 +1,5 @@
 (ql:quickload :CLinch)
-(ql:quickload :clinch-sdl)
+(ql:quickload :clinch-glfw)
 (ql:quickload :clinch)
 (ql:quickload :clinch-cairo)
 

@@ -273,7 +273,7 @@ void main() {
   (clinch:rotate node (clinch:degrees->radians (mod frame-count 360) ) 0 0.8942871 0.44714355)
   (clinch:translate node  0 0 -1.5)
   
-  (gl:clear-color 0.0 0.0 0.0 0.0)
+  (gl:clear-color 1.0 1.0 1.0 1.0)
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (clinch:render node))
 

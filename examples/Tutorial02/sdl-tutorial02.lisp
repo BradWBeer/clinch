@@ -14,11 +14,13 @@
 				 :qtype :unsigned-int
 				 :target :element-array-buffer
 				 :Stride 1
-				 :data '(0 1 2))
+				 :data '(0 1 2 0 1 3))
 		      :vertices (buffer
+				  :qtype :double
 				  :Stride 3
-				  :data '(   0.0  100.0 0.0
-					  -100.0 -100.0 0.0
-					  100.0 -100.0 0.0))))))
+				  :data '(   0.0d0  100.0d0 0.0d0
+					  -100.0d0 -100.0d0 0.0d0
+					  100.0d0 -100.0d0 0.0d0
+					  100.0d0  100.0d0 0.0d0))))))
   
 (start)
