@@ -12,6 +12,7 @@
 	       #:trivial-garbage)
   :components ((:file "package")
 	       (:file "clinch")
+	       (:file "refcount")
 	       (:file "element")
 	       (:file "transform")
 	       (:file "vector")
