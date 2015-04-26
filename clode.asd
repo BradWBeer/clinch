@@ -4,7 +4,7 @@
   :description "Describe clode here"
   :author "Brad Beer (WarWeasle)"
   :license "Specify license here"
-  :depends-on (#:cffi #:sb-cga)
+  :depends-on (#:cffi #:sb-cga #:clinch)
   :serial t
   :components ((:module clode
 			:pathname "clode"
