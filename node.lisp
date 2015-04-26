@@ -18,8 +18,10 @@
   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required."))
 
 (defmethod initialize-instance :after ((this node) &key parent)
-  )
 
+  (loop for i in (children this)
+       do (when (typep i 'refcount)
+	    (ref i))))
 
 (defmethod print-object ((this node) s)
   "Print function for node."
@@ -38,14 +40,24 @@
   "Add a child. Children must implement update and render."
   (with-accessors ((children children)) this
     (unless (member child children)
+      
+      (when (typep child 'refcount)
+	(ref child))      
+
       (setf children
 	    (cons child children)))))
 
 (defmethod remove-child ((this node) child &key)
   "Removes a child."
   (with-accessors ((children children)) this
-    (setf children
-	  (remove child children))))
+    
+    (when (member child children)
+
+      (when (typep child 'refcount)
+	(unref child))
+      
+      (setf children
+	    (remove child children)))))
 
 
 (defmethod update ((this node) &key parent force)

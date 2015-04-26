@@ -67,9 +67,27 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
   "Strict-index: ALL-INDICES-USED? on THIS"
   (when parent (add-child parent this))
   ;(when compile (make-render-func this))
-  (when strict-index (all-indices-used? this)))
+  (when strict-index (all-indices-used? this))
 
+  (let ((s (shader this)))
+    (when s (ref s)))
 
+  (let ((i (indexes this)))
+    (when i (ref i)))
+
+  (let ((vals (render-values this)))
+    (when vals
+      (loop for i in vals
+	   do (let ((v (third i)))
+		(when (typep v 'refcount)
+		  (ref v))))))      
+
+  (let ((v (vertices this)))
+    (when v (ref v)))
+
+  (let ((n (normals this)))
+    (when n (ref n))))
+  
 (defmethod print-object ((this entity) s)
   (format s "#<entity>"))
 
@@ -332,7 +350,24 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 (defmethod unload ((this entity) &key)
   "Release entity resources."
 
-  )
+  (let ((s (shader this)))
+    (when s (unref s)))
+  
+  (let ((i (indexes this)))
+    (when i (unref i)))
+  
+  (let ((vals (render-values this)))
+    (when vals
+      (loop for i in vals
+	 do (let ((v (third i)))
+	      (when (typep v 'refcount)
+		(unref v))))))      
+  
+  (let ((v (vertices this)))
+    (when v (unref v)))
+  
+  (let ((n (normals this)))
+    (when n (unref n))))
 
 
 (defmacro entity (&body rest)
