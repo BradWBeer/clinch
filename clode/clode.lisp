@@ -11,7 +11,6 @@
 (defvar *physics-contact-group*)
 (defvar *physics-max-contacts* 25)  
 (defvar *physics-geometry-hash*)
-(defvar *physics-updated*)
 
 (defun n->sf (x)
   (coerce x 'single-float))
@@ -65,15 +64,17 @@
   (if world 
       (unless (slot-value this 'pointer)
 	(setf (slot-value this 'pointer) (body-create world))
+
 	(when (mass this)
-	  (body-set-mass (pointer this) (pointer (mass this)))))
+	  (body-set-mass (pointer this) (pointer (mass this)))
+	  (ref (mass this))))
       
       (error "a physics-body requires a world!")))
   
 
 (defmethod unload ((this physics-body) &key)
   (when (mass this)
-    (unload (mass this)))
+    (unref (mass this)))
 
   (when (pointer this)
     (body-destroy (pointer this))
@@ -123,12 +124,16 @@
 
   (call-next-method)
 
+  (when (body this)
+    (ref (body this)))
+
   (setf (gethash (pointer-address (geometry this)) *physics-geometry-hash*) this))
 
 
 (defmethod unload ((this physics-object) &key)
   (when (body this)
-    (unload (body this))
+    (unref (body this))
+
     (setf (slot-value this 'body) nil))
 
   (when (geometry this)
@@ -168,6 +173,10 @@
 		       (elt matrix 7)
 		       (elt matrix 11))))
 
+
+(defmethod set-position ((this physics-object) x y z)
+  (let ((body (pointer (body this))))
+    (body-set-position body x y z)))
 
 (defclass physics-sphere (physics-object)
   ((radius :initform 1
@@ -435,6 +444,31 @@
   )
 
 
+(defmethod close-callback ((this physics-object) (that physics-object))
+
+  (let* ((o1 (geometry this))
+	 (o2 (geometry that))
+	 (b1 (geom-get-body o1))
+	 (b2 (geom-get-body o2)))
+    
+    (with-foreign-object (contact '(:struct dContact) *physics-max-contacts*)
+      
+      (loop for i from 0 to (1- (foreign-type-size '(:struct ode::dContact)))
+	 do (setf  (mem-aref contact :char i) 0))
+      
+      (let* ((surface (foreign-slot-pointer contact '(:struct ode::dContact) 'ode::surface))
+	     (gg (foreign-slot-pointer contact '(:struct ode::dContact) 'ode::geom)))
+	
+	
+	(combine-physics-objects surface this that)
+	
+	(let ((num-contacts (collide o1 o2 *physics-max-contacts* gg (foreign-type-size '(:struct ode::dContact)))))
+	  (unless (zerop num-contacts)
+	    
+	    (joint-attach
+	     (joint-create-contact *physics-world* *physics-contact-group* contact)
+	     b1 b2)))))))
+
 
 
 (defun physics-near-handler (data o1 o2)
@@ -442,46 +476,34 @@
   (unless (cffi:pointer-eq o1 o2)
     
     (let* ((lisp-object1 (gethash (pointer-address o1) *physics-geometry-hash*))
-  	   (lisp-object2 (gethash (pointer-address o2) *physics-geometry-hash*))
-  	   (b1 (geom-get-body o1))
-  	   (b2 (geom-get-body o2)))
+  	   (lisp-object2 (gethash (pointer-address o2) *physics-geometry-hash*)))
 
       (when (and lisp-object1 lisp-object2)
-
-  	(with-foreign-object (contact '(:struct dContact) *physics-max-contacts*)
-	  
-  	  (loop for i from 0 to (1- (foreign-type-size '(:struct ode::dContact)))
-  	     do (setf  (mem-aref contact :char i) 0))
-
-  	  (let* ((surface (foreign-slot-pointer contact '(:struct ode::dContact) 'ode::surface))
-  		 (gg (foreign-slot-pointer contact '(:struct ode::dContact) 'ode::geom)))
-	    
-	    
-  	    (combine-physics-objects surface lisp-object1 lisp-object2)
-	    
-	    (let ((num-contacts (collide o1 o2 *physics-max-contacts* gg (foreign-type-size '(:struct ode::dContact)))))
-  	      (unless (zerop num-contacts)
-			
-  		(joint-attach
-  		 (joint-create-contact *physics-world* *physics-contact-group* contact)
-  		 b1 b2)))))))))
+	
+	(close-callback lisp-object1 lisp-object2)))))
 
 
 
-(defun physics-init ()  
+(defun physics-init (&key (quad-tree t) (origin '(0 0 0)) (extents '(10 10 10)) (depth 10))  
   
   (init-ode)	      
   
+  
   (setf *physics-world*         (world-create)
-	*physics-space*         (hash-space-create (null-pointer))
+	*physics-space*         (if quad-tree
+				    (quad-tree-space-create (null-pointer)
+							    (make-array 4 :initial-contents (append origin (list 0)))
+							    (make-array 4 :initial-contents (append extents (list 0)))
+							    depth)
+				    (hash-space-create (null-pointer)))
 	*physics-contact-group* (joint-group-create 0))
-
+  
   (world-set-gravity *physics-world* 0 -6 0)
   (world-set-cfm *physics-world* .001)
   (world-set-damping *physics-world* .001 .001)
   (world-set-linear-damping-threshold *physics-world* .001)
   (world-set-angular-damping-threshold *physics-world* .001)
-
+  
   (setf *physics-geometry-hash* (make-hash-table :test 'eql)))
 
 (defun physics-step (step handler)
@@ -489,11 +511,6 @@
   (space-collide *physics-space* (null-pointer) handler)
   (world-quick-step *physics-world* step)
   (joint-group-empty *physics-contact-group*))
-
-(defun physics-step-done ()
-  
-  )
-
 
 (defun physics-uninit ()
   (joint-group-destroy *physics-contact-group*)      

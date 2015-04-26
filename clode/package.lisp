@@ -33,5 +33,7 @@
      #:SPHERE-VERTEXES #:SPHERE-NORMALS
      #:CYLINDER-INDEXES #:CYLINDER-VERTEXES #:CYLINDER-NORMALS
      #:clode-node
-     #:update-swank
+     #:ref #:unref
+     #:set-position
+     #:close-callback
      ))
