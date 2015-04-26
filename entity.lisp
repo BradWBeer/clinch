@@ -8,21 +8,18 @@
     :initform t
     :initarg :use-gl-stack?
     :reader use-gl-stack?)
-   (VAO
-     :initform nil
-     :reader VAO)
    (shader
     :initform nil
     :initarg :shader
-    :accessor shader)
+    :reader shader)
    (indexes
     :initform nil
     :initarg :indexes
-    :accessor indexes)
+    :reader indexes)
    (render-values
     :initform nil
     :initarg :values
-    :accessor render-values)
+    :reader render-values)
    (parent
     :initform nil
     :initarg :parent
@@ -30,11 +27,11 @@
    (vertices
     :initform nil
     :initarg  :vertices
-    :accessor vertices)
+    :reader vertices)
    (normals
     :initform nil
     :initarg  :normals
-    :accessor normals)
+    :reader normals)
    (before-render :initform nil
 		  :initarg :before-render
 		  :accessor before-render)
@@ -106,6 +103,50 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 		(clinch::render-values this)))
 	new-value))
 
+(defmethod (setf shader) (new-shader (this entity))
+  (with-slots ((s shader)) this
+    
+    (when s (unref s))
+
+    (ref new-shader)
+    (setf s new-shader)))
+
+(defmethod (setf indexes) (new-index-buffer (this entity))
+  (with-slots ((i indexes)) this
+
+    (ref new-index-buffer)
+    (when i (unref i))
+    
+    (setf i new-index-buffer)))
+
+(defmethod (setf vertices) (new-vertex-buffer (this entity))
+  (with-slots ((v vertices)) this
+
+    (ref new-vertex-buffer)
+    (when v (unref v))
+
+    (setf v new-vertex-buffer)))
+
+(defmethod (setf normals) (new-normal-buffer (this entity))
+  (with-slots ((n normals)) this
+
+    (ref new-normal-buffer)
+    (when n (unref n))
+
+    (setf n new-normal-buffer)))
+
+
+(defmethod (setf render-values) (new-render-values (this entity))
+  (with-slots ((rv render-values)) this
+
+    (loop for i in rv
+       do (let ((v (third i)))
+	    (when (typep v 'refcount)
+	      (ref v))))
+    
+    (when rv (unref rv))
+    
+    (setf rv new-render-values)))
 
 
 ;; (defmethod get-primitive ((this entity) name)

@@ -11,7 +11,7 @@
 (defvar *physics-contact-group*)
 (defvar *physics-max-contacts* 25)  
 (defvar *physics-geometry-hash*)
-
+(defvar *physics-updated*)
 
 (defun n->sf (x)
   (coerce x 'single-float))
@@ -42,17 +42,17 @@
 		     ode::Approx1-N 
 		     ode::Approx1))
 
-(defclass physics-mass ()
+(defclass physics-mass (refcount)
   ((pointer :initform (foreign-alloc 'dmass)
 	    :initarg :pointer
 	    :reader pointer)))
 
-(defmethod uninitialize ((this physics-mass))
+(defmethod unload ((this physics-mass) &key)
   (foreign-free (pointer this))
   (setf (slot-value this 'pointer) nil))
 
 
-(defclass physics-body ()
+(defclass physics-body (refcount)
   ((pointer :initform nil
 	    :initarg :pointer
 	    :reader pointer)
@@ -71,16 +71,16 @@
       (error "a physics-body requires a world!")))
   
 
-(defmethod uninitialize ((this physics-body))
+(defmethod unload ((this physics-body) &key)
   (when (mass this)
-    (uninitialize (mass this)))
+    (unload (mass this)))
 
   (when (pointer this)
     (body-destroy (pointer this))
     (setf (slot-value this 'pointer) nil)))
 
 
-(defclass physics-object ()
+(defclass physics-object (refcount)
   ((body :initform nil
 	 :initarg :body
 	 :reader body)
@@ -126,9 +126,9 @@
   (setf (gethash (pointer-address (geometry this)) *physics-geometry-hash*) this))
 
 
-(defmethod uninitialize ((this physics-object))
+(defmethod unload ((this physics-object) &key)
   (when (body this)
-    (uninitialize (body this))
+    (unload (body this))
     (setf (slot-value this 'body) nil))
 
   (when (geometry this)
@@ -476,7 +476,7 @@
 	*physics-space*         (hash-space-create (null-pointer))
 	*physics-contact-group* (joint-group-create 0))
 
-  (world-set-gravity *physics-world* 0 -3 0)
+  (world-set-gravity *physics-world* 0 -6 0)
   (world-set-cfm *physics-world* .001)
   (world-set-damping *physics-world* .001 .001)
   (world-set-linear-damping-threshold *physics-world* .001)
@@ -489,6 +489,10 @@
   (space-collide *physics-space* (null-pointer) handler)
   (world-quick-step *physics-world* step)
   (joint-group-empty *physics-contact-group*))
+
+(defun physics-step-done ()
+  
+  )
 
 
 (defun physics-uninit ()

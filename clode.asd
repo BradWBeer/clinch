@@ -13,6 +13,7 @@
 			 (:file "library")
 			 (:file "bindings")
 			 (:file "clode")
+			 (:file "clode-node")
 			 (:file "shapes")))))
 
 

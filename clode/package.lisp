@@ -1,7 +1,7 @@
 ;;;; package.lisp
 
 (defpackage #:clode
-  (:use #:cl :cffi)
+  (:use #:cl #:cffi #:clinch)
   (:nicknames #:ode)
     (:export 
 
@@ -18,7 +18,7 @@
      #:get-transform
      #:mode-options
      #:physics-mass
-     #:uninitialize
+     #:unload
      #:physics-body
      #:physics-object
      #:physics-sphere
