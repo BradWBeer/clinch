@@ -173,7 +173,6 @@
 
 (defmethod unload ((this shader) &key)
   "Unloads and releases all shader resources."
-  (trivial-garbage:cancel-finalization this)
   
   (with-slots ((vs vert-shader)
 	       (fs frag-shader)
