@@ -193,11 +193,6 @@
   (y dReal)
   (z dReal))
 
-(defcfun-rename-function "dBodySetLinearVel" :void
-  (body dBodyID)
-  (x dReal)
-  (y dReal)
-  (z dReal))
 
 (defcfun-rename-function "dBodySetAngularVel" :void
   (body dBodyID)
@@ -238,11 +233,6 @@
   (lx dReal)
   (ly dReal)
   (lz dReal))
-
-(defcfun-rename-function "dCreateCylinder" dGeomID
-  (space dSpaceID)
-  (r dReal)
-  (l dReal))
 
 (defcfun-rename-function "dCreatePlane" dGeomID
   (space dSpaceID)
