@@ -70,7 +70,7 @@
 	  (ref (mass this))))
       
       (error "a physics-body requires a world!")))
-  
+
 
 (defmethod unload ((this physics-body) &key)
   (when (mass this)
@@ -155,7 +155,7 @@
 (defmethod set-transform ((geom physics-object) (matrix SIMPLE-ARRAY))
   (with-foreign-object (rot 'dReal 12)
     (loop for i from 0 to 11
-	 do (setf (mem-aref rot 'dreal i) 0))
+       do (setf (mem-aref rot 'dreal i) 0))
 
     (loop
        for pos in '(0 4 8 1 5 9 2 6 10)
@@ -207,13 +207,13 @@
 	(when position
 	  (if (body this)
 	      (body-set-position (pointer (body this))
-				     (first (or position 0))
-				     (second (or position 0))
-				     (third (or position 0)))
+				 (first (or position 0))
+				 (second (or position 0))
+				 (third (or position 0)))
 	      (geom-set-position (geometry this)
-				     (first (or position 0))
-				     (second (or position 0))
-				     (third (or position 0)))))
+				 (first (or position 0))
+				 (second (or position 0))
+				 (third (or position 0)))))
 	(when rotation (error "setting rotation is not yet implemented!")))))
 
 
@@ -223,11 +223,7 @@
 	   :reader radius)
    (len    :initform 1
 	   :initarg :length
-	   :reader len)
-   (direction :initform 2
-	      :initarg :direction
-	      :reader direction)))
-
+	   :reader len)))
 
 (defmethod initialize-instance :after ((this physics-cylinder) &key total-mass density position rotation matrix)
 
@@ -238,9 +234,9 @@
     
     (let ((m (make-instance 'physics-mass)))
       
-      (cond (density    (mass-set-cylinder (pointer m) density (direction this) (radius this) (len this)))
-	    (total-mass (mass-set-cylinder-total (pointer m) density (direction this) (radius this) (len this)))
-	    (t (mass-set-cylinder (pointer m) 1 (direction this) (radius this) (len this))))
+      (cond (density    (mass-set-cylinder (pointer m) density 1 (radius this) (len this)))
+	    (total-mass (mass-set-cylinder-total (pointer m) density 1 (radius this) (len this)))
+	    (t (mass-set-cylinder (pointer m) 1 1 (radius this) (len this))))
       (setf (slot-value this 'body) (make-instance 'physics-body :world (world this) :mass m))))
   
   (when (body this)
@@ -252,14 +248,58 @@
 	(when position
 	  (if (body this)
 	      (body-set-position (pointer (body this))
-				     (first (or position 0))
-				     (second (or position 0))
-				     (third (or position 0)))
+				 (first (or position 0))
+				 (second (or position 0))
+				 (third (or position 0)))
 	      (geom-set-position (geometry this)
-				     (first (or position 0))
-				     (second (or position 0))
-				     (third (or position 0)))))
+				 (first (or position 0))
+				 (second (or position 0))
+				 (third (or position 0)))))
 	(when rotation (error "setting rotation is not yet implemented!")))))
+
+
+
+(defclass physics-capsule (physics-object)
+  ((radius :initform 1
+	   :initarg :radius
+	   :reader radius)
+   (len    :initform 1
+	   :initarg :length
+	   :reader len)))
+
+
+(defmethod initialize-instance :after ((this physics-capsule) &key total-mass density position rotation matrix)
+
+  (setf (slot-value this 'geometry) (create-capsule (pspace this) (radius this) (len this)))
+
+  (when (and (not (body this))
+	     (or total-mass density))
+    
+    (let ((m (make-instance 'physics-mass)))
+      
+      (cond (density    (mass-set-capsule (pointer m) density 1 (radius this) (len this)))
+	    (total-mass (mass-set-capsule-total (pointer m) density 1 (radius this) (len this)))
+	    (t (mass-set-capsule (pointer m) 1 1 (radius this) (len this))))
+      (setf (slot-value this 'body) (make-instance 'physics-body :world (world this) :mass m))))
+  
+  (when (body this)
+    (geom-set-body (geometry this) (pointer (body this))))
+  
+  (if matrix
+      (print "set-matrix not yet implemented!") ;;(set-matrix (pointer (body this)) matrix)
+      (progn
+	(when position
+	  (if (body this)
+	      (body-set-position (pointer (body this))
+				 (first (or position 0))
+				 (second (or position 0))
+				 (third (or position 0)))
+	      (geom-set-position (geometry this)
+				 (first (or position 0))
+				 (second (or position 0))
+				 (third (or position 0)))))
+	(when rotation (error "setting rotation is not yet implemented!")))))
+
 
 
 
@@ -307,7 +347,7 @@
 				     (third (or position 0)))))
 	(when rotation (error "setting rotation is not yet implemented!")))))
 
-	   
+
 
 
 (defclass physics-plane (physics-object)
@@ -324,13 +364,13 @@
     (error "physics-planes do not have physics-body objects"))
 
   (setf (slot-value this 'geometry) (create-plane (pspace this)
-						      (first normal)
-						      (second normal)
-						      (third normal)
-						      position)))
-  
+						  (first normal)
+						  (second normal)
+						  (third normal)
+						  position)))
 
-    
+
+
 
 (defmacro combine-surface-properties (surface val1 val2 property)
   (let ((v1 (gensym))
@@ -349,7 +389,7 @@
   (setf (cffi:foreign-slot-value surface '(:struct ode:dSurfaceParameters) 'ode::mode)
 	(cffi:foreign-bitfield-value 'ode::Contact-Enum
 				     (union (surface-mode this) (surface-mode that))))
- 
+  
   (combine-surface-properties surface
 			      (surface-mu this)
 			      (surface-mu that)
@@ -402,45 +442,45 @@
     				'ode::rhoN))
 
 
-   ;; (combine-surface-properties surface
-   ;; 			       (surface-mu2 this)
-   ;; 			       (surface-mu2 that)
-   ;; 			       'ode::mu2)
+  ;; (combine-surface-properties surface
+  ;; 			       (surface-mu2 this)
+  ;; 			       (surface-mu2 that)
+  ;; 			       'ode::mu2)
 
-   ;; (combine-surface-properties surface
-   ;; 			       (surface-soft-erp this)
-   ;; 			       (surface-soft-erp that)
-   ;; 			       'ode::soft-erp)
+  ;; (combine-surface-properties surface
+  ;; 			       (surface-soft-erp this)
+  ;; 			       (surface-soft-erp that)
+  ;; 			       'ode::soft-erp)
 
-   ;; (combine-surface-properties surface
-   ;; 			       (surface-soft-cfm this)
-   ;; 			       (surface-soft-cfm that)
-   ;; 			       'ode::soft-cfm)
+  ;; (combine-surface-properties surface
+  ;; 			       (surface-soft-cfm this)
+  ;; 			       (surface-soft-cfm that)
+  ;; 			       'ode::soft-cfm)
 
-   ;;  (combine-surface-properties surface
-   ;; 				(surface-motion1 this)
-   ;; 				(surface-motion1 that)
-   ;; 				'ode::motion1)
+  ;;  (combine-surface-properties surface
+  ;; 				(surface-motion1 this)
+  ;; 				(surface-motion1 that)
+  ;; 				'ode::motion1)
 
-   ;;  (combine-surface-properties surface
-   ;; 				(surface-motion2 this)
-   ;; 				(surface-motion2 that)
-   ;; 				'ode::motion2)
+  ;;  (combine-surface-properties surface
+  ;; 				(surface-motion2 this)
+  ;; 				(surface-motion2 that)
+  ;; 				'ode::motion2)
 
-   ;;  (combine-surface-properties surface
-   ;; 				(surface-motionn this)
-   ;; 				(surface-motionn that)
-   ;; 				'ode::motionn)
+  ;;  (combine-surface-properties surface
+  ;; 				(surface-motionn this)
+  ;; 				(surface-motionn that)
+  ;; 				'ode::motionn)
 
-   ;;  (combine-surface-properties surface
-   ;; 				(surface-slip1 this)
-   ;; 				(surface-slip1 that)
-   ;; 				'ode::slip1)
+  ;;  (combine-surface-properties surface
+  ;; 				(surface-slip1 this)
+  ;; 				(surface-slip1 that)
+  ;; 				'ode::slip1)
 
-   ;;  (combine-surface-properties surface
-   ;; 				(surface-slip2 this)
-   ;; 				(surface-slip2 that)
-   ;; 				'ode::slip2)
+  ;;  (combine-surface-properties surface
+  ;; 				(surface-slip2 this)
+  ;; 				(surface-slip2 that)
+  ;; 				'ode::slip2)
   )
 
 

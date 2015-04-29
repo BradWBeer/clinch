@@ -24,6 +24,7 @@
      #:physics-sphere
      #:physics-box
      #:physics-cylinder
+     #:physics-capsule
      #:physics-plane
      #:physics-init
      #:physics-step

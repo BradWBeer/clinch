@@ -367,6 +367,27 @@
   (radius dReal)
   (length dReal))
 
+(defcfun-rename-function "dCreateCapsule" dGeomID
+  (space dSpaceID)
+  (radius dReal)
+  (length dReal))
+
+(defcfun-rename-function "dMassSetCapsule" :void
+  (m (:pointer dMass))
+  (density dReal)
+  (direction :int)
+  (radius dReal)
+  (length dReal))
+
+(defcfun-rename-function "dMassSetCapsuleTotal" :void
+  (m (:pointer dMass))
+  (density dReal)
+  (direction :int)
+  (radius dReal)
+  (length dReal))
+
+
+
 
 (defcfun-rename-function "dSpaceDestroy" :void
   (space dSpaceID))
