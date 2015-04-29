@@ -297,12 +297,6 @@
   (ly dReal)
   (lz dReal))
 
-(defcfun-rename-function "dMassSetCylinderTotal" :void
-  (mass (:pointer dMass))
-  (m dReal)
-  (dir :int)
-  (r dReal)
-  (l dReal))
 
 (defcfun-rename-function "dMassSetZero" :void
   (mass (:pointer dMass)))
