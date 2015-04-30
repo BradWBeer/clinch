@@ -37,4 +37,5 @@
      #:ref #:unref
      #:set-position
      #:close-callback
+     #:update
      ))

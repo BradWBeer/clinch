@@ -200,9 +200,30 @@
   (y dReal)
   (z dReal))
 
+(defcfun-rename-function "dBodySetMaxAngularSpeed" :void
+  (body dBodyID)
+  (max-speed dReal))
+
 (defcfun-rename-function "dBodySetRotation" :void
   (body dBodyID)
   (R dMatrix3))
+
+(defcfun-rename-function "dBodyEnable" :void
+  (body dBodyID))
+
+(defcfun-rename-function "dBodyDisable" :void
+  (body dBodyID))
+
+
+(defcfun-rename-function "dBodyIsEnabled" :int
+  (body dBodyID))
+
+(defcfun-rename-function "dBodySetAutoDisableFlag" :void
+  (body dBodyID)
+  (auto-disable :int))
+
+(defcfun-rename-function "dBodyGetAutoDisableFlag" :int
+  (body dBodyID))
 
 (defcfun-rename-function "dGeomSetPosition" :void
   (geom dGeomID)
