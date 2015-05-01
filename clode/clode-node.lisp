@@ -14,7 +14,7 @@
 (defmethod set-transform-to-geom ((this clode-node) &key)
   (with-slots ((geom geometry)) this
     (when geom 
-      (setf (clinch:transform this) (ode:get-transform geom)))))
+      (setf (clinch:transform this) (get-transform geom)))))
 
 
 (defmethod update :before ((this clode-node) &key parent force)

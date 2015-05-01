@@ -120,12 +120,43 @@
    (surface-slip2 :INITFORM 0 :INITARG :slip2 :ACCESSOR surface-slip2)))
 
 
-(defmethod initialize-instance :around ((this physics-object) &key position)
+(defmethod initialize-instance :around ((this physics-object) &key position rotation matrix offset-matrix offset-position offset-rotation)
 
   (call-next-method)
 
   (when (body this)
     (ref (body this)))
+
+  (unless (typep this 'physics-plane)
+    (if matrix
+	(if (body this)
+	    (set-transform (body this) matrix)
+	    (set-transform this matrix))
+	(progn
+	  (when position
+	    (if (body this)
+		(body-set-position (pointer (body this))
+				   (first (or position 0))
+				   (second (or position 0))
+				   (third (or position 0)))
+		(geom-set-position (geometry this)
+				   (first (or position 0))
+				   (second (or position 0))
+				   (third (or position 0)))))
+	  (when rotation (error "setting rotation is not yet implemented!"))))
+
+    (when (body this)
+      (cond (offset-matrix (set-offset-transform this offset-matrix))
+	    (offset-position (geom-set-offset-position (geometry this)
+						       (first offset-position)
+						       (second offset-position)
+						       (third offset-position)))
+	    (offset-rotation (error "setting rotation is not yet implemented!"))
+	    (t t))))
+
+
+
+
 
   (setf (gethash (pointer-address (geometry this)) *physics-geometry-hash*) this))
 
@@ -174,9 +205,56 @@
 		       (elt matrix 11))))
 
 
+(defmethod set-transform ((body physics-body) (matrix SIMPLE-ARRAY))
+  (with-foreign-object (rot 'dReal 12)
+    (loop for i from 0 to 11
+       do (setf (mem-aref rot 'dreal i) 0))
+
+    (loop
+       for pos in '(0 4 8 1 5 9 2 6 10)
+       for i from 0 to 11
+	 
+       do (setf (mem-aref rot 'dreal i) (elt matrix pos)))
+
+    (body-set-rotation (pointer body) rot))
+  
+  (with-foreign-object (pos 'dreal 4)
+    (loop for i from 0 to 3 do (setf (mem-aref pos 'dreal i) 0))
+
+    (body-set-position (pointer body)
+		       (elt matrix 3)
+		       (elt matrix 7)
+		       (elt matrix 11))))
+
+
+(defmethod set-offset-transform ((geom physics-object) (matrix SIMPLE-ARRAY))
+  (with-foreign-object (rot 'dReal 12)
+    (loop for i from 0 to 11
+       do (setf (mem-aref rot 'dreal i) 0))
+
+    (loop
+       for pos in '(0 4 8 1 5 9 2 6 10)
+       for i from 0 to 11
+	 
+       do (setf (mem-aref rot 'dreal i) (elt matrix pos)))
+
+    (geom-set-rotation (geometry geom) rot))
+  
+  (with-foreign-object (pos 'dreal 4)
+    (loop for i from 0 to 3 do (setf (mem-aref pos 'dreal i) 0))
+
+    (geom-set-position (geometry geom)
+		       (elt matrix 3)
+		       (elt matrix 7)
+		       (elt matrix 11))))
+
+
+
 (defmethod set-position ((this physics-object) x y z)
-  (let ((body (pointer (body this))))
-    (body-set-position body x y z)))
+  (with-slots ((body body)) this
+    (if body 
+      (body-set-position (pointer body) x y z)
+      (geom-set-position (geometry this) x y z))))
 
 (defclass physics-sphere (physics-object)
   ((radius :initform 1
@@ -184,7 +262,7 @@
 	   :reader radius)))
 
 
-(defmethod initialize-instance :after ((this physics-sphere) &key total-mass density position rotation matrix)
+(defmethod initialize-instance :after ((this physics-sphere) &key total-mass density)
 
   (setf (slot-value this 'geometry) (create-sphere (pspace this) (radius this)))
 
@@ -199,22 +277,8 @@
       (setf (slot-value this 'body) (make-instance 'physics-body :world (world this) :mass m))))
   
   (when (body this)
-    (geom-set-body (geometry this) (pointer (body this))))
+    (geom-set-body (geometry this) (pointer (body this)))))
   
-  (if matrix
-      (print "set-matrix not yet implemented!") ;;(set-matrix (pointer (body this)) matrix)
-      (progn
-	(when position
-	  (if (body this)
-	      (body-set-position (pointer (body this))
-				 (first (or position 0))
-				 (second (or position 0))
-				 (third (or position 0)))
-	      (geom-set-position (geometry this)
-				 (first (or position 0))
-				 (second (or position 0))
-				 (third (or position 0)))))
-	(when rotation (error "setting rotation is not yet implemented!")))))
 
 
 (defclass physics-cylinder (physics-object)
@@ -225,7 +289,7 @@
 	   :initarg :length
 	   :reader len)))
 
-(defmethod initialize-instance :after ((this physics-cylinder) &key total-mass density position rotation matrix)
+(defmethod initialize-instance :after ((this physics-cylinder) &key total-mass density)
 
   (setf (slot-value this 'geometry) (create-cylinder (pspace this) (radius this) (len this)))
 
@@ -240,23 +304,7 @@
       (setf (slot-value this 'body) (make-instance 'physics-body :world (world this) :mass m))))
   
   (when (body this)
-    (geom-set-body (geometry this) (pointer (body this))))
-  
-  (if matrix
-      (print "set-matrix not yet implemented!") ;;(set-matrix (pointer (body this)) matrix)
-      (progn
-	(when position
-	  (if (body this)
-	      (body-set-position (pointer (body this))
-				 (first (or position 0))
-				 (second (or position 0))
-				 (third (or position 0)))
-	      (geom-set-position (geometry this)
-				 (first (or position 0))
-				 (second (or position 0))
-				 (third (or position 0)))))
-	(when rotation (error "setting rotation is not yet implemented!")))))
-
+    (geom-set-body (geometry this) (pointer (body this)))))
 
 
 (defclass physics-capsule (physics-object)
@@ -268,7 +316,7 @@
 	   :reader len)))
 
 
-(defmethod initialize-instance :after ((this physics-capsule) &key total-mass density position rotation matrix)
+(defmethod initialize-instance :after ((this physics-capsule) &key total-mass density)
 
   (setf (slot-value this 'geometry) (create-capsule (pspace this) (radius this) (len this)))
 
@@ -283,26 +331,9 @@
       (setf (slot-value this 'body) (make-instance 'physics-body :world (world this) :mass m))))
   
   (when (body this)
-    (geom-set-body (geometry this) (pointer (body this))))
-  
-  (if matrix
-      (print "set-matrix not yet implemented!") ;;(set-matrix (pointer (body this)) matrix)
-      (progn
-	(when position
-	  (if (body this)
-	      (body-set-position (pointer (body this))
-				 (first (or position 0))
-				 (second (or position 0))
-				 (third (or position 0)))
-	      (geom-set-position (geometry this)
-				 (first (or position 0))
-				 (second (or position 0))
-				 (third (or position 0)))))
-	(when rotation (error "setting rotation is not yet implemented!")))))
+    (geom-set-body (geometry this) (pointer (body this)))))
 
-
-
-
+ 
 (defclass physics-box (physics-object)
   ((x :initform 1
       :initarg :x
@@ -315,7 +346,7 @@
       :reader z)))
 
 
-(defmethod initialize-instance :after ((this physics-box) &key total-mass density position rotation matrix)
+(defmethod initialize-instance :after ((this physics-box) &key total-mass density)
 
   (setf (slot-value this 'geometry) (ode:create-box (pspace this) (x this) (y this) (z this)))
 
@@ -326,27 +357,11 @@
       
       (cond (density    (clode:mass-set-box (pointer m) density (x this) (y this) (z this)))
 	    (total-mass (clode:mass-set-box-total (pointer m) total-mass (x this) (y this) (z this)))
-	    (t (clode:mass-set-sphere (pointer m) 1 (x this) (y this) (z this))))
+	    (t (clode:mass-set-box (pointer m) 1 (x this) (y this) (z this))))
       (setf (slot-value this 'body) (make-instance 'physics-body :world (world this) :mass m))))
   
   (when (body this)
-    (clode:geom-set-body (geometry this) (pointer (body this))))
-  
-  (if matrix
-      (print "set-matrix not yet implemented!") ;;(set-matrix (pointer (body this)) matrix)
-      (progn
-	(when position
-	  (if (body this)
-	      (ode:body-set-position (pointer (body this))
-				     (first (or position 0))
-				     (second (or position 0))
-				     (third (or position 0)))
-	      (ode:geom-set-position (geometry this)
-				     (first (or position 0))
-				     (second (or position 0))
-				     (third (or position 0)))))
-	(when rotation (error "setting rotation is not yet implemented!")))))
-
+    (clode:geom-set-body (geometry this) (pointer (body this)))))
 
 
 
@@ -370,6 +385,18 @@
 						  position)))
 
 
+(defclass physics-ray (physics-object)
+  ())
+
+(defmethod initialize-instance :after ((this physics-ray) &key length total-mass density )
+
+  (unless length
+    (error "Rays require a length!"))
+
+  (setf (slot-value this 'geometry) (ode:create-ray (pspace this) length))
+  
+  (when (body this)
+    (clode:geom-set-body (geometry this) (pointer (body this)))))
 
 
 (defmacro combine-surface-properties (surface val1 val2 property)
@@ -439,50 +466,7 @@
     (combine-surface-properties surface
     				(surface-rhoN this)
     				(surface-rhoN that)
-    				'ode::rhoN))
-
-
-  ;; (combine-surface-properties surface
-  ;; 			       (surface-mu2 this)
-  ;; 			       (surface-mu2 that)
-  ;; 			       'ode::mu2)
-
-  ;; (combine-surface-properties surface
-  ;; 			       (surface-soft-erp this)
-  ;; 			       (surface-soft-erp that)
-  ;; 			       'ode::soft-erp)
-
-  ;; (combine-surface-properties surface
-  ;; 			       (surface-soft-cfm this)
-  ;; 			       (surface-soft-cfm that)
-  ;; 			       'ode::soft-cfm)
-
-  ;;  (combine-surface-properties surface
-  ;; 				(surface-motion1 this)
-  ;; 				(surface-motion1 that)
-  ;; 				'ode::motion1)
-
-  ;;  (combine-surface-properties surface
-  ;; 				(surface-motion2 this)
-  ;; 				(surface-motion2 that)
-  ;; 				'ode::motion2)
-
-  ;;  (combine-surface-properties surface
-  ;; 				(surface-motionn this)
-  ;; 				(surface-motionn that)
-  ;; 				'ode::motionn)
-
-  ;;  (combine-surface-properties surface
-  ;; 				(surface-slip1 this)
-  ;; 				(surface-slip1 that)
-  ;; 				'ode::slip1)
-
-  ;;  (combine-surface-properties surface
-  ;; 				(surface-slip2 this)
-  ;; 				(surface-slip2 that)
-  ;; 				'ode::slip2)
-  )
-
+    				'ode::rhoN)))
 
 (defmethod close-callback ((this physics-object) (that physics-object))
 
@@ -493,9 +477,6 @@
     
     (with-foreign-object (contact '(:struct dContact) *physics-max-contacts*)
       
-      (loop for i from 0 to (1- (foreign-type-size '(:struct ode::dContact)))
-	 do (setf  (mem-aref contact :char i) 0))
-      
       (let* ((surface (foreign-slot-pointer contact '(:struct ode::dContact) 'ode::surface))
 	     (gg (foreign-slot-pointer contact '(:struct ode::dContact) 'ode::geom)))
 	
@@ -504,11 +485,44 @@
 	
 	(let ((num-contacts (collide o1 o2 *physics-max-contacts* gg (foreign-type-size '(:struct ode::dContact)))))
 	  (unless (zerop num-contacts)
-	    
-	    (joint-attach
-	     (joint-create-contact *physics-world* *physics-contact-group* contact)
-	     b1 b2)))))))
 
+	    (when (or (and (not (cffi:null-pointer-p b1)) (not (zerop (clode::body-is-kinematic b1))))
+		      (and (not (cffi:null-pointer-p b2)) (not (zerop (clode::body-is-kinematic b2)))))
+	      (print "kinemeatic object"))
+	    
+
+	    (loop for x from 0 to (1- num-contacts)
+		 do (joint-attach
+		     (joint-create-contact *physics-world* *physics-contact-group* (cffi:mem-aptr contact '(:struct clode::dContact) x))
+		     b1 b2))))))))
+
+
+
+(defmethod close-callback ((this physics-ray) (that physics-object))
+
+  (let* ((o1 (geometry this))
+  	 (o2 (geometry that))
+  	 (b1 (geom-get-body o1))
+  	 (b2 (geom-get-body o2)))
+    
+    (with-foreign-object (contact '(:struct dContact) *physics-max-contacts*)
+      (let ((gg (foreign-slot-pointer contact '(:struct ode::dContact) 'ode::geom)))
+	
+	
+	(let ((num-contacts (collide o1 o2 *physics-max-contacts* gg (foreign-type-size '(:struct ode::dContact)))))
+	  (unless (zerop num-contacts)
+	    
+	    (let ((distance (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::depth)))
+
+	      ;(format t "CLODE:ray-callback b1 = ~A~%" b1)
+
+	      (clode:body-set-force b1 0 (/ 1 distance) 0)
+
+	      )))))))
+
+  
+(defmethod close-callback ((this physics-object) (that physics-ray))
+  (close-callback that this))
 
 
 (defun physics-near-handler (data o1 o2)
@@ -516,7 +530,7 @@
   (unless (cffi:pointer-eq o1 o2)
     
     (let* ((lisp-object1 (gethash (pointer-address o1) *physics-geometry-hash*))
-  	   (lisp-object2 (gethash (pointer-address o2) *physics-geometry-hash*)))
+	   (lisp-object2 (gethash (pointer-address o2) *physics-geometry-hash*)))
 
       (when (and lisp-object1 lisp-object2)
 	
@@ -539,10 +553,11 @@
 	*physics-contact-group* (joint-group-create 0))
   
   (world-set-gravity *physics-world* 0 -6 0)
-  (world-set-cfm *physics-world* .001)
+  (world-set-cfm *physics-world* 1e-5)
   (world-set-damping *physics-world* .001 .001)
-  (world-set-linear-damping-threshold *physics-world* .001)
-  (world-set-angular-damping-threshold *physics-world* .001)
+  (world-set-linear-damping-threshold *physics-world* 0.00001)
+  (world-set-angular-damping-threshold *physics-world* .005)
+  (clode:world-set-auto-disable-flag  *physics-world* 0)
   
   (setf *physics-geometry-hash* (make-hash-table :test 'eql)))
 

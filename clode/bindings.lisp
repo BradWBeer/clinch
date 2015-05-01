@@ -171,10 +171,10 @@
 (defcfun-rename-function "dBodyDestroy" dBodyID
   (world dWorldID))
 
-(defcfun-rename-function "dBodyGetPosition" (:pointer dReal)
+(defcfun-rename-function "dBodyGetPosition" dVector3
   (body dBodyID))
 
-(defcfun-rename-function "dBodyGetRotation" (:pointer dReal)
+(defcfun-rename-function "dBodyGetRotation" dVector3
   (body dBodyID))
 
 (defcfun-rename-function "dBodySetMass" :void
@@ -225,6 +225,151 @@
 (defcfun-rename-function "dBodyGetAutoDisableFlag" :int
   (body dBodyID))
 
+(defcfun-rename-function "dBodyAddForce" :void 
+  (body dBodyID)
+  (fx dReal)
+  (fy dReal)
+  (fz dReal))
+
+(defcfun-rename-function "dBodyAddTorque" :void
+  (body dBodyID)
+  (fx dReal)
+  (fy dReal)
+  (fz dReal))
+
+(defcfun-rename-function "dBodyAddRelForce" :void 
+  (body dBodyID)
+  (fx dReal)
+  (fy dReal)
+  (fz dReal))
+
+(defcfun-rename-function "dBodyAddRelTorque" :void
+  (body dBodyID)
+  (fx dReal)
+  (fy dReal)
+  (fz dReal))
+
+(defcfun-rename-function "dBodyAddForceAtPos" :void
+  (body dBodyID)
+  (fx dReal)
+  (fy dReal) 
+  (fz dReal)
+  (px dReal)
+  (py dReal)
+  (pz dReal))
+
+(defcfun-rename-function "dBodyAddForceAtRelPos" :void
+  (body dBodyID)
+  (fx dReal)
+  (fy dReal) 
+  (fz dReal)
+  (px dReal)
+  (py dReal)
+  (pz dReal))
+
+(defcfun-rename-function "dBodyAddRelForceAtPos" :void
+  (body dBodyID)
+  (fx dReal)
+  (fy dReal) 
+  (fz dReal)
+  (px dReal)
+  (py dReal)
+  (pz dReal))
+
+(defcfun-rename-function "dBodyAddRelForceAtRelPos" :void
+  (body dBodyID)
+  (fx dReal)
+  (fy dReal) 
+  (fz dReal)
+  (px dReal)
+  (py dReal)
+  (pz dReal))
+
+(defcfun-rename-function "dBodyGetForce" dVector3 
+  (body dBodyID))
+
+(defcfun-rename-function "dBodyGetTorque" dVector3 
+  (body dBodyID))
+
+(defcfun-rename-function "dBodySetForce" :void 
+  (body dBodyID)
+  (x dReal)
+  (y dReal) 
+  (z dReal))
+
+(defcfun-rename-function "dBodySetTorque" :void 
+  (body dBodyID)
+  (x dReal)
+  (y dReal) 
+  (z dReal))
+
+(defcfun-rename-function "dBodySetDynamic" :void 
+  (body dBodyID))
+
+(defcfun-rename-function "dBodySetKinematic" :void 
+  (body dBodyID))
+
+(defcfun-rename-function "dBodyIsKinematic" :int 
+  (body dBodyID))
+
+(defcfun-rename-function "dBodyVectorToWorld" :void
+  (body dBodyID)
+  (px dReal)
+  (py dReal)
+  (pz dReal)
+  (result dVector3))
+
+(defcfun-rename-function "dBodyVectorFromWorld" :void
+  (body dBodyID)
+  (px dReal)
+  (py dReal)
+  (pz dReal)
+  (result dVector3))
+
+(defcfun-rename-function "dBodySetAutoDisableLinearThreshold" :void 
+  (body dBodyID)
+  (linear-threshold dReal))
+
+(defcfun-rename-function "dBodyGetAutoDisableLinearThreshold" dReal
+  (body dBodyID))
+
+(defcfun-rename-function "dBodySetAutoDisableAngularThreshold" :void  
+  (body dBodyID) 
+  (angular-threshold dReal))
+
+(defcfun-rename-function "dBodyGetAutoDisableAngularThreshold" dReal
+  (body dBodyID))
+
+(defcfun-rename-function "dBodySetAutoDisableSteps" :void
+  (body dBodyID)
+  (steps :int))
+
+(defcfun-rename-function "dBodyGetAutoDisableSteps" :int
+  (body dBodyID))
+
+(defcfun-rename-function "dBodySetAutoDisableTime" :void
+  (body dBodyID)
+  (time dReal))
+
+(defcfun-rename-function "dBodyGetAutoDisableTime" dReal
+  (body dBodyID))
+
+(defcfun-rename-function "dBodySetAutoDisableAverageSamplesCount" :void 
+  (body dBodyID)
+  (average-samples-count :unsigned-int))
+
+(defcfun-rename-function "dBodyGetAutoDisableAverageSamplesCount" :int 
+  (body dBodyID))
+
+(defcfun-rename-function "dBodySetAutoDisableDefaults" :void 
+  (body dBodyID))
+
+(defcfun-rename-function "dBodySetMovedCallback" :void 
+  (body dBodyID)
+  (callback :pointer))
+
+
+
 (defcfun-rename-function "dGeomSetPosition" :void
   (geom dGeomID)
   (x dReal)
@@ -248,6 +393,23 @@
 (defcfun-rename-function "dGeomGetQuaternion" :void
   (geom dGeomID)
   (result dQuaternion))
+
+(defcfun-rename-function "dGeomSetOffsetPosition" :void
+  (geom dGeomID)
+  (x dReal)
+  (y dReal)
+  (z dReal))
+
+(defcfun-rename-function "dGeomSetOffsetRotation" :void
+  (geom dGeomID)
+  (r dMatrix3))
+
+(defcfun-rename-function "dGeomSetOffsetQuaternion" :void 
+  (geom dGeomID)
+  (q dQuaternion))
+
+(defcfun-rename-function "dGeomClearOffset" :void
+  (geom dGeomID))
 
 (defcfun-rename-function "dCreateBox" dGeomID
   (space dSpaceID)
@@ -398,7 +560,48 @@
   (length dReal))
 
 
+(defcfun-rename-function "dCreateRay" dGeomID
+  (space dSpaceID)
+  (length dReal))
 
+(defcfun-rename-function "dGeomRaySetLength" :void 
+  (ray dGeomID)
+  (length dReal))
+
+(defcfun-rename-function "dGeomRayGetLength" dReal
+  (ray dGeomID))
+
+(defcfun-rename-function "dGeomRaySet" :void 
+  (ray dGeomID)
+  (px dReal)
+  (py dReal)
+  (pz dReal)
+  (dx dReal)
+  (dy dReal) 
+  (dz dReal))
+
+(defcfun-rename-function "dGeomRayGet" :void
+  (ray dGeomID)
+  (start dVector3)
+  (dir dVector3))
+
+
+(defcfun-rename-function "dGeomRaySetParams" :void 
+  (ray dGeomID)
+  (first-contact :int) 
+  (backface-cull :int))
+
+;; (defcfun-rename-function "dGeomRayGetParams" :void 
+;;   (ray dGeomID)
+;;   *FirstContact, int *BackfaceCull );
+
+
+(defcfun-rename-function "dGeomRaySetClosestHit" :void
+  (ray dGeomID)
+  (ClosestHit :int))
+
+(defcfun-rename-function "dGeomRayGetClosestHit" :int
+  (ray dGeomID))
 
 (defcfun-rename-function "dSpaceDestroy" :void
   (space dSpaceID))
@@ -418,12 +621,6 @@
 
 (defcfun-rename-function "dGeomGetBody" dBodyID
   (geom dGeomID))
-
-;; (defcfun-rename-function "dGeomGetPosition" dVector3
-;;   (geom dGeomID))
-
-;; (defcfun-rename-function "dGeomGetRotation" dMatrix3
-;;   (geom dGeomID))
 
 (defcfun-rename-function "dCollide" :int
   (o1 dGeomID)
@@ -466,3 +663,10 @@
 (defcfun-rename-function "dWorldSetAngularDampingThreshold" :void
   (world dWorldID) 
   (threshold dReal))
+
+(defcfun-rename-function "dWorldSetAutoDisableFlag" :void
+  (world dWorldID)
+  (auto-disable :int))
+
+(defcfun-rename-function "dWorldGetAutoDisableFlag" :int
+  (world dWorldID))
