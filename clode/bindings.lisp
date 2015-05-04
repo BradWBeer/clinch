@@ -200,6 +200,12 @@
   (y dReal)
   (z dReal))
 
+(defcfun-rename-function "dBodyGetLinearVel" dVector3
+  (body dBodyID))
+
+(defcfun-rename-function "dBodyGetAngularVel" dVector3
+  (body dBodyID))
+
 (defcfun-rename-function "dBodySetMaxAngularSpeed" :void
   (body dBodyID)
   (max-speed dReal))

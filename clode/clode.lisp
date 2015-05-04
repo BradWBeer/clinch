@@ -21,7 +21,10 @@
 ;; 		 (n->sf (elt rotation 8)) (n->sf (elt rotation 9)) (n->sf (elt rotation 10)) (n->sf (elt position 2))
 ;; 		 (n->sf 0)                (n->sf 0)                (n->sf 0)                 (n->sf 1)))
 
-
+(defun coerce-floats (val)
+  (sb-cga:vec (coerce (aref val 0) 'single-float)
+	      (coerce (aref val 1) 'single-float)
+	      (coerce (aref val 2) 'single-float)))
 
 (setf mode-options '(ode::Mu2	  
 		     ode::Axis-Dep 
@@ -468,6 +471,18 @@
     				(surface-rhoN that)
     				'ode::rhoN)))
 
+
+
+(defmethod remove-vector (v1 v2)
+  (let* ((fv1 (COERCE-FLOATS v1))
+	 (fv2 (COERCE-FLOATS v2))
+	 (n (sb-cga:normalize fv2))
+	 (dot (sb-cga:dot-product fv1 n)))
+    (if (> dot 0)
+	(sb-cga:vec- fv1 (sb-cga:vec* n dot))
+	v1)))
+	         
+
 (defmethod close-callback ((this physics-object) (that physics-object))
 
   (let* ((o1 (geometry this))
@@ -480,7 +495,6 @@
       (let* ((surface (foreign-slot-pointer contact '(:struct ode::dContact) 'ode::surface))
 	     (gg (foreign-slot-pointer contact '(:struct ode::dContact) 'ode::geom)))
 	
-	
 	(combine-physics-objects surface this that)
 	
 	(let ((num-contacts (collide o1 o2 *physics-max-contacts* gg (foreign-type-size '(:struct ode::dContact)))))
@@ -488,13 +502,22 @@
 
 	    (when (or (and (not (cffi:null-pointer-p b1)) (not (zerop (clode::body-is-kinematic b1))))
 		      (and (not (cffi:null-pointer-p b2)) (not (zerop (clode::body-is-kinematic b2)))))
-	      (print "kinemeatic object"))
 	    
+	      (when (cffi:null-pointer-p b1)
+		(let ((vel (remove-vector (clode:body-get-linear-vel b2)
+					  (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::normal))))
+		  (clode:body-set-linear-vel b2 (aref vel 0) (aref vel 1) (aref vel 2))))
+
+	      (when (cffi:null-pointer-p b2)
+		(let ((vel (remove-vector (clode:body-get-linear-vel b1)
+					  (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::normal))))
+		  (clode:body-set-linear-vel b1 (aref vel 0) (aref vel 1) (aref vel 2)))))
+
 
 	    (loop for x from 0 to (1- num-contacts)
-		 do (joint-attach
-		     (joint-create-contact *physics-world* *physics-contact-group* (cffi:mem-aptr contact '(:struct clode::dContact) x))
-		     b1 b2))))))))
+	       do (joint-attach
+		   (joint-create-contact *physics-world* *physics-contact-group* (cffi:mem-aptr contact '(:struct clode::dContact) x))
+		   b1 b2))))))))
 
 
 
@@ -512,13 +535,19 @@
 	(let ((num-contacts (collide o1 o2 *physics-max-contacts* gg (foreign-type-size '(:struct ode::dContact)))))
 	  (unless (zerop num-contacts)
 	    
-	    (let ((distance (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::depth)))
+	    (let ((distance (abs (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::depth))))
 
-	      ;(format t "CLODE:ray-callback b1 = ~A~%" b1)
+	      ;;(format t "CLODE:ray-callback b1 = ~A~%" distance)
 
-	      (clode:body-set-force b1 0 (/ 1 distance) 0)
-
-	      )))))))
+	      (let* ((vel (body-get-linear-vel b1))
+		     (x  (+ (* .9 (aref vel 1))
+			    (* 1/2 (abs (- (abs distance) 3))))))
+		;; (+ (* 
+		;; 	(abs (* 1/25 (max 0 (- distance 1.5))))))))
+		
+		;;(format t "~A vs ~A~%" vel x)
+		
+		(clode:body-set-linear-vel b1 (aref vel 0) x (aref vel 2))))))))))
 
   
 (defmethod close-callback ((this physics-object) (that physics-ray))
