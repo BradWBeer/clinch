@@ -506,11 +506,15 @@
 	      (when (cffi:null-pointer-p b1)
 		(let ((vel (remove-vector (clode:body-get-linear-vel b2)
 					  (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::normal))))
+
+		  (print vel)
 		  (clode:body-set-linear-vel b2 (aref vel 0) (aref vel 1) (aref vel 2))))
 
 	      (when (cffi:null-pointer-p b2)
 		(let ((vel (remove-vector (clode:body-get-linear-vel b1)
 					  (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::normal))))
+
+		  (print vel)
 		  (clode:body-set-linear-vel b1 (aref vel 0) (aref vel 1) (aref vel 2)))))
 
 
@@ -540,8 +544,8 @@
 	      ;;(format t "CLODE:ray-callback b1 = ~A~%" distance)
 
 	      (let* ((vel (body-get-linear-vel b1))
-		     (x  (+ (* .9 (aref vel 1))
-			    (* 1/2 (abs (- (abs distance) 3))))))
+		     (x  (+ (* .90 (aref vel 1))
+			    (* 1 (abs (- (abs distance) 3))))))
 		;; (+ (* 
 		;; 	(abs (* 1/25 (max 0 (- distance 1.5))))))))
 		
@@ -586,7 +590,7 @@
   (world-set-damping *physics-world* .001 .001)
   (world-set-linear-damping-threshold *physics-world* 0.00001)
   (world-set-angular-damping-threshold *physics-world* .005)
-  (clode:world-set-auto-disable-flag  *physics-world* 0)
+  (clode:world-set-auto-disable-flag  *physics-world* 1)
   
   (setf *physics-geometry-hash* (make-hash-table :test 'eql)))
 

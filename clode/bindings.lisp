@@ -375,6 +375,19 @@
   (callback :pointer))
 
 
+(defcfun-rename-function "dBodyGetLinearDamping" dReal
+  (body dBodyID))
+
+(defcfun-rename-function "dBodyGetAngularDamping" dReal
+  (body dBodyID))
+
+(defcfun-rename-function "dBodySetLinearDamping" :void
+  (body dBodyID)
+  (scale dReal)) 
+
+(defcfun-rename-function "dBodySetAngularDamping" :void
+  (body dBodyID)
+  (scale dReal))
 
 (defcfun-rename-function "dGeomSetPosition" :void
   (geom dGeomID)
