@@ -188,7 +188,7 @@
 
 (defmethod unload ((this node) &key)
   "Release node resources."
-  
+  (setf (enabled this) nil)
   (loop for i in (children this)
        do (when (typep i 'refcount)
 	    (unref i))))

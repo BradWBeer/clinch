@@ -18,9 +18,10 @@
 
 
 (defmethod update :before ((this clode-node) &key parent force)
-  (with-slots ((geom geometry)) this
-    (when geom 
-      (setf (slot-value this 'clinch:transform) (ode:get-transform geom)))))
+  (when (enabled this)
+    (with-slots ((geom geometry)) this
+      (when geom 
+	(setf (slot-value this 'clinch:transform) (ode:get-transform geom))))))
 
 
 (defmethod initialize-instance :after ((this clode-node) &key parent)

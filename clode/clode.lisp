@@ -256,8 +256,8 @@
 (defmethod set-position ((this physics-object) x y z)
   (with-slots ((body body)) this
     (if body 
-      (body-set-position (pointer body) x y z)
-      (geom-set-position (geometry this) x y z))))
+	(body-set-position (pointer body) x y z)
+	(geom-set-position (geometry this) x y z))))
 
 (defclass physics-sphere (physics-object)
   ((radius :initform 1
@@ -281,7 +281,7 @@
   
   (when (body this)
     (geom-set-body (geometry this) (pointer (body this)))))
-  
+
 
 
 (defclass physics-cylinder (physics-object)
@@ -336,7 +336,7 @@
   (when (body this)
     (geom-set-body (geometry this) (pointer (body this)))))
 
- 
+
 (defclass physics-box (physics-object)
   ((x :initform 1
       :initarg :x
@@ -474,14 +474,31 @@
 
 
 (defmethod remove-vector (v1 v2)
+
   (let* ((fv1 (COERCE-FLOATS v1))
 	 (fv2 (COERCE-FLOATS v2))
-	 (n (sb-cga:normalize fv2))
-	 (dot (sb-cga:dot-product fv1 n)))
-    (if (> dot 0)
-	(sb-cga:vec- fv1 (sb-cga:vec* n dot))
-	v1)))
-	         
+	 ;(n (sb-cga:normalize fv2))
+	 (dot (sb-cga:dot-product fv1 fv2))
+	 (ret (if (> dot 0)
+		  (sb-cga:vec- fv1 (sb-cga:vec* fv2 dot))
+		  v1)))
+
+    ret))
+
+  
+
+    ;; ;;(setf (aref ret 1) (max 0.0 (aref ret 1)))
+    ;; (if (> dot 0)
+    ;; 	(format t "~A - (~A * ~A) = ~A~%" fv1 dot (sb-cga:vec* fv2 dot) ret)
+    ;; 	(format t "~A dot=~A~%" fv1 dot))
+    ;; ret))
+
+;; (defmethod remove-vector (v1 v2)
+;;   (setf (aref v1 1)
+;; 	(max (aref v1 1) 0.0))
+;;   (print v2)
+;;   v1)
+
 
 (defmethod close-callback ((this physics-object) (that physics-object))
 
@@ -498,25 +515,66 @@
 	(combine-physics-objects surface this that)
 	
 	(let ((num-contacts (collide o1 o2 *physics-max-contacts* gg (foreign-type-size '(:struct ode::dContact)))))
+
 	  (unless (zerop num-contacts)
 
 	    (when (or (and (not (cffi:null-pointer-p b1)) (not (zerop (clode::body-is-kinematic b1))))
 		      (and (not (cffi:null-pointer-p b2)) (not (zerop (clode::body-is-kinematic b2)))))
-	    
+	      
 	      (when (cffi:null-pointer-p b1)
-		(let ((vel (remove-vector (clode:body-get-linear-vel b2)
-					  (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::normal))))
-
-		  (print vel)
+		(let* ((oldvel (clode:body-get-linear-vel b2))
+		       (norm (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::normal))
+		       (depth (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::depth))
+		       (pos (clode:body-get-position b2))
+		       (vel (remove-vector oldvel norm))
+		       (dpos (sb-cga:vec* (clinch:make-vector (aref norm 0) (aref norm 1) (aref norm 2))
+					  (coerce (- depth) 'single-float))))
+		  
+		  
+		  ;;(format t "geom=~A body=~A geometry=~A~%" o2 pos (clode:geom-get-position o2))
+		  (when (> (abs (aref pos 2)) 1)
+		    
+		    
+		    ;(format t "~A ov=~A n=~A nv=~A~%" pos oldvel norm vel)
+		    ;(print (aref vel 2))
+		    )
+		  
+		  ;;(format t "#1 ov=~A v=~A p=~A depth=~A~%" oldvel vel (clode:body-get-position b2) (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::depth))
+		  
 		  (clode:body-set-linear-vel b2 (aref vel 0) (aref vel 1) (aref vel 2))))
+	      ;; (clode:body-set-position b2 0
+	      ;; 			   (+ (aref pos 0)
+	      ;; 			      (aref dpos 0))
+	      ;; 			   (+ (aref pos 1)
+	      ;; 			      (aref dpos 1))
+	      ;; 			   (+ (aref pos 2)
+	      ;; 			      (aref dpos 2)))))
+		
+	      
+	      ;;(print (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::normal))
 
+	      
+	      
+	      
 	      (when (cffi:null-pointer-p b2)
-		(let ((vel (remove-vector (clode:body-get-linear-vel b1)
-					  (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::normal))))
+		(let* ((oldvel (clode:body-get-linear-vel b1))
+		       (norm (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::normal))
+		       (vel (remove-vector oldvel (clinch:make-vector (- (aref norm 0))
+								      (- (aref norm 1))
+								      (- (aref norm 2)))))
 
-		  (print vel)
+								      
+		       (pos (clode:body-get-position b1)))
+		  
+		  ;;(format t "geom=~A body=~A geometry=~A~%" o1 pos (clode:geom-get-position o1))
+		  (when (> (abs (aref pos 2)) 1)
+		    ;(format t "~A ov=~A n=~A nv=~A~%" pos oldvel norm vel)
+		    ;(print (aref vel 2))
+		    )
+		  ;; (print (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::normal))
+		  ;;(format t "#2 ov=~A v=~A p=~A depth=~A~%" oldvel vel (clode:body-get-position b1) (foreign-slot-value gg '(:struct ode::dContactGeom) 'ode::depth))
 		  (clode:body-set-linear-vel b1 (aref vel 0) (aref vel 1) (aref vel 2)))))
-
+	    
 
 	    (loop for x from 0 to (1- num-contacts)
 	       do (joint-attach
@@ -545,7 +603,7 @@
 
 	      (let* ((vel (body-get-linear-vel b1))
 		     (x  (+ (* .90 (aref vel 1))
-			    (* 1 (abs (- (abs distance) 3))))))
+			    (* 1/2 (abs (- (abs distance) 3))))))
 		;; (+ (* 
 		;; 	(abs (* 1/25 (max 0 (- distance 1.5))))))))
 		
@@ -553,7 +611,7 @@
 		
 		(clode:body-set-linear-vel b1 (aref vel 0) x (aref vel 2))))))))))
 
-  
+
 (defmethod close-callback ((this physics-object) (that physics-ray))
   (close-callback that this))
 

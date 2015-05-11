@@ -40,7 +40,25 @@
             fix)
            package))))))
 
-(defmacro infinity (&optional (precision :double))
+(defcfun-rename-function "dGetConfiguration" :string)
+  
+(defvar is-double-precision?)
+(setf is-double-precision? (search "ODE_double_precision" (get-configuration)))
+
+
+(defun number->dreal (x)
+  (coerce x (if is-double-precision?
+		'double-float
+		'single-float)))
+
+;;(if is-double-precision?
+    (defctype dreal (:wrapper :double
+			      :to-c number->dreal))
+   ;; (defctype dreal (:wrapper :float
+   ;; 			      :to-c number->dreal)))
+
+
+(defmacro infinity (&optional (precision is-double-precision?))
   `(if (eql ,precision :single)
        (progn
          #+sbcl sb-ext:single-float-positive-infinity
@@ -91,14 +109,6 @@
   (:Approx1-2	 #x2000)
   (:Approx1-N    #x4000)
   (:Approx1      #x7000))
-
-
-
-(defun number->dreal (x)
-  (coerce x 'double-float))
-
-(defctype dreal (:wrapper :double
-			 :to-c number->dreal))
 
 
 

@@ -3,11 +3,10 @@
 
 (in-package #:clinch)
 
-
 (defun make-vector (a b c)
-  (sb-cga:vec (float a)
-	      (float b)
-	      (float c)))
+  (sb-cga:vec (coerce a 'single-float)
+	      (coerce b 'single-float)
+	      (coerce c 'single-float)))
 
 (defun ray-triangle-intersect? (origin ray-dir v0 v1 v2)
   (declare (ignore v2))
