@@ -265,6 +265,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
   (loop
      with tex-unit = 0
      for (atr-or-uni name value) in (render-values this)
+     if (typep value 'function) do (setf value (funcall value))
      collect (cond ((and (eql atr-or-uni :uniform)
 			 (typep value 'texture)) (prog1 (bind-sampler value (shader this) name tex-unit) (incf tex-unit)))
 		   ((eql atr-or-uni :uniform) (attach-uniform (shader this) name value))
