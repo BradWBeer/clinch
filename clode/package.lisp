@@ -29,6 +29,8 @@
      #:physics-init
      #:physics-step
      #:physics-uninit
+     #:body #:pointer
+     #:enabled
 
      #:BOX-INDEXES #:BOX-VERTEXES #:BOX-NORMALS #:BOX-TEXCOORDS #:SPHERE-INDEXES
      #:SPHERE-VERTEXES #:SPHERE-NORMALS
@@ -38,4 +40,6 @@
      #:set-position
      #:close-callback
      #:update
+     #:ray-length #:physics-spring #:springiness #:damping
+     #:physics-player
      ))

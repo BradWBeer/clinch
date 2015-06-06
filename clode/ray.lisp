@@ -14,6 +14,12 @@
   (when (body this)
     (clode:geom-set-body (geometry this) (pointer (body this)))))
 
+(defmethod ray-length ((this physics-ray) &key)
+  (geom-ray-get-length (geometry this)))
+
+(defmethod (setf transform)  ((length number) (this physics-ray))
+  (geom-ray-set-length (geometry this) length))
+
 (defmethod close-callback ((this physics-ray) (that physics-object))
 
   (let* ((o1 (geometry this))
@@ -33,8 +39,9 @@
 	      ;;(format t "CLODE:ray-callback b1 = ~A~%" distance)
 
 	      (let* ((vel (body-get-linear-vel b1))
+		     (len (ray-length this))
 		     (x  (+ (* .90 (aref vel 1))
-			    (* 1/2 (abs (- (abs distance) 3))))))
+			    (* 1/2 (abs (- (abs distance) len))))))
 		;; (+ (* 
 		;; 	(abs (* 1/25 (max 0 (- distance 1.5))))))))
 		
@@ -45,4 +52,13 @@
 
 (defmethod close-callback ((this physics-object) (that physics-ray))
   (close-callback that this))
+
+(defmethod Ray-Get ((this physics-ray))
+
+  (cffi:with-foreign-objects ((start 'dVector3)
+			      (dir   'dVector3))
+
+    (Geom-Ray-Get (geometry this) start dir)
+    (values (cffi:convert-from-foreign start 'dVector3)
+	    (cffi:convert-from-foreign dir 'dVector3))))
 

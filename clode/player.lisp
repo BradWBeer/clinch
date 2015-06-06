@@ -1,22 +1,19 @@
 (in-package #:clode)
 
-(defclass spring ()
-  ())
-
 (defclass physics-player ()
-  ((head :initform nil
-	 :initarg :head
-	 :reader head)
-   (legs :initform nil
-	 :initarg :legs
-	 :reader legs)
-   (up :initform '(0 1 0)
-       :initarg :up
-       :reader up-vector)
-   (direction :initform '(1 0 0)
-	      :initarg :direction
-	      :reader direction-vector)
-   (max-speed :initform 1
-	      :initarg :max-speed
-	      :accessor max-speed)))
-   
+  ((body :initform (error "You must pass a physics-body to a physics-player object!")
+	 :initarg :body
+	 :reader body)))
+
+
+(defmethod initialize-instance :after ((this physics-player) &key)
+
+  (let ((pbody (clode::pointer (clode::body this))))
+    
+  (clode:body-set-max-angular-speed pbody 0)
+  (clode::body-set-kinematic pbody)
+  (clode:Body-Set-Auto-Disable-Flag pbody 0)
+  (clode:Body-Set-Angular-Damping pbody 0)
+  (clode:Body-Set-linear-Damping pbody 0)))
+
+

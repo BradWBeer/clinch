@@ -312,3 +312,9 @@
 	       do (joint-attach
 		   (joint-create-contact *physics-world* *physics-contact-group* (cffi:mem-aptr contact '(:struct clode::dContact) x))
 		   b1 b2))))))))
+
+
+(defmethod enabled ((this physics-object))
+  (let ((pbody (pointer (body this))))
+
+    (eq 1 (Body-Is-Enabled pbody))))

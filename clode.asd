@@ -22,7 +22,9 @@
 			 (:file "box")
 			 (:file "plane")
 			 (:file "ray")
+			 (:file "spring")
 			 (:file "clode-node")
-			 (:file "shapes")))))
+			 (:file "shapes")
+			 (:file "player")))))
 
 

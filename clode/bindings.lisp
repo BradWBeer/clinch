@@ -611,8 +611,8 @@
 
 (defcfun-rename-function "dGeomRayGet" :void
   (ray dGeomID)
-  (start dVector3)
-  (dir dVector3))
+  (start :pointer)
+  (dir :pointer))
 
 
 (defcfun-rename-function "dGeomRaySetParams" :void 
