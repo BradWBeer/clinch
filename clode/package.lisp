@@ -42,4 +42,5 @@
      #:update
      #:ray-length #:physics-spring #:springiness #:damping
      #:physics-player
+     #:horizontal #:vertical #:load-player-camera
      ))

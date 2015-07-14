@@ -52,3 +52,13 @@
 		       (elt matrix 3)
 		       (elt matrix 7)
 		       (elt matrix 11))))
+
+
+(defmethod add-to-body-velocity ((this physics-body) vel)
+  (let* ((p (pointer this))
+	 (v (body-get-linear-vel p)))
+    (body-set-linear-vel p
+			 (+ (aref v 0) (first vel))
+			 (+ (aref v 1) (second vel))
+			 (+ (aref v 2) (third vel)))
+    (values v (body-get-linear-vel p))))
