@@ -132,25 +132,27 @@
 
 (defmethod attach-uniform ((this shader) (uniform string) value)
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
+  (let ((ret (get-uniform-id this uniform)))
 
-  (destructuring-bind (type . id) (get-uniform-id this uniform)
+    (when ret 
+      (destructuring-bind (type . id) ret
+	
+	(let ((f (case type
+		   (:float #'gl:uniformf)
+		   (:int #'gl:uniformi)
+		   (:matrix (lambda (id value)
+			      (gl:uniform-matrix id 2 (cond
+							((arrayp value) value)
+							((typep value 'node) (transform
+									      value))
+							(t (error "Unknown Type in attach-uniform!")))))))))
+	  
+	  
+	  (if (listp value)
+	      (apply f id value)
+	      (apply f id (list value))))))))
     
-    (let ((f (case type
-	       (:float #'gl:uniformf)
-	       (:int #'gl:uniformi)
-	       (:matrix (lambda (id value)
-			  (gl:uniform-matrix id 2 (cond
-						    ((arrayp value) value)
-						    ((typep value 'node) (transform
-									  value))
-						    (t (error "Unknown Type in attach-uniform!")))))))))
-						      
-      
-      (if (listp value)
-	  (apply f id value)
-	  (apply f id (list value))))))
-
-(defmethod attach-uniform ((this shader) (uniform string) (matrix array))
+    (defmethod attach-uniform ((this shader) (uniform string) (matrix array))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
 
   (destructuring-bind (type . id) (get-uniform-id this uniform)
@@ -167,8 +169,9 @@
 (defmethod bind-static-values-to-attribute ((this shader) name &rest vals)
   "It is possible to bind static information to an attribute. Your milage may vary."
   (let ((id (cdr (get-attribute-id this name))))
-    (gl:disable-vertex-attrib-array id)
-    (apply #'gl:vertex-attrib id vals)))
+    (when id 
+      (gl:disable-vertex-attrib-array id)
+      (apply #'gl:vertex-attrib id vals))))
 
 
 (defmethod unload ((this shader) &key)

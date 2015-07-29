@@ -135,13 +135,13 @@
   "Bind buffer to a shader attribute."
 
   (let ((id (cdr (get-attribute-id shader name))))
-    
-    (gl:enable-vertex-attrib-array id)
-    (gl:bind-buffer (target this) (id this))
-    (gl:vertex-attrib-pointer id
-			      (stride this)
-			      (qtype this)
-			      0 0 (cffi:null-pointer))))
+    (when id
+      (gl:enable-vertex-attrib-array id)
+      (gl:bind-buffer (target this) (id this))
+      (gl:vertex-attrib-pointer id
+				(stride this)
+				(qtype this)
+				0 0 (cffi:null-pointer)))))
 
 
 (defmethod draw-with-index-buffer ((this buffer))
