@@ -176,7 +176,8 @@
 
 (defmethod unload ((this shader) &key)
   "Unloads and releases all shader resources."
-  
+
+  (format t "Unloading shader!!!~%")
   (with-slots ((vs vert-shader)
 	       (fs frag-shader)
 	       (geo geo-shader)
@@ -196,7 +197,8 @@
 	(gl:detach-shader program geo)
 	(gl:delete-shader geo))
 
-      (gl:delete-program program))
+      (gl:delete-program program)
+      (setf program nil))
     
     (setf (slot-value this 'uniforms) nil
 	  (slot-value this 'attributes) nil

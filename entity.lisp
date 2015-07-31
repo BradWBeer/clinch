@@ -256,8 +256,10 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 (defmethod tmp ((this entity) &key)
   (gl:matrix-mode :modelview)
 
-  (when (shader this)
-    (use-shader (shader this)))
+  (with-accessors ((shader shader)) this
+    (when shader (use-shader (if (typep shader 'function)
+				 (funcall shader)
+				 shader))))
 
   (when (vertices this) (bind-buffer-to-vertex-array (vertices this)))
   (when (normals this) (bind-buffer-to-normal-array (normals this)))
