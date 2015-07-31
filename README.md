@@ -76,3 +76,4 @@ An application can have several viewports. As CLinch does not force any particul
 
 A pipeline is a series of commands which create the scene with every call. Generally they clear the screen, render the root node and sort items into the proper sequence. Unlike Horde3D, any set of Lisp can be used. Usually there is only one pipeline per viewport or application.
 
+
