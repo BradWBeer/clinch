@@ -40,6 +40,15 @@
             fix)
            package))))))
 
+
+(defmacro defcfun-rename-function (name &rest rest)
+  (let ((lisp-name (swig-lispify-noprefix name 'function)))
+    `(progn
+       (defcfun (,name ,lisp-name)
+	   ,@rest)
+       (cl:export (swig-lispify-noprefix ,name 'function)))))
+
+
 (defcfun-rename-function "dGetConfiguration" :string)
   
 (defvar is-double-precision?)
@@ -80,13 +89,6 @@
          #+lispworks #.(read-from-string "10E999")
          #+scl ext:double-float-positive-infinity
          #+t most-positive-double-float)))
-
-(defmacro defcfun-rename-function (name &rest rest)
-  (let ((lisp-name (swig-lispify-noprefix name 'function)))
-    `(progn
-       (defcfun (,name ,lisp-name)
-	   ,@rest)
-       (cl:export (swig-lispify-noprefix ,name 'function)))))
 
 (defmacro ode-num (x)
   `(coerce ,x 'double-float))
