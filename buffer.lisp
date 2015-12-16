@@ -48,7 +48,8 @@
       target: OpenGL buffer target. If you use this, think about subclassing. For more info lookup glBindBuffer().
               NOTE: use :element-array-buffer if you are creating an index buffer.
       usage:  Tells OpenGL how often you wish to access the buffer. 
-     loaded: Has data been put into the buffer. Buffers without data is just future storage, just be sure to set it before you use it."
+      loaded: Has data been put into the buffer. Buffers without data is just future storage, just be sure to set it before you use it.
+      data:   The data with which to fill the buffer. If data has a size, vcount does not need to be set."
   
   (with-slots ((type    type)
 	       (id      id)
@@ -59,7 +60,7 @@
 	       (loaded? loaded))  this
 
     ;; if they didn't give a vcount, see if we can derive one...
-    (when (and (not vcount) (listp data))
+    (when (and (not vcount) (length data))
       (setf vcount (/ (length data) stride)))
     
     (unless id

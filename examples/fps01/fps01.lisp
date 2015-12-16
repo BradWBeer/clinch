@@ -51,7 +51,6 @@
 
       (cairo:move-to (- cw 50) (- ch 50))
       (cairo:line-to (+ cw 50) (+ ch 50))
-      (cairo:set-source-rgb 0 0 0)
       (cairo:move-to (+ cw 50) (- ch 50))
       (cairo:line-to (- cw 50) (+ ch 50))
       (cairo:stroke))
