@@ -22,7 +22,7 @@
 (defvar box)
 (defvar cylinder)
 (defvar root-node)
-(defvar other-node)
+(defvar overlay-01)
 (defvar player-node)
 (defvar plane)
 (defvar shader)
@@ -35,13 +35,31 @@
 (defvar wall)
 (defvar tex-overlay)
 (defvar player-object)
+(defvar overlay-text "")
+
 
 (defun draw-overlay (texture text)
   (clinch::with-context-for-texture  (texture :width-var w :height-var h)
+    
     (clinch:clear-cairo-context 0 0 0 0)
-    (clinch:print-text `("span" (("font_desc" "Century Schoolbook L Roman bold 150"))
-			 ,text)
+    (cairo:set-line-width 10)
+    (cairo:set-line-cap :round)
+    (cairo:set-source-rgba 1 1 1 1)
 
+    (let* ((cw (/ w 2))
+	   (ch (/ h 2)))
+
+      (cairo:move-to (- cw 50) (- ch 50))
+      (cairo:line-to (+ cw 50) (+ ch 50))
+      (cairo:set-source-rgb 0 0 0)
+      (cairo:move-to (+ cw 50) (- ch 50))
+      (cairo:line-to (- cw 50) (+ ch 50))
+      (cairo:stroke))
+
+    (cairo:move-to 0 0)
+    (clinch:print-text `("span" (("font_desc" "Century Schoolbook L Roman bold 100"))
+				,text)
+		       
 		       :width w)))
 
 
@@ -66,33 +84,6 @@
 				    (asdf:system-relative-pathname :clinch "clinch.asd"))
 				   "examples/fps01/"))
 
-
-;; (defun create-rectangle (texture &optional (node hub))
-;;   (make-instance 'clinch:entity
-;; 		 :parent node
-;; 		 :indexes indexes
-;; 		 :shader shader
-;; 		 :values  (list
-;; 			   (list :attribute "tc1" tex-coord)
-;; 			   (list :attribute "t1" texture)
-;; 			   (list :vertices vertexes)
-;; 			   (list :normals normals)
-;; 			   )))
-
-
-
-
-;; (defun add-to-body-velocity (body vel)
-;;   (let ((v (clode:body-get-linear-vel body)))
-;;     (clode:body-set-linear-vel body
-;; 			       (+ (aref v 0) (aref vel 0))
-;; 			       (+ (aref v 1) (aref vel 1))
-;; 			       (+ (aref v 2) (aref vel 2)))
-;;     (values v (clode:body-get-linear-vel body))))
-
-
-
-
 (defun eval-from-file (file)
   (eval
    (read-from-string
@@ -111,20 +102,6 @@ the sdl2:with-init code."
       #+sbcl (sb-int:with-float-traps-masked (:invalid) ,@body)
       #-sbcl ,@body)))
 
-
-(defmacro continuable (&body body)
-  "Helper macro that we can use to allow us to continue from an
-error. Remember to hit C in slime or pick the restart so errors don't kill the app."
-  `(restart-case (progn ,@body) (continue () :report "Continue")))
-
-
-(defun update-swank ()
-  "Called from within the main loop, this keep the lisp repl
-working while cepl runs"
-  (continuable
-    (let ((connection (or swank::*emacs-connection* (swank::default-connection))))
-      (when connection
-	(swank::handle-requests connection t)))))
 
 (defun add-wall (size position rotation)
   (let ((cn (make-instance 'clode:clode-node
@@ -179,13 +156,11 @@ working while cepl runs"
 				     :qtype :unsigned-char
 				     :target :pixel-unpack-buffer))
     
-    (draw-overlay tex-overlay "This is a test!")
-					;(clinch:print-text '("This is a test!!!"))
+    (draw-overlay tex-overlay overlay-text)   
     
-    
-    
-    (setf other-node
+    (setf overlay-01
 	  (make-instance 'clinch:node
+			 :enabled nil
 			 :children (list
 				    (setf overlay1
 					  (make-instance
@@ -213,8 +188,8 @@ working while cepl runs"
 
     
 
-    (clinch:scale other-node 100 100 0)
-    (clinch:translate  other-node  0 0 5)
+    (clinch:scale overlay-01 100 100 0)
+    (clinch:translate  overlay-01  0 0 5)
     
     
     (setf root-node
@@ -370,15 +345,15 @@ working while cepl runs"
   
   (clinch:render root-node)
 
-  ;(when (clinch:enabled other-node)
+  ;(when (clinch:enabled overlay-01)
     
     (gl:matrix-mode :projection)
     (gl:load-matrix ortho-matrix)  
     (gl:matrix-mode :modelview)
     
-    (clinch:update other-node)
+    (clinch:update overlay-01)
     
-    (clinch:render other-node)
+    (clinch:render overlay-01)
     )
 
 
@@ -406,12 +381,12 @@ working while cepl runs"
 				     :qtype :unsigned-char
 				     :target :pixel-unpack-buffer))
     
-    (draw-overlay tex-overlay "This is a Test!"))
+    (draw-overlay tex-overlay overlay-text))
 
   (setf ortho-matrix (clinch:make-orthogonal-transform width height .25 100))
-  (clinch:set-identity-transform other-node)
-  (clinch:scale other-node (/ width 2) (/ height 2) 0)
-  (clinch:translate  other-node  0 0 5)
+  (clinch:set-identity-transform overlay-01)
+  (clinch:scale overlay-01 (/ width 2) (/ height 2) 0)
+  (clinch:translate  overlay-01  0 0 5)
   )
 
 
@@ -462,14 +437,15 @@ working while cepl runs"
 		(:mousemotion
 		 (:xrel x :yrel y)
 
-		 (setf (clode:horizontal player-object) 
-		       (mod (+ (clode:horizontal player-object) (/ x 10)) 360))
+		 (unless cursor-enabled
+		   (setf (clode:horizontal player-object) 
+			 (mod (+ (clode:horizontal player-object) (/ x 10)) 360))
 		 
-		 (setf (clode:vertical player-object)
-		       (min
-			(max (+ (clode:vertical player-object) (/ y 10))
-			     -89)
-			89)))
+		   (setf (clode:vertical player-object)
+			 (min
+			  (max (+ (clode:vertical player-object) (/ y 10))
+			       -89)
+			  89))))
 		
 		(:keydown
 		 (:repeat repeat :keysym keysym)
@@ -482,15 +458,16 @@ working while cepl runs"
 
 		   (when (zerop repeat)
 		     (cond
-		       ;((sdl2:scancode= scancode :scancode-e) (setf run-loop (not run-loop)))
 		       ((sdl2:scancode= scancode :scancode-q) (sdl2:set-relative-mouse-mode (if cursor-enabled
-												(progn (setf cursor-enabled nil) 0)
-												(progn (setf cursor-enabled t) 1))))
+												(progn (setf cursor-enabled nil) 1)
+												(progn (setf cursor-enabled t) 0))))
 		       ((sdl2:scancode= scancode :scancode-w) (incf mouse-forward -1))
 		       ((sdl2:scancode= scancode :scancode-s) (incf mouse-forward  1))
 		       ((sdl2:scancode= scancode :scancode-d) (incf mouse-strafe  1))
 		       ((sdl2:scancode= scancode :scancode-a) (incf mouse-strafe -1))
-		       ((sdl2:scancode= scancode :scancode-e) (setf (clinch:enabled other-node)  (not (clinch:enabled other-node))))
+		       ((sdl2:scancode= scancode :scancode-e)
+			(when (setf (clinch:enabled overlay-01)  (not (clinch:enabled overlay-01)))
+			  (draw-overlay tex-overlay overlay-text)))
 		       ((sdl2:scancode= scancode :scancode-space) (clode::jump player-object))))
 		   ))
 		;; (format t "EVENT: ~A Key sym: ~a, code: ~a, mod: ~a~%"
@@ -530,7 +507,7 @@ working while cepl runs"
 		       (main-loop)
 		       
 		       (sdl2:gl-swap-window win)
-		       (update-swank))
+		       (clinch::update-swank))
 		
 		(:quit () t))
 
