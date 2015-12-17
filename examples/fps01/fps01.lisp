@@ -3,6 +3,7 @@
 (ql:quickload :sdl2)
 (ql:quickload :clinch)
 (ql:quickload :clinch-pango)
+(ql:quickload :clinch-slime)
 
 (defvar phy-object1)
 (defvar phy-object2)
@@ -44,7 +45,7 @@
     (clinch:clear-cairo-context 0 0 0 0)
     (cairo:set-line-width 10)
     (cairo:set-line-cap :round)
-    (cairo:set-source-rgba 1 1 1 1)
+    (cairo:set-source-rgba 0 0 1 .2)
 
     (let* ((cw (/ w 2))
 	   (ch (/ h 2)))
