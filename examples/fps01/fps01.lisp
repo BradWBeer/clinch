@@ -5,11 +5,6 @@
 (ql:quickload :clinch-pango)
 (ql:quickload :clinch-slime)
 
-(defvar phy-object1)
-(defvar phy-object2)
-(defvar phy-object3)
-(defvar phy-object4)
-(defvar phy-object5)
 (defvar ray)
 (defvar phy-plane)
 (defvar win-entity)
@@ -28,7 +23,6 @@
 (defvar plane)
 (defvar shader)
 (defvar tex-shader) 
-(defvar run-loop)
 (defvar move-direction)
 (defvar cursor-enabled) 
 (defvar mouse-forward)
@@ -38,10 +32,11 @@
 (defvar player-object)
 (defvar overlay-text "")
 
-
+;; Draw text and crosshairs on the overlay.
 (defun draw-overlay (texture text)
   (clinch::with-context-for-texture  (texture :width-var w :height-var h)
     
+    ;; Draw the crosshairs
     (clinch:clear-cairo-context 0 0 0 0)
     (cairo:set-line-width 10)
     (cairo:set-line-cap :round)
@@ -56,11 +51,12 @@
       (cairo:line-to (- cw 50) (+ ch 50))
       (cairo:stroke))
 
+    ;; Draw the text
     (cairo:move-to 0 0)
-    (clinch:print-text `("span" (("font_desc" "Century Schoolbook L Roman bold 100"))
-				,text)
-		       
-		       :width w)))
+    (unless (string-equal overlay-text "")
+      (clinch:print-text `("span" (("font_desc" "Century Schoolbook L Roman bold 100"))
+				  ,text)
+			 :width w))))
 
 
 ;; ambientLight   The lowest amount of light to use. An RGB value.
@@ -76,19 +72,20 @@
       (coerce  (sb-cga:normalize (clinch:make-vector 1 5 3))
 	       'list))
 
-(defvar *reference-counts*)
-(setf *reference-counts* (make-hash-table))
+;; Find the working directory so we can load assets.
+(defvar *working-dir*
+  (concatenate 'string 
+	       (directory-namestring
+		(asdf:system-relative-pathname :clinch "clinch.asd"))
+	       "examples/fps01/"))
 
-(defvar *working-dir* (concatenate 'string 
-				   (directory-namestring
-				    (asdf:system-relative-pathname :clinch "clinch.asd"))
-				   "examples/fps01/"))
-
+;; Evals a file and returns the result.
 (defun eval-from-file (file)
   (eval
    (read-from-string
     (alexandria:read-file-into-string (concatenate 'string *working-dir* file)))))
 
+;; Allows SDL2 to access slime/swank.
 (defmacro with-main (&body body)
   "Enables REPL access via UPDATE-SWANK in the main loop using SDL2. Wrap this around
 the sdl2:with-init code."
@@ -102,7 +99,7 @@ the sdl2:with-init code."
       #+sbcl (sb-int:with-float-traps-masked (:invalid) ,@body)
       #-sbcl ,@body)))
 
-
+;; Adds a wall, given the size, position and rotation.
 (defun add-wall (size position rotation)
   (let ((cn (make-instance 'clode:clode-node
 			   :geometry (make-instance 'ode:physics-box :x (first size) :y (second size) :z (third size) :body nil
@@ -117,31 +114,37 @@ the sdl2:with-init code."
     (clinch:add-child root-node cn)
     cn))
 
-
+;; Initialize the scene
 (defun init ()
 
-  (setf run-loop nil)
+  ;; disable the cursor and allow player movement.
   (setf cursor-enabled nil)
 
+  ;; set up the player 
   (setf mouselook (clinch:make-vector 0 0 0))
   (setf mouse-strafe 0)
   (setf mouse-forward 0)
-
-
   (setf move-direction (clinch:make-vector 0.0 0.0 0.0))
+
   (format t "Initializing physics...~%")
   (ode:physics-init)
   (format t "Done initing physics!~%");
-  
+
+  ;; set up global opengl settings
   (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d :cull-face)
   (%gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:polygon-mode :front-and-back :fill)
   
+  ;; load the simple color shader.
   (setf shader (eval-from-file "simple-shader.lisp"))
+
+  ;; load the texture shader.
   (setf tex-shader (eval-from-file "simple-texture.lisp"))
 
+  ;; Create the window's viewport
   (setf viewport (make-instance 'clinch:viewport))
 
+  ;; load the wall, sphere, box, plane and cylinder meshes
   (setf wall (eval-from-file "wall.lisp"))
   (let ((sphere (eval-from-file "sphere.lisp"))
 	(box (eval-from-file "box.lisp"))
@@ -149,15 +152,18 @@ the sdl2:with-init code."
 	(cylinder (eval-from-file "cylinder.lisp")))
 	;(simple-rect (eval-from-file "simple-rect.lisp")))
 
+    ;; create the overlay texture.
     (setf tex-overlay (make-instance 'clinch:texture
 				     :width 800
 				     :height 800
 				     :stride 4
 				     :qtype :unsigned-char
 				     :target :pixel-unpack-buffer))
-    
+
+    ;; draw the overlay for the first time.
     (draw-overlay tex-overlay overlay-text)   
     
+    ;; create the overlay node and mesh
     (setf overlay-01
 	  (make-instance 'clinch:node
 			 :enabled nil
@@ -186,12 +192,7 @@ the sdl2:with-init code."
 												 1.0 0.0)))
 						       (:uniform "t1" ,(lambda (&rest args) tex-overlay))))))))
 
-    
-
-    (clinch:scale overlay-01 100 100 0)
-    (clinch:translate  overlay-01  0 0 5)
-    
-    
+    ;; create the "scene tree" of sorts
     (setf root-node
 	  (make-instance 'clinch:node
 			 :children
@@ -264,97 +265,55 @@ the sdl2:with-init code."
   (clode:body-set-position (clode::pointer (clode::body phy-object5)) -8 3 -8)
 
   (setf player-object (make-instance 'clode:physics-player :body (clode:body phy-object5)))
-  (setf (clode:horizontal player-object) (- 180 45))
-  )
-
+  (setf (clode:horizontal player-object) (- 180 45)))
 
 (defun main-loop ()
 
-  (when t;run-loop 
-
-    (gl:clear-color 0.0 0.0 1.0 0.0)
-
-
-    ;;(format t "ENABLED = ~A~%" (clode:body-is-enabled (clode::pointer (clode::body phy-object5))))
-
-
-    (let* ((b (clode:pointer (clode:body player-object)))
-	   (v (clode:body-get-linear-vel b)))
-
-      (if (or (not (zerop mouse-forward))
-	      (not (zerop mouse-strafe)))
-
-	  (let* ((m (sb-cga:rotate-around (clinch:make-vector 0 -1 0)
-					  (clinch:degrees->radians (clode:horizontal player-object))))
-		 (p (clinch:transform-point (sb-cga:normalize (clinch:make-vector mouse-strafe 0 mouse-forward)) m)))
-	    
-	    (clode:body-set-linear-vel b (* 5 (aref p 0)) (aref v 1) (* 5 (aref p 2))))
-
-	  (clode:body-set-linear-vel b 0 (aref v 1) 0)))
-
-
-    (let ((v1 (clode:body-get-linear-vel (clode::pointer (clode::body phy-object5)))))
-      
-      ;;(format t "v=~A~%" v1)
-
-      (clode:body-set-linear-vel (clode::pointer (clode::body phy-object5)) 
-    				 (aref v1 0)
-    				 (+ (aref v1 1)
-    				    -6/60)
-    				 (aref v1 2)))
+  (gl:clear-color 0.0 0.0 1.0 0.0)
+  
+  
+  (let* ((b (clode:pointer (clode:body player-object)))
+	 (v (clode:body-get-linear-vel b)))
     
-    (ode:physics-step 1/60 (cffi:callback physics-near-callback)))
+    (if (or (not (zerop mouse-forward))
+	    (not (zerop mouse-strafe)))
+	
+	(let* ((m (sb-cga:rotate-around (clinch:make-vector 0 -1 0)
+					(clinch:degrees->radians (clode:horizontal player-object))))
+	       (p (clinch:transform-point (sb-cga:normalize (clinch:make-vector mouse-strafe 0 mouse-forward)) m)))
+	  
+	  (clode:body-set-linear-vel b (* 5 (aref p 0)) (aref v 1) (* 5 (aref p 2))))
+	
+	(clode:body-set-linear-vel b 0 (aref v 1) 0)))
+  
+  
+  (let ((v1 (clode:body-get-linear-vel (clode::pointer (clode::body phy-object5)))))
+    
+    (clode:body-set-linear-vel (clode::pointer (clode::body phy-object5)) 
+			       (aref v1 0)
+			       (+ (aref v1 1)
+				  -6/60)
+			       (aref v1 2)))
+  
+  (ode:physics-step 1/60 (cffi:callback physics-near-callback))
 
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (clinch:update player-node)
-
+  
   (clode:load-player-camera player-object projection-matrix)
-
-  ;; (let ((pos (clode:body-get-position (clode::pointer (clode::body phy-object5)))))
-  ;;   (clinch:set-identity-transform root-node)
-  ;;   (clinch:translate root-node 
-  ;; 		      (clinch::ensure-float (- (aref pos 0)))
-  ;; 		      (clinch::ensure-float (- (aref pos 1)))
-  ;; 		      (clinch::ensure-float (- (aref pos 2))))
-  ;;   (clinch:rotate root-node (clinch:degrees->radians (clode:horizontal player-object)) 0 1 0)
-  ;;   (clinch:rotate root-node (clinch:degrees->radians (clode:vertical player-object))  1 0 0))
-  
-
-  ;; (let*  ((b (clode::pointer (clode::body phy-object5)))
-  ;; 	 (v (clode:body-get-linear-vel b))
-  ;; 	 (m
-  ;; (print 
-  ;;  (clinch:transform-point (sb-cga:normalize (clinch:make-vector mouse-strafe 0 mouse-forward))    
-  
-
-  
-  
-
-  ;;   (clode:body-set-linear-vel b (aref m 0) (aref v 1) (aref m 2)))
-
-  
-  ;; (setf (clinch:transform root-node)
-  ;; 	(sb-cga:matrix* (clode:vertical player-object)-matrix
-  ;; 			(sb-cga:matrix* (clode:horizontal player-object)-matrix 
-  ;; 	(sb-cga:matrix* (sb-cga:rotate-around (sb-cga:vec 1.0 0.0 0.0) (clinch:radians->degrees 90))
-  ;; 			(sb-cga:inverse-matrix (clinch:transform player-node))))
-  
 
   
   (clinch:update root-node)
   
   (clinch:render root-node)
 
-  ;(when (clinch:enabled overlay-01)
-    
-    (gl:matrix-mode :projection)
-    (gl:load-matrix ortho-matrix)  
-    (gl:matrix-mode :modelview)
-    
-    (clinch:update overlay-01)
-    
-    (clinch:render overlay-01)
-    )
+  (gl:matrix-mode :projection)
+  (gl:load-matrix ortho-matrix)  
+  (gl:matrix-mode :modelview)
+  
+  (clinch:update overlay-01)
+  
+  (clinch:render overlay-01))
 
 
 
@@ -452,9 +411,6 @@ the sdl2:with-init code."
 		 (let ((scancode (sdl2:scancode-value keysym))
 		       (sym (sdl2:sym-value keysym))
 		       (mod-value (sdl2:mod-value keysym)))
-
-		   ;; (defvar mouse-forward  ;; (defvar mouse-strafe)
-
 
 		   (when (zerop repeat)
 		     (cond
