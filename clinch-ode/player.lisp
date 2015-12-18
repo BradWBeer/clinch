@@ -1,4 +1,4 @@
-(in-package #:clode)
+(in-package #:clinch)
 
 (defclass physics-player ()
   ((body :initform (error "You must pass a physics-body to a physics-player object!")
@@ -28,13 +28,13 @@
 
 (defmethod initialize-instance :after ((this physics-player) &key)
 
-  (let ((pbody (clode::pointer (clode::body this))))
+  (let ((pbody (ode::pointer (ode::body this))))
     
-  (clode:body-set-max-angular-speed pbody 0)
-  (clode::body-set-kinematic pbody)
-  (clode:Body-Set-Auto-Disable-Flag pbody 0)
-  (clode:Body-Set-Angular-Damping pbody 0)
-  (clode:Body-Set-linear-Damping pbody 0)))
+  (ode:body-set-max-angular-speed pbody 0)
+  (ode::body-set-kinematic pbody)
+  (ode:Body-Set-Auto-Disable-Flag pbody 0)
+  (ode:Body-Set-Angular-Damping pbody 0)
+  (ode:Body-Set-linear-Damping pbody 0)))
 
 
 (defun mouse-math (x y z horz vert) 
@@ -50,13 +50,13 @@
 (defmethod load-player-camera ((this physics-player) projection-matrix)
 
   (gl:matrix-mode :projection)
-  (let ((pos (clode:body-get-position (clode::pointer (clode::body this)))))
+  (let ((pos (ode:body-get-position (ode::pointer (ode::body this)))))
     
     (gl:load-matrix (sb-cga:matrix* projection-matrix (mouse-math (- (aref pos 0))
 								  (- (aref pos 1))
 								  (- (aref pos 2))
-								  (clode:horizontal this)
-								  (clode:vertical this)))))
+								  (ode:horizontal this)
+								  (ode:vertical this)))))
   (gl:matrix-mode :modelview))
   
 
