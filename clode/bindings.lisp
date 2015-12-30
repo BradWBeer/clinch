@@ -532,11 +532,6 @@
   (world dWorldID)
   (step_size dReal))
 
-(defcfun-rename-function "dBodySetMovedCallback" :void
-  (b dBodyID)
-  (callback :pointer))
-
-
 (defcfun-rename-function "dCreateSphere" dGeomID
   (space dSpaceID)
   (radius dReal))
