@@ -105,6 +105,8 @@
   "Wrapper around glBindBuffer. Puts the buffer into play."
   (gl:bind-buffer (target this) (id this)))
 
+(defmethod unbind ((this buffer) &key)
+  (gl:bind-buffer (target this) 0))
 
 (defmethod get-size ((this buffer) &key)
   "Calculates the number of VALUES (stride + vcount) this buffer contains."

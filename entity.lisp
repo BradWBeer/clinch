@@ -85,9 +85,16 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
   (let ((n (normals this)))
     (when n (ref n))))
   
-(defmethod print-object ((this entity) s)
-  (format s "#<entity>"))
+;; (defmethod print-object ((this entity) s)
+;;   (format s "#<entity>"))
 
+(defun render-value-location (values key)
+  (loop
+     for i in values 
+     for x from 0
+     if (equal key (second i))
+     do (return x)))
+  
 (defun assoc-on-second (item lst) 
   (or (when (equal item (cadar lst))
 	(car lst))
@@ -98,10 +105,14 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
    (assoc-on-second name (clinch::render-values this))))
   
 (defmethod (setf render-value) (new-value (this entity) name)
-  (setf (third (assoc-on-second
-		name
-		(clinch::render-values this)))
-	new-value))
+  (let ((ret
+	 (with-accessors ((lst render-values)) this
+	   (let ((loc (render-value-location lst name)))
+	      (when loc
+		(setf (third (nth loc lst)) new-value))))))
+    ;; (format t "(setf render-value this: ~A name: ~A new-val: ~A ret: ~A~%" this name new-value ret)
+    ;; (print (slot-value this 'render-values))
+    ret))
 
 (defmethod (setf shader) (new-shader (this entity))
   (with-slots ((s shader)) this

@@ -132,6 +132,7 @@
 
 (defmethod attach-uniform ((this shader) (uniform string) value)
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
+
   (let ((ret (get-uniform-id this uniform)))
 
     (when ret 

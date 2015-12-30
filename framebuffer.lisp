@@ -3,18 +3,22 @@
 
 (in-package #:clinch)
 
+(defconstant color-attachment-0 (cffi:foreign-enum-value 'cl-opengl-bindings:enum
+							 :color-attachment0))
 
-(defclass frame-buffer (element refcount)
+
+(defclass frame-buffer (refcount)
   ((id :reader id
        :initform nil
        :initarg :id)
    (target  :accessor target
-	    :initform :framebuffer
+	    :initform :draw-framebuffer 
 	    :initarg  :target)
    (color   :reader color-attachments   ;; this is a list!
 	    :initform nil)
-   (depth   :reader depth-attachments
-	    :initform nil)
+   (depth   :reader depth-buffer
+	    :initform nil
+	    :initarg :depth-buffer)
    (stencil :reader stencil-attachments
 	    :initform nil)))
 
@@ -39,14 +43,33 @@
 	  (setf color (list color-attachments))))
 
     (when depth-attachment
-      (setf depth depth-attachment))
+      (setf (depth-buffer this) depth-attachment))
 
     (when stencil-attachment
       (setf stencil stencil-attachment)))
 
-  (update this))
+  (update this)
+  (unbind this))
 
-    
+(defmethod (setf depth-buffer) ((db texture) (this frame-buffer))
+
+  (setf (slot-value this 'depth) db)
+  (bind this)
+  (bind db)
+  
+  (gl:framebuffer-texture-2d :DRAW-FRAMEBUFFER :depth-attachment :texture-2d (clinch::tex-id db) 0)
+  (unbind db)
+  (unbind this))
+
+(defmethod add-color-buffer ((this frame-buffer) (tex texture) &optional (index 'number ))
+
+  (bind this)
+  (bind tex)
+  (let ((attachment (+ color-attachment-0 (or index 0))))
+    (gl:framebuffer-texture-2d :DRAW-FRAMEBUFFER attachment :texture-2d (tex-id tex) 0))
+  (unbind tex)
+  (unbind this))
+
 
 (defmethod update ((this frame-buffer) &key)
 
