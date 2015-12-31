@@ -1138,7 +1138,7 @@
 	     (setf ,orig-h ,user-h)))
        
        (setf ,bits (freeimage::freeimage-getbits ,dib))
-       ;;(freeimage:freeimage-flipvertical ,dib)
+       (freeimage:freeimage-flipvertical ,dib)
        ,@body
 
        (freeimage:unload-dib ,dib))))
@@ -1166,7 +1166,7 @@
 		  (when ,height (setf ,h ,height))))
 
 	      (setf ,bits (freeimage::freeimage-getbits ,dib))
-	      ;;(freeimage:freeimage-flipvertical ,dib)
+	      (freeimage:freeimage-flipvertical ,dib)
 	      ,@body)
 	 (freeimage:unload-dib ,dib)))))
 
