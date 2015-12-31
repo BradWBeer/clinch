@@ -40,11 +40,15 @@
 
 
 
-(defmethod initialize-instance :after ((this texture) &key
-				       (wrap-s :repeat)
-				       (wrap-t :repeat)
-				       (mag-filter :linear)
-				       (min-filter :linear))
+(defmethod initialize-instance :after ((this texture)
+				       &key
+					 (wrap-s :repeat)
+					 (wrap-t :repeat)
+					 (mag-filter :linear)
+					 (min-filter :linear)
+					 depth-texture-mode
+					 texture-compare-mode
+					 texture-compare-function)
     "Sets up a texture instance.
       type:   cffi type NOTE: use :unsigned-int if you are creating an index buffer.
       id:     OpenGL buffer id
@@ -56,7 +60,8 @@
       format: The OpenGL Format of the Color Data. blue-green-red-alpha is default and prefered for simplicity.
       wrap-s & wrap-t: Wrap texture vertical or horizontal.
       mag-filter & min-filter: Magnification an minimization method."
-  
+
+ 
   (with-slots ((tex-id tex-id)
 	       (w width)
 	       (h height)
@@ -72,12 +77,18 @@
     (gl:tex-parameter :texture-2d :texture-wrap-t wrap-t)
     (gl:tex-parameter :texture-2d :texture-mag-filter mag-filter)
     (gl:tex-parameter :texture-2d :texture-min-filter min-filter)
+
+    (when depth-texture-mode (gl:Tex-Parameter :TEXTURE-2D :DEPTH-TEXTURE-MODE depth-texture-mode))
+    (when texture-compare-mode (gl:Tex-Parameter :TEXTURE-2D :TEXTURE-COMPARE-MODE texture-compare-mode))
+    (when texture-compare-function (gl:Tex-Parameter :TEXTURE-2D :TEXTURE-COMPARE-func texture-compare-function))
     
-    (when (loaded? this)
-      (gl:tex-image-2d :texture-2d 0 iformat w h 0 eformat
-		       (cffi-type->gl-type dtype)
-		       (cffi:null-pointer))
-      tex-id)))
+    (gl:bind-buffer (target this) (if (loaded? this)
+				      (id this) 
+				      0))
+    (gl:tex-image-2d :texture-2d 0 iformat w h 0 eformat
+		     (cffi-type->gl-type dtype)
+		     (cffi:null-pointer))
+    tex-id))
     
     
 (defmethod get-size ((this texture) &key)
