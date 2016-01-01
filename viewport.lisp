@@ -95,7 +95,7 @@
   "Update this and child nodes if changed."
   )
 
-(defmethod render ((this viewport) &key)
+(defmethod render ((this viewport) &key projection)
   (with-accessors ((x x)
 		   (y y)
 		   (w width)
@@ -119,7 +119,7 @@
     
     
     (loop for c in (children this)
-       do (render c))))
+       do (render c :parent this :projection projection))))
 
 (defmethod quick-set ((this viewport) x y w h)
   (setf (x this) x

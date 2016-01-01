@@ -134,6 +134,15 @@
   (%gl:normal-pointer (qtype this) 0 (cffi:null-pointer)))
 
 
+(defmethod unbind-vertex-array ()
+  "Stop using the vertex array"
+  (gl:disable-Client-State :VERTEX-ARRAY))
+
+(defmethod unbind-normal-array ()
+  "Stop using the normal array"
+  (gl:Disable-Client-State :NORMAL-ARRAY))
+
+
 (defmethod bind-buffer-to-attribute-array ((this buffer) (shader shader) name)
   "Bind buffer to a shader attribute."
 

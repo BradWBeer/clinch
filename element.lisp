@@ -114,7 +114,7 @@
        do (update c)))
 
 
-(defmethod render ((this element) &key)
+(defmethod render ((this element) &key projection)
 
   (when (once this)
     (funcall (once this) this)
@@ -124,7 +124,7 @@
     (funcall (before-render this) this))
 
   (loop for c in (children this)
-       do (render c))
+       do (render c :projection projection))
 
   (when (after-render this)
     (funcall (after-render this) this)))
