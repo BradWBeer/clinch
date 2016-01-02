@@ -40,6 +40,26 @@
 				       undefs)
   "Create the shader. Currently there is no way to change the shader. You must make a new one."
 
+  (build-shader this :name name
+		:vertex-shader-text vertex-shader-text
+		:fragment-shader-text fragment-shader-text
+		:geometry-shader-text geometry-shader-text
+		:attributes attributes
+		:uniforms uniforms
+		:defines defines
+		:undefs undefs))
+
+
+(defmethod build-shader ((this shader) &key
+					 name
+					 vertex-shader-text
+					 fragment-shader-text
+					 geometry-shader-text
+					 attributes
+					 uniforms
+					 defines
+					 undefs)
+
   (with-slots ((vs vert-shader)
   	       (fs frag-shader)
 	       (geo geo-shader)
@@ -52,6 +72,8 @@
 				      (format nil "~{#undef ~A~%~}" undefs)
 				      vertex-shader-text))
 
+    (if program (unload this))
+    
     (gl:compile-shader vs)
 
     (let ((log (gl:get-shader-info-log vs)))
@@ -93,8 +115,6 @@
       (unless (gl:get-shader geo :compile-status)
 	(error "Could not compile geometry shader!")))
 
-
-
     (setf program (gl:create-program))
     ;; You can attach the same shader to multiple different programs.
     (gl:attach-shader program vs)
@@ -128,10 +148,9 @@
 		  (cons type location))
 	 else do (format t "could not find uniform ~A!~%" name)))
 			
-      
 
     (when name (setf (slot-value this 'name) name))))
-
+  
 
 (defmethod use-shader ((this shader) &key)
   "Start using the shader."
