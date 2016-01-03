@@ -184,7 +184,7 @@
 		   (:matrix (lambda (id value)
 			      (gl:uniform-matrix id 2 (cond
 							((arrayp value) value)
-							((typep value 'node) (transform
+							((typep value 'node) (current-transform
 									      value))
 							(t (error "Unknown Type in attach-uniform!")))))))))
 	  
@@ -210,7 +210,7 @@
     (when ret 
       (destructuring-bind (type . id) ret
 	
-	(gl::with-foreign-matrix (foreign-matrix (clinch:transform matrix))
+	(gl::with-foreign-matrix (foreign-matrix (clinch:current-transform matrix))
 	  (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
 
 
