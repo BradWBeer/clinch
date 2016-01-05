@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass shader (refcount)
+(defclass shader ()
   ((name
     :reader name
     :initform nil)

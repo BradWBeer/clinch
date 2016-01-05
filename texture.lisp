@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass texture (buffer refcount)
+(defclass texture (buffer)
   ((tex-id
     :accessor tex-id
     :initform nil

@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass entity (refcount)
+(defclass entity ()
   ((shader
     :initform nil
     :initarg :shader
@@ -60,26 +60,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
   "Strict-index: ALL-INDICES-USED? on THIS"
   (when parent (add-child parent this))
 					;(when compile (make-render-func this))
-  (when strict-index (all-indices-used? this))
-
-  (let ((s (shader this)))
-    (when s (ref s)))
-
-  (let ((i (indexes this)))
-    (when i (ref i)))
-
-  (let ((vals (render-values this)))
-    (when vals
-      (loop for i in vals
-	 do (let ((v (third i)))
-	      (when (typep v 'refcount)
-		(ref v))))))      
-
-  (let ((v (vertices this)))
-    (when v (ref v)))
-
-  (let ((n (normals this)))
-    (when n (ref n))))
+  (when strict-index (all-indices-used? this)))
 
 ;; (defmethod print-object ((this entity) s)
 ;;   (format s "#<entity>"))
@@ -106,22 +87,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 	   (let ((loc (render-value-location lst name)))
 	     (if loc
 		 (setf (third (nth loc lst)) new-value))))))
-    ;; (format t "(setf render-value this: ~A name: ~A new-val: ~A ret: ~A~%" this name new-value ret)
-    ;; (print (slot-value this 'render-values))
     ret))
-
-(defmethod (setf render-values) (new-render-values (this entity))
-  (with-slots ((rv render-values)) this
-
-    (loop for i in rv
-       do (let ((v (third i)))
-	    (when (typep v 'refcount)
-	      (ref v))))
-    
-    (when rv (unref rv))
-    
-    (setf rv new-render-values)))
-
 
 (defmethod get-primitive ((this entity) name)
   (let* ((buff      (get-render-value this name))
@@ -154,9 +120,6 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 
     (values bret iret)))
 
-
-(defun rec (primitives i distance u v index)
-  )
 
 (defmethod triangle-intersection? ((this entity) start dir &key (vertex-name :vertices))
   (labels ((rec (primitives i distance u v index)
@@ -238,29 +201,6 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
     (let ((*parent* this))
       (funcall (after-render this) this))))
 
-;;(funcall (slot-value this 'func) :parent-transform (or matrix parent) :projection-transform projection))
-
-(defmethod slow-render ((this entity))
-  (gl:matrix-mode :modelview)
-  ;;(use-transform this)
-  (when (shader this)
-    (use-shader (shader this)))
-  (loop
-     with tex-unit = 0
-     for (atr-or-uni name value) in (render-values this)
-     do (cond ((eql atr-or-uni :uniform) (apply #'attach-uniform (shader this) name value))
-	      ((and (eql atr-or-uni :attribute)
-		    (typep value 'texture)) (bind-sampler value (shader this) name tex-unit) (incf tex-unit))
-	      ((and (eql atr-or-uni :attribute)
-		    (typep value 'buffer)) 
-	       (bind-buffer-to-attribute-array value (shader this) name))
-	      ((eql atr-or-uni :attribute) (apply #'bind-static-values-to-attribute (shader this) name value))
-	      ((eql atr-or-uni :vertices) 
-	       (bind-buffer-to-vertex-array name))))
-
-  (draw-with-index-buffer (indexes this)))
-
-
 (defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
 
   (multiple-value-bind (points index) (clinch::get-primitive this primitive)
@@ -291,26 +231,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 
 (defmethod unload ((this entity) &key)
   "Release entity resources."
-
-  (let ((s (shader this)))
-    (when s (unref s)))
-  
-  (let ((i (indexes this)))
-    (when i (unref i)))
-  
-  (let ((vals (render-values this)))
-    (when vals
-      (loop for i in vals
-	 do (let ((v (third i)))
-	      (when (typep v 'refcount)
-		(unref v))))))      
-  
-  (let ((v (vertices this)))
-    (when v (unref v)))
-  
-  (let ((n (normals this)))
-    (when n (unref n))))
-
+  )
 
 (defmacro entity (&body rest)
 

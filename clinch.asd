@@ -11,8 +11,6 @@
 	       #:sb-cga)
   :components ((:file "package")
 	       (:file "clinch")
-	       (:file "refcount")
-	       (:file "element")
 	       (:file "transform")
 	       (:file "vector")
 	       (:file "node")
@@ -21,8 +19,6 @@
 	       (:file "texture")
 	       (:file "entity")
 	       (:file "viewport")
-	       (:file "pipeline")
-	       (:file "renderbuffer")
 	       (:file "framebuffer")
 	       (:file "shapes")))
 

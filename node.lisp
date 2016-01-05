@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass node (element refcount)
+(defclass node ()
   ((transform
     :accessor transform
     :initform  (sb-cga:identity-matrix)
@@ -18,11 +18,8 @@
   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required."))
 
 (defmethod initialize-instance :after ((this node) &key parent)
-
-  (loop for i in (children this)
-       do (when (typep i 'refcount)
-	    (ref i))))
-
+  )
+  
 (defmethod print-object ((this node) s)
   "Print function for node."
   (format s "#<NODE children: ~A ~%~A>" (length (children this)) (transform this)))
@@ -41,9 +38,6 @@
   (with-accessors ((children children)) this
     (unless (member child children)
       
-      (when (typep child 'refcount)
-	(ref child))      
-
       (setf children
 	    (cons child children)))))
 
@@ -52,10 +46,7 @@
   (with-accessors ((children children)) this
     
     (when (member child children)
-
-      (when (typep child 'refcount)
-	(unref child))
-      
+     
       (setf children
 	    (remove child children)))))
 
@@ -188,10 +179,7 @@
 
 (defmethod unload ((this node) &key)
   "Release node resources."
-  (setf (enabled this) nil)
-  (loop for i in (children this)
-       do (when (typep i 'refcount)
-	    (unref i))))
+  (setf (enabled this) nil))
 
 (defmacro node (&body args)
 

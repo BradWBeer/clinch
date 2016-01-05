@@ -7,7 +7,7 @@
 							 :color-attachment0))
 
 
-(defclass frame-buffer (refcount)
+(defclass frame-buffer ()
   ((id :reader id
        :initform nil
        :initarg :id)

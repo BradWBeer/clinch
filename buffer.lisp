@@ -8,7 +8,7 @@
     (:unsigned-char :unsigned-byte)
     (otherwise type)))
 
-(defclass buffer (refcount)
+(defclass buffer ()
   ((id
     :reader id
     :initform nil
