@@ -169,8 +169,24 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 			   ((eql atr-or-uni :uniform)
 			    
 			    (attach-uniform current-shader name (cond ((eql value :projection) projection)
-								     ((eql value :Model)      (or parent (sb-cga:identity-matrix)))
-								     (t value))))
+								      ((eql value :Model)      (or parent (sb-cga:identity-matrix)))
+								      ((eql value :model-1) (typecase parent
+											      (node (sb-cga:inverse-matrix
+												     (current-transform parent)))
+											      (array (sb-cga:inverse-matrix parent))
+											      (t (sb-cga:identity-matrix))))
+								      ((eql value :projection-1) (sb-cga:inverse-matrix projection))
+								      ((eql value :normal) (typecase parent
+											     (node
+											      (convert-matrix4-to-matrix3
+											       (sb-cga:transpose-matrix
+												(sb-cga:inverse-matrix
+												 (current-transform parent)))))
+											     (array (convert-matrix4-to-matrix3
+												     (sb-cga:transpose-matrix
+												      (sb-cga:inverse-matrix parent))))
+											     (t (make-identity-matrix3))))
+								      (t value))))
 			   
 			   ((and (eql atr-or-uni :attribute)
 				 (typep value 'buffer)) 
