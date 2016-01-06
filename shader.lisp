@@ -185,44 +185,52 @@
 (defmethod attach-uniform ((this shader) (uniform string) value)
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
   (let ((ret (get-uniform-id this uniform)))
-    
+
     (when ret
-      (destructuring-bind (type . id) ret
+      (unless (eq (gethash ret *current-shader-uniforms*) value)
+	(setf (gethash ret *current-shader-uniforms*) value)
 	
-	(let ((f (case type
-		   (:float #'gl:uniformf)
-		   (:int #'gl:uniformi)
-		   (:matrix (lambda (id value)
-			      (gl:uniform-matrix id 2 (cond
-							((arrayp value) value)
-							((typep value 'node) (current-transform
-									      value))
-							(t (error "Unknown Type in attach-uniform!")))))))))
+	(destructuring-bind (type . id) ret
+	  
+	  (let ((f (case type
+		     (:float #'gl:uniformf)
+		     (:int #'gl:uniformi)
+		     (:matrix (lambda (id value)
+				(gl:uniform-matrix id 2 (cond
+							  ((arrayp value) value)
+							  ((typep value 'node) (current-transform
+										value))
+							  (t (error "Unknown Type in attach-uniform!")))))))))
 	  
 	  
-	  (if (listp value)
-	      (apply f id value)
-	      (apply f id (list value))))))))
+	    (if (listp value)
+		(apply f id value)
+		(apply f id (list value)))))))))
     
 (defmethod attach-uniform ((this shader) (uniform string) (matrix array))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
 
   (let ((ret (get-uniform-id this uniform)))
     (when ret 
-      (destructuring-bind (type . id) ret
-	
-	(gl::with-foreign-matrix (foreign-matrix matrix)
-	  (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
+      (unless (eq (gethash ret *current-shader-uniforms*) value)
+	(setf (gethash ret *current-shader-uniforms*) value)
+	(destructuring-bind (type . id) ret
+	  
+	  (gl::with-foreign-matrix (foreign-matrix matrix)
+	    (%gl:uniform-matrix-4fv id 1 nil foreign-matrix)))))))
     
 (defmethod attach-uniform ((this shader) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
 
-  (let ((ret (get-uniform-id this uniform)))
-    (when ret 
-      (destructuring-bind (type . id) ret
-	
-	(gl::with-foreign-matrix (foreign-matrix (clinch:current-transform matrix))
-	  (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
+  (unless (eq (gethash ret *current-shader-uniforms*) value)
+    (setf (gethash ret *current-shader-uniforms*) value)
+    
+    (let ((ret (get-uniform-id this uniform)))
+      (when ret 
+	(destructuring-bind (type . id) ret
+	  
+	  (gl::with-foreign-matrix (foreign-matrix (clinch:current-transform matrix))
+	    (%gl:uniform-matrix-4fv id 1 nil foreign-matrix)))))))
 
 
 (defmethod bind-static-values-to-attribute ((this shader) name &rest vals)
