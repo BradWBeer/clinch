@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass viewport (element)
+(defclass viewport ()
   ((x
     :initform 0
     :initarg :x
