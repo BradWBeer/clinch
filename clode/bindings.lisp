@@ -51,20 +51,20 @@
 
 (defcfun-rename-function "dGetConfiguration" :string)
   
-(defvar is-double-precision?)
-(setf is-double-precision? (search "ODE_double_precision" (get-configuration)))
+(defvar is-double-precision? nil)
+;;(setf is-double-precision? (search "ODE_double_precision" (get-configuration)))
 
 
 (defun number->dreal (x)
-  (coerce x (if is-double-precision?
-		'double-float
-		'single-float)))
+  (coerce x ;(if is-double-precision?
+  ;;'double-float
+		'single-float))
 
 ;;(if is-double-precision?
-    (defctype dreal (:wrapper :double
-			      :to-c number->dreal))
-   ;; (defctype dreal (:wrapper :float
-   ;; 			      :to-c number->dreal)))
+    ;; (defctype dreal (:wrapper :double
+    ;; 			      :to-c number->dreal))
+(defctype dreal (:wrapper :float
+			  :to-c number->dreal))
 
 
 (defmacro infinity (&optional (precision is-double-precision?))

@@ -53,8 +53,8 @@
     
     (when (member child children)
 
-      (when (typep child 'refcount)
-	(unref child))
+      ;; (when (typep child 'refcount)
+      ;; 	(unref child))
       
       (setf children
 	    (remove child children)))))
