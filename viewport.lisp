@@ -114,12 +114,8 @@
     (when (projection-transform this)
       (gl:matrix-mode :projection)
       (gl:load-matrix (projection-transform this))
-      (gl:matrix-mode :modelview))
-    ;;(gl:load-identity)
+      (gl:matrix-mode :modelview))))
     
-    
-    (loop for c in (children this)
-       do (render c :parent this :projection projection))))
 
 (defmethod quick-set ((this viewport) x y w h)
   (setf (x this) x
@@ -134,21 +130,23 @@
 	    (cons child children)))))
 
 
-(defmethod print-object ((this viewport) s)
+;; (defmethod print-object ((this viewport) s)
 
-  (format s "(viewport ")
-  (when (name     this)     (format s ":name ~S " (name this)))
-  (when (id       this)      (format s ":id ~S "   (id this)))
-  (when (x        this)      (format s ":x ~S "   (x this)))
-  (when (y        this)      (format s ":y ~S "   (y this)))
-  (when (slot-value this 'width)         (format s ":width ~S "   (width this)))
-  (when (slot-value this 'height)      (format s ":height ~S "   (height this)))
-  (when (slot-value this 'clear-color)      (format s ":clear-color '~S "   (clear-color this)))
-  ;; (when (clinch:transform   this)      (format s ":transform ~S "   (clinch:transform this)))
-  ;;(when (camera   this)      (format s ":camera ~S "   (camera this)))
+;;   (format s "(viewport ")
+;;   (when (name     this)     (format s ":name ~S " (name this)))
+;;   (when (id       this)      (format s ":id ~S "   (id this)))
+;;   (when (x        this)      (format s ":x ~S "   (x this)))
+;;   (when (y        this)      (format s ":y ~S "   (y this)))
+;;   (when (slot-value this 'width)         (format s ":width ~S "   (width this)))
+;;   (when (slot-value this 'height)      (format s ":height ~S "   (height this)))
+;;   (when (slot-value this 'clear-color)      (format s ":clear-color '~S "   (clear-color this)))
+;;   ;; (when (clinch:transform   this)      (format s ":transform ~S "   (clinch:transform this)))
+;;   ;;(when (camera   this)      (format s ":camera ~S "   (camera this)))
   
-  (when (children this) (format s "~{~%~S~}" (children this)))
-  (format s ")"))
+;;   ;; (when (children this) (format s "~{~%~S~}" (children this)))
+;;   ;; (format s ")")
+
+;;   )
 
 
 (defmacro viewport (&body args)
