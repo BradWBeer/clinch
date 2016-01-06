@@ -163,7 +163,6 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 	   for (atr-or-uni name value) in (render-values this)
 	   if (typep value 'function) do (setf value (funcall value))
 	   collect (progn
-		     ;;(format t "name: ~A value: ~A~%" name value)
 		     (cond ((and (eql atr-or-uni :uniform)
 				 (typep value 'texture)) (prog1 (bind-sampler value current-shader name tex-unit) (incf tex-unit)))
 			   ((eql atr-or-uni :uniform)
