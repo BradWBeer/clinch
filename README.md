@@ -1,22 +1,25 @@
 # CLinch
 
-## [CLinch now has tutorials](https://github.com/BradWBeer/CLinch/wiki/CLinch-Tutorials)##
-
-## Warning: Much of this has changed. So has the purpose and scope of CLinch. Please stand by as I modify CLinch and then backfill the documention.
 
 ## Overview
 
-CLinch is a simple, yet powerful 3d graphics engine for Lisp. In true Lisp fashion, it is more a build-your-own-engine hobby kit rather than striving to be a full graphics panacea. Much of the design is based on Horde3D. Although Horde3D is a very good design, it has limitations which it attempts to solve by adding domain specific languages. Items such as shaders, entities and, most importantly, the pipeline are specified using an XML language. Lisp, by being self-compiling seems like a better fit than requiring (yet) another language.
+CLinch is a simple, yet powerful 3d game engine for Lisp. It's features include 2d and 3d graphics, simple texture and shader integration and 
 
-Eventually I hope CLinch becomes a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp and 3D. See my [Qix](https://github.com/BradWBeer/Qix) project for more information. 
+Eventually CLinch will become a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp, 3D, shaders, 2d vector graphics, richtext support, 3d physics and much more.
 
 ### CLinch Extensions:
+
+* A suite of modern 3d and 2d tools through OpenGL
+
+* Access to commercial grade windowing, controller, force-feedback, sound, music and more thorough SDL2
+
+* 3d physics with joints and motors with the ODE physics engine.
+
+* Texture loading and saving with FreeImage
 
 * Integration with 2D vector graphics with Cairo
 
 * Integration with fonts and text positioning with Pango
-
-* File loading and saving with FreeImage
 
 * 3D asset importing using ClassImp (Coming Soon!)
 
