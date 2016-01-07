@@ -71,6 +71,14 @@
 	       (iformat internal-format)) this
     (sdl2:i-main-thread ()
     (unless tex-id (setf tex-id (car (gl:gen-textures 1))))
+
+    (trivial-garbage:cancel-finalization this)
+    (trivial-garbage:finalize this 
+			      (let ((id-value (id))
+				    (tex-id-value tex-id))
+				(lambda () (sdl2:in-main-thread () 
+								(gl:delete-buffers (list id-value))
+								(gl:delete-textures (list tex-id-value))))))
     
     (gl:bind-texture :texture-2d (tex-id this))
     (gl:tex-parameter :texture-2d :texture-wrap-s wrap-s)
@@ -151,6 +159,7 @@
 
 
 (defmethod unload :before ((this texture) &key)
+  (trivial-garbage:cancel-finalization this)
   (sdl2:in-main-thread ()
   (gl:delete-textures (list (tex-id this)))))
 

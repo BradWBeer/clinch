@@ -37,6 +37,12 @@
     (unless id
       (setf id (car (gl:gen-framebuffers 1))))
 
+    (trivial-garbage:cancel-finalization this)
+    (trivial-garbage:finalize this 
+			      (let ((id-value (id)))
+				(lambda () (sdl2:in-main-thread () 
+								(gl:delete-framebuffers (list id-value))))))					
+    
     (when color-attachments
       (if (listp color-attachments)
 	  (setf color color-attachments)
@@ -139,6 +145,7 @@
 	       (depth depth)
 	       (stencil stencil)) this
 
+    (trivial-garbage:cancel-finalization this)
     (sdl2:in-main-thread ()
     (gl:Delete-Framebuffers (list id))
    
