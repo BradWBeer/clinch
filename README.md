@@ -1,13 +1,13 @@
-# CLinch
+# Clinch
 
 
 ## Overview
 
-CLinch is a simple, yet powerful 3d game engine for Lisp. It's features include 2d and 3d graphics, simple texture and shader integration and 
+Clinch is a simple, yet powerful 3d game engine for Lisp. 
 
-Eventually CLinch will become a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp, 3D, shaders, 2d vector graphics, richtext support, 3d physics and much more.
+Eventually Clinch will become a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp, 3D, shaders, 2d vector graphics, richtext support, 3d physics and much more.
 
-### CLinch Extensions:
+### Clinch Extensions:
 
 * A suite of modern 3d and 2d tools through OpenGL
 
@@ -15,7 +15,7 @@ Eventually CLinch will become a stable and fast workhorse tool for developing ga
 
 * 3d physics with joints and motors with the ODE physics engine
 
-* Ability to live code through with Lisp.
+* Ability to live code with Lisp.
 
 * Texture loading and saving with FreeImage
 
@@ -25,29 +25,27 @@ Eventually CLinch will become a stable and fast workhorse tool for developing ga
 
 * 3D asset importing using ClassImp (Coming Soon!)
 
-
 ## Design Goals
 
 ### Fast 
 
-CLinch should be as fast or faster than most script-based graphics engines while requiring much less development time. While it may never rival professional C libraries, the ability to modify the 3D engine and environment from the REPL will allow skilled developers to create applications in a fast, intuitive and flexible way.
+Clinch should be as fast or faster than most script-based graphics engines and require less development time. While it may never rival professional libraries and engines, the ability to modify the 3D engine and environment from the REPL allows skilled developers to create applications in a fast, intuitive and flexible way.
 
 ### Simple
 
-CLinch should be as simple as possible for someone familiar with 3D graphics programming to understand. I still remember how easy it was to write a single pixel to the screen in DOS and while I can't simplify to that degree (without losing modern power and flexibility), I can remove many of the most common difficulties. These include texture and vertex buffers, shader compiling and linking, shader variable passing, drawing text and 2D graphics, pipelines and 3D transformations. 
+Clinch should be as simple as possible for someone familiar with 3D graphics programming to understand. I still remember how easy it was to write a single pixel to the screen in DOS and while I can't simplify to that degree (without losing modern power and flexibility), I can remove many of the most common difficulties. These include texture and vertex buffers, shader compiling and linking, shader variable passing, drawing text and 2D graphics, pipelines and 3D transformations. 
 
 ### Intuitive
 
-Time spent looking for solutions is time spent, period. It ruins developer flow and can stop a project (especially a small one) indefinitely. CLinch should have few basic primitives which solve the general cases well and allow for easy replacements when necessary. It should be well documented and have a consistent interface. I will strive to keep abstraction leaks at a minimum. 
+Time spent looking for solutions is spent time, period. It ruins developer flow and can stop a project (especially a small one) indefinitely. Clinch should have few basic primitives which solve the general cases well and allow for easy replacements when necessary. It should be well documented and have a consistent interface. I will strive to keep abstraction leaks at a minimum. 
 
 ### Flexible
 
-CLinch should not depend on any one library. Currently it only supports OpenGL, but the framework can (in theory) support others. It should not rely on a particular windowing library and should work as a simplified replacement for the original graphics library interface. It should not be designed for any one type of application such as games, but should support any 2D or 3D application. It should be cross-platform (wherever possible) and not inflict any particular design onto its client applications.
-
+Clinch does not inflict any particular design onto its client applications. It can be easily modified to create a specific engine. It uses plugins to minimize it's own overhead.
 
 ## Architecture
 
-Although CLinch can be used as a complete engine, most parts of CLinch are independent. You can use objects by themselves as best suits your application. For example, you can use a buffer object by itself. This also helps with testing by isolating the various parts of CLinch. The following is in hierarchical order based on the default configuration. This is to explain it as clearly as possible, not to indicate a necessary design. 
+Although Clinch can be used as a complete engine, most parts of Clinch are independent. You can use objects by themselves as best suits your application. For example, you can use a buffer object by itself. This also helps with testing by isolating the various parts of Clinch. The following is in hierarchical order based on the default configuration. This is to explain it as clearly as possible, not to indicate a necessary design. 
 
 ### Transforms
 
@@ -75,4 +73,4 @@ Entities are the rendered items. They bring together the shader, buffers, textur
 
 ### Viewports
 
-An application can have several viewports. As CLinch does not force any particular windowing implementation, it can not have a window class. Once your window is set up, however, you can use the viewport handle for drawing an area on screen. The most common children the cameras, which will be rendered in order unless then are not enabled.
+An application can have several viewports. As Clinch does not force any particular windowing implementation, it can not have a window class. Once your window is set up, however, you can use the viewport handle for drawing an area on screen. The most common children the cameras, which will be rendered in order unless then are not enabled.

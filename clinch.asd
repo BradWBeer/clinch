@@ -24,6 +24,7 @@
 	       (:file "texture")
 	       (:file "entity")
 	       (:file "viewport")
-	       (:file "framebuffer")))
+	       (:file "framebuffer")
+	       (:file "window")))
 
 

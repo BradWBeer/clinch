@@ -1,5 +1,7 @@
-(in-package #:clinch)
+;;;; clinch.lisp
+;;;; Please see the licence.txt for the CLinch 
 
+(in-package #:clinch)
 
 (defun split-keywords (lst &optional keys objects)
   (cond 

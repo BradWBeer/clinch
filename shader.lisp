@@ -1,4 +1,4 @@
-;;;; shaders.lisp
+;;;; shader.lisp
 ;;;; Please see the licence.txt for the CLinch
 
 (in-package #:clinch)
