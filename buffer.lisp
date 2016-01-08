@@ -152,12 +152,24 @@
 
   (let ((id (cdr (get-attribute-id shader name))))
     (when id
-      (gl:enable-vertex-attrib-array id)
-      (gl:bind-buffer (target this) (id this))
-      (gl:vertex-attrib-pointer id
-				(stride this)
-				(qtype this)
-				0 0 (cffi:null-pointer)))))
+      (unless (eq (gethash id *current-shader-attributes*) value)
+	(setf (gethash id *current-shader-attributes*) value)
+
+	(gl:enable-vertex-attrib-array id)
+	(gl:bind-buffer (target this) (id this))
+	(gl:vertex-attrib-pointer id
+				  (stride this)
+				  (qtype this)
+				  0 0 (cffi:null-pointer))))))
+
+(defmethod unbind-buffer-attribute-array ((this buffer) (shader shader) name)
+  "Bind buffer to a shader attribute."
+
+  (let ((id (cdr (get-attribute-id shader name))))
+    (when id
+      (remhash id *current-shader-attributes*)
+      
+      (gl:disable-vertex-attrib-array id))))
 
 
 (defmethod draw-with-index-buffer ((this buffer))
