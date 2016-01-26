@@ -41,6 +41,8 @@
   (with-accessors ((children children)) this
     (unless (member child children)
       
+        
+
       (setf children
 	    (cons child children)))))
 
@@ -71,9 +73,12 @@
 (defmethod render ((this node) &key parent projection)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (enabled this)
+ 
 
     (when (changed? this)
       (update this :parent parent))
+    
+ 
     
     (loop for i in (children this)
        do (render i :parent this :projection projection))))
