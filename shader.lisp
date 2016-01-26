@@ -24,7 +24,9 @@
     :initform nil)
   (uniforms
     :reader shader-uniform
-    :initform nil))
+    :initform nil)
+   (key :initform (gensym "shader")
+	:reader key))
    
   (:documentation "Creates and keeps track of the shader objects. Requires an UNLOAD call when you are done. Bind Buffer functions are in Buffer.l"))
 
@@ -130,21 +132,25 @@
     (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
 
     (trivial-garbage:cancel-finalization this)
-    (setf (gethash this *uncollected*) this)
-    (trivial-garbage:finalize this 
+    (setf (gethash (key this) *uncollected*) this)
+    (trivial-garbage:finalize this
 			      (let ((program-val program)
 				    (fs-val fs)
 				    (vs-val vs)
-				    (geo-val geo))
-				(lambda () (sdl2:in-main-thread () 
-							(gl:detach-shader program-val fs-val)
-							(gl:delete-shader fs-val)
-							(gl:detach-shader program-val vs-val)
-							(gl:delete-shader vs-val)
-							(when geo-val 
-							  (gl:detach-shader program-val geo-val)
-							  (gl:delete-shader geo-val))
-							(gl:delete-program program-val)))))
+				    (geo-val geo)
+				    (key (key this)))
+				
+				(lambda ()
+				  (remhash key *uncollected*)
+				  (sdl2:in-main-thread () 
+				    (gl:detach-shader program-val fs-val)
+				    (gl:delete-shader fs-val)
+				    (gl:detach-shader program-val vs-val)
+				    (gl:delete-shader vs-val)
+				    (when geo-val 
+				      (gl:detach-shader program-val geo-val)
+				      (gl:delete-shader geo-val))
+				    (gl:delete-program program-val)))))
 
 
 
@@ -270,7 +276,8 @@
 	       (program program)) this
     
     (trivial-garbage:cancel-finalization this)
-    (remhash this *uncollected*)
+    (remhash (key this) *uncollected*)
+
     (when program
 
       (when vs

@@ -35,7 +35,9 @@
    (target
     :reader target
     :initform :pixel-unpack-buffer
-    :initarg :target))
+    :initarg :target)
+   (key :initform (gensym "texture")
+	:reader key))
     (:documentation "Creates and keeps track of a texture object and its buffer (shared memory with gpu, sort of)."))
  
 
@@ -73,13 +75,15 @@
     (unless tex-id (setf tex-id (car (gl:gen-textures 1))))
 
     (trivial-garbage:cancel-finalization this)
-    (setf (gethash this *uncollected*) this)
+    (setf (gethash (key this) *uncollected*) this)
     (trivial-garbage:finalize this 
 			      (let ((id-value (id this))
-				    (tex-id-value tex-id))
-				(lambda () (sdl2:in-main-thread () 
-								(gl:delete-buffers (list id-value))
-								(gl:delete-textures (list tex-id-value))))))
+				    (tex-id-value tex-id)
+				    (key (key this)))
+				(lambda () (sdl2:in-main-thread ()
+					     (remhash key *uncollected*)
+					     (gl:delete-buffers (list id-value))
+					     (gl:delete-textures (list tex-id-value))))))
     
     (gl:bind-texture :texture-2d (tex-id this))
     (gl:tex-parameter :texture-2d :texture-wrap-s wrap-s)
@@ -161,7 +165,7 @@
 
 (defmethod unload :before ((this texture) &key)
   (trivial-garbage:cancel-finalization this)
-  (remhash this *uncollected*)
+  (remhash (key this) *uncollected*)
   (sdl2:in-main-thread ()
     (gl:delete-textures (list (tex-id this)))))
 

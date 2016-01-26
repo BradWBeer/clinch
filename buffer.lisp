@@ -35,7 +35,9 @@
     :initarg :target)
    (loaded
     :accessor loaded?
-    :initform nil))
+    :initform nil)
+   (key :initform (gensym "texture")
+	:reader key))
   (:documentation "Creates and keeps track of buffer object (shared memory with gpu, sort of). Base class of texture class."))
 
 
@@ -67,10 +69,15 @@
 	(setf id (car (gl:gen-buffers 1))))
 
       (trivial-garbage:cancel-finalization this)
-      (setf (gethash this *uncollected*) this)
-      (trivial-garbage:finalize this 
-				(let ((id-value id))
-				  (lambda () (sdl2:in-main-thread () (gl:delete-buffers (list id-value))))))
+      (setf (gethash (key this) *uncollected*) this)
+      
+      (trivial-garbage:finalize this
+				(let ((id-value id)
+				      (key (key this)))
+				  (lambda ()
+				    (remhash key *uncollected*)
+				    (sdl2:in-main-thread ()
+				      (gl:delete-buffers (list id-value))))))
       (gl:bind-buffer target id)
 
       (cond
@@ -213,7 +220,7 @@
 (defmethod unload ((this buffer) &key)
   "Release buffer resources."
   (trivial-garbage:cancel-finalization this)
-  (remhash this *uncollected*)
+  (remhash (key this) *uncollected*)
   (sdl2:in-main-thread () (gl:delete-buffers (list (id this))))
   (setf (slot-value this 'id) nil))
 

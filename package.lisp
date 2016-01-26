@@ -6,7 +6,50 @@
   ;;(:shadow )
   (:import-from :cepl :v!)
   (:export
+   #:!
    #:v!
+   #:ROTATION
+   #:SCALE
+   #:TRANSLATION
+   #:CHILDREN
+   #:TRANSFORM 
+   #:TRANSLATE 
+   #:ROTATE 
+   #:RESIZE 
+   #:N*
+
+   #:init
+   #:uninit
+   #:*ON-WINDOW-SIZE-CHANGED*
+   #:*ON-WINDOW-RESIZED*
+   #:*ON-WINDOW-HIDDEN*
+   #:*ON-WINDOW-EXPOSED*
+   #:*ON-WINDOW-MOVED*
+   #:*ON-WINDOW-MINIMIZED*
+   #:*ON-WINDOW-MAXIMIZED*
+   #:*ON-WINDOW-RESTORED*
+   #:*ON-WINDOW-ENTER*
+   #:*ON-WINDOW-LEAVE*
+   #:*ON-WINDOW-FOCUS-GAINED*
+   #:*ON-WINDOW-FOCUS-LOST*
+   #:*ON-WINDOW-CLOSE*
+   #:*ON-KEY-DOWN*
+   #:*ON-KEY-UP*
+   #:*ON-MOUSE-MOVE*
+   #:*ON-MOUSE-DOWN*
+   #:*ON-MOUSE-UP*
+   #:*ON-MOUSE-CLICK*
+   #:*ON-MOUSE-DOUBLE-CLICK*
+   #:*ON-MOUSE-WHEEL-MOVE*
+   #:*ON-CONTROLLER-BUTTON-DOWN*
+   #:*ON-CONTROLLER-BUTTON-UP*
+   #:*ON-CONTROLLER-ADDED*
+   #:*ON-CONTROLLER-REMOVED*
+   #:*ON-CONTROLLER-REMAPPED*
+   #:*ON-CONTROLLER-AXIS-MOVE*
+   #:*ON-IDLE*
+   #:*ON-QUIT*
+
    #:unload-all-uncollected
    #:shader #:name #:program #:frag-shader #:vert-shader #:attributes #:uniforms #:use-shader #:get-uniform-id #:get-attribute-id #:attach-uniform #:unload #:bind-static-values-to-attribute
    

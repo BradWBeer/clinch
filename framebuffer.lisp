@@ -20,8 +20,9 @@
 	    :initform nil
 	    :initarg :depth-buffer)
    (stencil :reader stencil-attachments
-	    :initform nil)))
-
+	    :initform nil)
+   (key :initform (gensym "framebuffer")
+	:reader key)))
 
 
 (defmethod initialize-instance :after ((this frame-buffer) &key
@@ -37,13 +38,18 @@
       (unless id
 	(setf id (car (gl:gen-framebuffers 1))))
 
+
       (trivial-garbage:cancel-finalization this)
-      (setf (gethash this *uncollected*) this)
-      (trivial-garbage:finalize this 
-				(let ((id-value id))
-				  (lambda () (sdl2:in-main-thread () 
-					       (gl:delete-framebuffers (list id-value))))))					
+      (setf (gethash (key this) *uncollected*) this)
       
+      (trivial-garbage:finalize this
+				(let ((id-value id)
+				      (key (key this)))
+
+				  (lambda ()
+				    (remhash key *uncollected*)
+				    (sdl2:in-main-thread () 
+				      (gl:delete-framebuffers (list id-value))))))
       (when color-attachments
 	(if (listp color-attachments)
 	    (setf color color-attachments)
@@ -147,7 +153,7 @@
 	       (stencil stencil)) this
 
     (trivial-garbage:cancel-finalization this)
-    (remhash this *uncollected*)
+    (remhash (key this) *uncollected*)
     (sdl2:in-main-thread ()
       (gl:Delete-Framebuffers (list id))
       

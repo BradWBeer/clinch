@@ -11,6 +11,10 @@
   (loop for key being the hash-keys of *uncollected*
      do (unload key)))
 
+(defmacro ! (&body body)
+  `(sdl2:in-main-thread ()
+     ,@body))
+
 (defun split-keywords (lst &optional keys objects)
   (cond 
     ((or (null lst)
