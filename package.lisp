@@ -3,7 +3,10 @@
 
 (defpackage #:clinch
   (:use #:cl)
-  (:export 
+  ;;(:shadow )
+  (:import-from :cepl :v!)
+  (:export
+   #:v!
    #:unload-all-uncollected
    #:shader #:name #:program #:frag-shader #:vert-shader #:attributes #:uniforms #:use-shader #:get-uniform-id #:get-attribute-id #:attach-uniform #:unload #:bind-static-values-to-attribute
    
@@ -12,7 +15,7 @@
    #:texture #:tex-id #:width #:height #:data-format #:stride #:target #:bind #:map-buffer #:unmap-buffer #:bind-sampler  #:unload #:with-mapped-texture
    #:transform #:make-vector #:transform-point #:ray-triangle-intersect? #:make-matrix #:degrees->radians #:radians->degrees #:qtype #:transform #:transform->list #:set-identity-transform #:qreset #:m* #:transpose #:determinate #:invert #:scale #:translate #:rotate #:make-orthogonal-transform #:make-frustum-transform  #:make-perspective-transform #:unproject #:get-screen-direction #:get-current-gl-matrix #:use-transform #:use-projection-transform #:M*V 
 
-   #:node #:children #:current-transform #:changed? #:update #:render 
+   #:node #:children #:changed? #:update #:render 
 
    #:enabled
    #:make-foreign-array #:make-identity-matrix #:list->matrix #:copy-foreign-array #:fill-foreign-array #:cached-matrix #:matrix #:get-current-matrix #:update-current-matrix #:read-gl-matrix #:get-current-gl-matrix #:use-matrix #:save-matrix  #:print-node-data #:m*m #:mT #:det #:m-1 

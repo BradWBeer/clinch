@@ -4,13 +4,19 @@
 (in-package #:clinch)
 
 (defclass node ()
-  ((transform
-    :accessor transform
-    :initform  (sb-cga:identity-matrix)
-    :initarg  :transform)
-   (current-transform
-    :accessor current-transform
-    :initform nil)
+  ((trans :reader translation
+	  :initform (cepl:v! 0 0 0)
+	  :initarg  :translation)
+   (rot :reader rotation
+	:initform (q:identity-quat)
+	:initarg :rotation)
+   (scale    :reader scaling
+	     :initform (cepl:v! 1 1 1)
+	     :initarg  :scale)
+   (t-matrix :initform nil)
+   (r-matrix :initform nil)
+   (s-matrix :initform nil)
+   (transform :initform nil)
    (enabled
     :accessor enabled
     :initform t
@@ -20,21 +26,53 @@
 	     :initarg  :children))
   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required."))
 
-(defmethod initialize-instance :after ((this node) &key parent)
-  )
+(defgeneric reset (this))
+(defgeneric (setf rotation) (val this))
+(defgeneric (setf scaling) (val this))
+(defgeneric (setf translation) (val this))
+(defgeneric translation-matrix (this &key))
+(defgeneric rotation-matrix (this &key))
+(defgeneric scale-matrix (this &key))
+(defgeneric transform (this &key))
+(defgeneric translate (this trans &key))
+(defgeneric rotate (this rot &key))
+(defgeneric scale (this scale &key))
+(defgeneric n* (this that &key))
+
+(defmethod initialize-instance :after ((this node) &key translation rotation scale copy)
+  (setf (translation this) (or translation
+			       (and copy (copy-seq (translation copy)))
+			       (cepl:v! 0 0 0)))
+  (setf (rotation this) (or rotation
+			    (and copy (copy-seq (rotation copy)))
+			    (cepl:v! 1 0 0 0)))
+  (setf (scaling this) (or scale
+			 (and copy (copy-seq (scaling copy)))
+			 (cepl:v! 1 1 1))))
+
+(defmethod reset ((this node))
+  (setf (translation this) (cepl:v! 0 0 0))
+  (setf (rotation this)    (cepl:v! 1 0 0 0))
+  (setf (scaling this)     (cepl:v! 1 1 1))
+  (setf (slot-value this 't-matrix) nil)
+  (setf (slot-value this 'r-matrix) nil)
+  (setf (slot-value this 's-matrix) nil)
+  (setf (slot-value this 's-matrix) nil)
+  (setf (slot-value this 'transform) nil))
   
-;; (defmethod print-object ((this node) s)
-;;   "Print function for node."
-;;   (format s "#<NODE children: ~A ~%~A>" (length (children this)) (transform this)))
+(defmethod print-object ((this node) s)
+  "Print function for node."
+  (format s "#<NODE children: ~A ~%~A>" (length (children this)) (transform this)))
 
 (defmethod changed? ((this node))
   "Has this node changed and not updated?"
-  (null (slot-value this 'current-transform)))
-
+  (null (slot-value this 'transform)))
 
 (defmethod (setf changed?) (val (this node))
   "Set this node to update later."
-  (setf (slot-value this 'current-transform) (if val nil t)))
+  (if val
+      (setf (slot-value this 'transform) nil)
+      (transform this)))
 
 (defmethod add-child ((this node) child &key)
   "Add a child. Children must implement update and render."
@@ -55,30 +93,28 @@
       (setf children
 	    (remove child children)))))
 
+;; I don't think i need this anymore...
 
-(defmethod update ((this node) &key parent force)
-  "Update this and child nodes if changed."
-  (when (or force (changed? this))
-    (setf (current-transform this)
-	  (if parent
-	      (sb-cga:matrix* (current-transform parent) (transform this))
-	      (transform this)))
-    (setf force t))
+;; (defmethod update ((this node) &key parent force)
+;;   "Update this and child nodes if changed."
+;;   (when (or force (changed? this))
+;;     (setf (current-transform this)
+;; 	  (if parent
+;; 	      (sb-cga:matrix* (current-transform parent) (transform this))
+;; 	      (transform this)))
+;;     (setf force t))
   
-  (loop for child in (children this)
-     do (update child :parent this :force force))
+;;   (loop for child in (children this)
+;;      do (update child :parent this :force force))
   
-  (current-transform this))
+;;   (current-transform this))
 
 (defmethod render ((this node) &key parent projection)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (enabled this)
- 
-
-    (when (changed? this)
-      (update this :parent parent))
     
- 
+    ;; (when (changed? this)
+    ;;   (update this :parent parent))
     
     (loop for i in (children this)
        do (render i :parent this :projection projection))))
@@ -86,100 +122,88 @@
 (defmethod render ((this list) &key parent projection)
   "Render a list of rendables."
   (when (enabled this)
-    (load-matrix this)
-    
+        
     (loop for i in this
        do (render i :parent parent :projection projection))))
 
 
-(defmethod (setf transform)  ((other-node array) (this node))
-  "Inherited function for setting changed?"
-  (setf (slot-value this 'transform)
-	other-node)
-  (setf (changed? this) t)
-  (transform this))
+(defmethod (setf translation) (trans (this node))
+  (with-slots ((current trans)) this
+    (if (v:= trans current) current
+	(progn
+	  (setf (slot-value this 't-matrix) nil
+		current trans)))))
+	
+(defmethod translation-matrix ((this node) &key)
+  (or (slot-value this 't-matrix)
+      (setf (slot-value this 't-matrix)
+	    (m4:translation (translation this)))))
 
-(defmethod set-identity-transform ((this node) &key)
-  "Inherited function for setting changed?"
-  (setf (transform this) (sb-cga:identity-matrix)))
+(defmethod (setf rotation) (rot (this node))
+  (with-slots ((current rot)) this
+    (if (v:= rot current) current
+	(progn
+	  (setf (slot-value this 'r-matrix) nil
+		current rot)))))
+	
+(defmethod rotation-matrix ((this node) &key)
+  (or (slot-value this 'r-matrix)
+      (setf (slot-value this 'r-matrix)
+	    (q:to-matrix4 
+	     (rotation this)))))
 
-(defmethod m* ((this node) (that node) &optional (in-place t))
-  "Inherited function for setting changed?"
-  (if in-place
-      (setf (transform this) (sb-cga:matrix* (transform that) (transform this)))
-      (sb-cga:matrix* (transform that) (transform this))))
+(defmethod (setf scaling) (scale (this node))
+  (with-slots ((current scale)) this
+    (if (v:= scale current) current
+	(progn
+	  (setf (slot-value this 's-matrix) nil
+		current scale)))))
+	
+(defmethod scale-matrix ((this node) &key)
+  (or (slot-value this 's-matrix)
+       (setf (slot-value this 's-matrix)
+	    (m4:scale (scaling this)))))
 
-(defmethod transpose ((this node) &optional (in-place t))
-  "Inherited function for setting changed?"
-  (if in-place
-      (setf (transform this) (sb-cga:transpose-matrix (transform this)))
-      (sb-cga:transpose-matrix (transform this))))
+(defmethod transform ((this node) &key)
+  (with-slots ((scale s-matrix)
+	       (trans t-matrix)
+	       (rot   r-matrix)
+	       (transform transform)) this
 
+    (if (and scale rot trans transform)
+	transform
+	(setf transform
+	      (reduce #'m4:m* (list (or trans (translation-matrix this))
+				    (or rot   (rotation-matrix this))
+				    (or scale (scale-matrix this))))))))
 
-(defmethod invert ((this node) &optional (in-place t))
-  "Inherited function for setting changed?"
-  (if in-place
-      (setf (transform this) (sb-cga:inverse-matrix (transform this)))
-      (sb-cga:inverse-matrix (transform this))))
+(defmethod rotate ((this node) rot &key (modify t))
+  (if modify 
+      (setf (rotation this) 
+	    (q:q*quat rot (rotation this)))
+      (q:q*quat rot (rotation this))))
 
+(defmethod translate ((this node) trans &key (modify t))
+  (if modify 
+      (setf (translation this) 
+	    (v:+ trans (translation this)))
+      (v:+ trans (translation this))))
 
-(defmethod scale ((this node) x y z &optional (in-place t))
-  "Inherited function for setting changed?"
-  (if in-place
-      (setf (transform this)
-	    (sb-cga:matrix*
-	     (sb-cga:scale* (float x)
-			    (float y)
-			    (float z))
-	     (transform this)))
-      (sb-cga:matrix* (sb-cga:scale* (float x)
-				     (float y)
-				     (float z))
-		      (transform this))))
+(defmethod scale ((this node) size &key (modify t))
+  (if modify 
+      (setf (scaling this) 
+	    (v:+ size (scaling this)))
+      (v:+ size (scaling this))))
 
-(defmethod translate ((this node) x y z &optional (in-place t))
-  "Inherited function for setting changed?"
-  (if in-place
-      (setf (transform this) (sb-cga:matrix* (sb-cga:translate* (float x)
-								(float y)
-								(float z))
-					     (transform this)))
-      (sb-cga:matrix* (sb-cga:translate* (float x)
-					 (float y)
-					 (float z))
-		      (transform this))))
-
-(defmethod rotate ((this node) rad x y z &optional (in-place t))
-  "Inherited function for setting changed?"
-  (if in-place
-      (setf (transform this)
-	    (sb-cga:matrix* (sb-cga:rotate-around
-			     (make-vector (float x)
-					  (float y)
-					  (float z)) (float rad))
-			    (transform this)))
-      (sb-cga:matrix* (sb-cga:rotate-around
-		       (make-vector (float x)
-				    (float y)
-				    (float z)) (float rad))
-		      (transform this))))
+(defmethod n* ((this node) (that node) &key new-node)
+  (if new-node
+      (make-instance 'node
+		     :scale (v:* (scaling this) (scaling that))
+		     :rotation (q:q*quat (rotation this) (rotation that))
+		     :translation (v:+ (translation this) (translation that)))
+      (m4:m* (transform this)
+	     (transform that))))
 
 
-(defmethod load-matrix ((this node) &key)
-
-  (gl:load-matrix (or (current-transform this)
-		      (transform this))))
-
-(defmethod unload ((this node) &key)
-  "Release node resources."
-  (setf (enabled this) nil))
-
-(defmacro node (&body args)
-
-  (multiple-value-bind (keys children) (split-keywords args)
-    
-    `(let ((*parent* (make-instance 'node ,@keys :parent *parent*)))
-       ,@children
-       *parent*)))
 
 

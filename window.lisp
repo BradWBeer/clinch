@@ -5,8 +5,6 @@
 
 ;;;; window.lisp
 
-(in-package #:clank)
-
 (defparameter *window* nil)
 (defparameter *context* nil)
 
