@@ -1,9 +1,9 @@
-;;;; shaders.lisp
+;;;; shader.lisp
 ;;;; Please see the licence.txt for the CLinch
 
 (in-package #:clinch)
 
-(defclass shader (refcount)
+(defclass shader ()
   ((name
     :reader name
     :initform nil)
@@ -27,7 +27,6 @@
     :initform nil))
    
   (:documentation "Creates and keeps track of the shader objects. Requires an UNLOAD call when you are done. Bind Buffer functions are in Buffer.l"))
-
 
 (defmethod initialize-instance :after ((this shader) &key
 				       name
@@ -129,7 +128,26 @@
     
     (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
     (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
-      
+
+    (trivial-garbage:cancel-finalization this)
+    (trivial-garbage:finalize this 
+			      (let ((program-val program)
+				    (fs-val fs)
+				    (vs-val vs)
+				    (geo-val geo))
+				(lambda () (sdl2:in-main-thread () 
+							(gl:detach-shader program-val fs-val)
+							(gl:delete-shader fs-val)
+							(gl:detach-shader program-val vs-val)
+							(gl:delete-shader vs-val)
+							(when geo-val 
+							  (gl:detach-shader program-val geo-val)
+							  (gl:delete-shader geo-val))
+							(gl:delete-program program-val)))))
+
+
+
+    
     (when attributes
 
       (loop for (name type) in attributes
@@ -156,13 +174,24 @@
   "Start using the shader."
   (gl:use-program (program this)))
 
-(defmethod get-uniform-id ((this shader) uniform)
+(defmethod get-uniform-id ((this shader) (id integer))
+  "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
+  (when (and id (>= (cdr id) 0)) id))
+
+(defmethod get-uniform-id ((this shader) (uniform string))
   "Shaders pass information by using named values called Uniforms and Attributes. This gets the gl id of a uniform name."
   (let ((id (gethash uniform
 		     (slot-value this 'uniforms))))
     (when (and id (>= (cdr id) 0)) id)))
 
-(defmethod get-attribute-id ((this shader) attribute)
+
+(defmethod get-attribute-id ((this shader) (id integer))
+  "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
+  (when (and id
+	     (>= (cdr id) 0))
+    id))
+
+(defmethod get-attribute-id ((this shader) (attribute string))
   "Shaders pass information by using named values called Uniforms and Attributes. This gets the gl id of a attribute name."
   (let ((id (gethash attribute
 		     (slot-value this 'attributes))))
@@ -174,44 +203,52 @@
 (defmethod attach-uniform ((this shader) (uniform string) value)
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
   (let ((ret (get-uniform-id this uniform)))
-    
+
     (when ret
-      (destructuring-bind (type . id) ret
+      (unless (eq (gethash ret *current-shader-uniforms*) value)
+	(setf (gethash ret *current-shader-uniforms*) value)
 	
-	(let ((f (case type
-		   (:float #'gl:uniformf)
-		   (:int #'gl:uniformi)
-		   (:matrix (lambda (id value)
-			      (gl:uniform-matrix id 2 (cond
-							((arrayp value) value)
-							((typep value 'node) (current-transform
-									      value))
-							(t (error "Unknown Type in attach-uniform!")))))))))
+	(destructuring-bind (type . id) ret
+	  
+	  (let ((f (case type
+		     (:float #'gl:uniformf)
+		     (:int #'gl:uniformi)
+		     (:matrix (lambda (id value)
+				(gl:uniform-matrix id 2 (cond
+							  ((arrayp value) value)
+							  ((typep value 'node) (current-transform
+										value))
+							  (t (error "Unknown Type in attach-uniform!")))))))))
 	  
 	  
-	  (if (listp value)
-	      (apply f id value)
-	      (apply f id (list value))))))))
+	    (if (listp value)
+		(apply f id value)
+		(apply f id (list value)))))))))
     
 (defmethod attach-uniform ((this shader) (uniform string) (matrix array))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
 
   (let ((ret (get-uniform-id this uniform)))
     (when ret 
-      (destructuring-bind (type . id) ret
-	
-	(gl::with-foreign-matrix (foreign-matrix matrix)
-	  (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
+      (unless (eq (gethash ret *current-shader-uniforms*) value)
+	(setf (gethash ret *current-shader-uniforms*) value)
+	(destructuring-bind (type . id) ret
+	  
+	  (gl::with-foreign-matrix (foreign-matrix matrix)
+	    (%gl:uniform-matrix-4fv id 1 nil foreign-matrix)))))))
     
 (defmethod attach-uniform ((this shader) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
 
-  (let ((ret (get-uniform-id this uniform)))
-    (when ret 
-      (destructuring-bind (type . id) ret
-	
-	(gl::with-foreign-matrix (foreign-matrix (clinch:current-transform matrix))
-	  (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
+  (unless (eq (gethash ret *current-shader-uniforms*) value)
+    (setf (gethash ret *current-shader-uniforms*) value)
+    
+    (let ((ret (get-uniform-id this uniform)))
+      (when ret 
+	(destructuring-bind (type . id) ret
+	  
+	  (gl::with-foreign-matrix (foreign-matrix (clinch:current-transform matrix))
+	    (%gl:uniform-matrix-4fv id 1 nil foreign-matrix)))))))
 
 
 (defmethod bind-static-values-to-attribute ((this shader) name &rest vals)
@@ -229,7 +266,8 @@
 	       (fs frag-shader)
 	       (geo geo-shader)
 	       (program program)) this
-
+    
+    (trivial-garbage:cancel-finalization this)
     (when program
 
       (when vs

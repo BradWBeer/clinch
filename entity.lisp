@@ -3,87 +3,37 @@
 
 (in-package #:clinch)
 
-(defclass entity (refcount)
+(defclass entity ()
   ((shader
     :initform nil
     :initarg :shader
-    :accessor shader)
+    :reader shader)
    (indexes
     :initform nil
     :initarg :indexes
-    :accessor indexes)
+    :reader indexes)
    (render-values
     :initform nil
     :initarg :values
-    :accessor render-values)
-   (parent
-    :initform nil
-    :initarg :parent
-    :accessor parent)
-   (vertices
-    :initform nil
-    :initarg  :vertices
-    :accessor vertices)
-   (normals
-    :initform nil
-    :initarg  :normals
-    :accessor normals)
-   (before-render :initform nil
-		  :initarg :before-render
-		  :accessor before-render)
-   (after-render :initform nil
-		 :initarg :after-render
-		 :accessor after-render)
-   (once          :initform nil
-		  :initarg :once
-		  :accessor once)))
+    :reader render-values)))
 
-(defun all-indices-used? (entity)
-  ;; TODO: Is the naming okay? The language used does not feel idiomatic/clear.
-  ;; TODO: Perhaps an error should be signalled instead of simply a warning?
-  "Asserts that all vertices are 'used' by the indices and that ~ 
-none of the indices are below or above the range 0 to (vertices_length/stride - 1)"
-  (let* ((vertices (get-render-value entity :vertices))
-         (indices (indexes entity))
-         (indices-data (get-buffer-data indices)))
-    (if    ;; Are the lists of the same length and do they contain the same elements?
-     ;; If so:
-     ;;  1. All vertices are 'used' by the indices
-     ;;  2. None of the indices are below or above the range 0 to (vertices_length/stride - 1)
-     (equalp (coerce (sort indices-data #'<) 'list)
-	     (loop for i from 0 to (1- (vertex-count vertices))
-		collect i))
-     t
-     (warn "Indices not used correctly in entity ~A" entity))))
 
 (defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
   "Strict-index: ALL-INDICES-USED? on THIS"
-  (when parent (add-child parent this))
-					;(when compile (make-render-func this))
-  (when strict-index (all-indices-used? this))
+  (when parent (add-child parent this)))
 
-  (let ((s (shader this)))
-    (when s (ref s)))
+(defmethod (setf shader) (new-value (this entity))
+  (sdl2:in-main-thread ()
+    (setf (slot-value this 'shader) new-value)))
 
-  (let ((i (indexes this)))
-    (when i (ref i)))
+(defmethod (setf indexes) (new-value (this entity))
+  (sdl2:in-main-thread ()
+    (setf (slot-value this 'indexes) new-value)))
 
-  (let ((vals (render-values this)))
-    (when vals
-      (loop for i in vals
-	 do (let ((v (third i)))
-	      (when (typep v 'refcount)
-		(ref v))))))      
-
-  (let ((v (vertices this)))
-    (when v (ref v)))
-
-  (let ((n (normals this)))
-    (when n (ref n))))
-
-;; (defmethod print-object ((this entity) s)
-;;   (format s "#<entity>"))
-
+(defmethod (setf render-values) (new-value (this entity))
+  (sdl2:in-main-thread ()
+    (setf (slot-value this 'render-values) new-value)))
+		       
 (defun render-value-location (values key)
   (loop
      for i in values 
@@ -105,23 +55,9 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 	 (with-accessors ((lst render-values)) this
 	   (let ((loc (render-value-location lst name)))
 	     (if loc
-		 (setf (third (nth loc lst)) new-value))))))
-    ;; (format t "(setf render-value this: ~A name: ~A new-val: ~A ret: ~A~%" this name new-value ret)
-    ;; (print (slot-value this 'render-values))
+		 (sdl2:in-main-thread ()
+		 (setf (third (nth loc lst)) new-value)))))))
     ret))
-
-(defmethod (setf render-values) (new-render-values (this entity))
-  (with-slots ((rv render-values)) this
-
-    (loop for i in rv
-       do (let ((v (third i)))
-	    (when (typep v 'refcount)
-	      (ref v))))
-    
-    (when rv (unref rv))
-    
-    (setf rv new-render-values)))
-
 
 (defmethod get-primitive ((this entity) name)
   (let* ((buff      (get-render-value this name))
@@ -154,9 +90,6 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 
     (values bret iret)))
 
-
-(defun rec (primitives i distance u v index)
-  )
 
 (defmethod triangle-intersection? ((this entity) start dir &key (vertex-name :vertices))
   (labels ((rec (primitives i distance u v index)
@@ -200,14 +133,29 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 	   for (atr-or-uni name value) in (render-values this)
 	   if (typep value 'function) do (setf value (funcall value))
 	   collect (progn
-		     ;;(format t "name: ~A value: ~A~%" name value)
 		     (cond ((and (eql atr-or-uni :uniform)
 				 (typep value 'texture)) (prog1 (bind-sampler value current-shader name tex-unit) (incf tex-unit)))
 			   ((eql atr-or-uni :uniform)
 			    
 			    (attach-uniform current-shader name (cond ((eql value :projection) projection)
-								     ((eql value :Model)      (or parent (sb-cga:identity-matrix)))
-								     (t value))))
+								      ((eql value :Model)      (or parent (sb-cga:identity-matrix)))
+								      ((eql value :model-1) (typecase parent
+											      (node (sb-cga:inverse-matrix
+												     (current-transform parent)))
+											      (array (sb-cga:inverse-matrix parent))
+											      (t (sb-cga:identity-matrix))))
+								      ((eql value :projection-1) (sb-cga:inverse-matrix projection))
+								      ((eql value :normal) (typecase parent
+											     (node
+											      (convert-matrix4-to-matrix3
+											       (sb-cga:transpose-matrix
+												(sb-cga:inverse-matrix
+												 (current-transform parent)))))
+											     (array (convert-matrix4-to-matrix3
+												     (sb-cga:transpose-matrix
+												      (sb-cga:inverse-matrix parent))))
+											     (t (make-identity-matrix3))))
+								      (t value))))
 			   
 			   ((and (eql atr-or-uni :attribute)
 				 (typep value 'buffer)) 
@@ -224,42 +172,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 
 (defmethod render ((this entity) &key parent projection)
 
-  (when (once this)
-    (funcall (once this) this)
-    (setf (once this) nil))
-  
-  (when (before-render this)
-    (let ((*parent* this))
-      (funcall (before-render this) this)))
-
-  (draw this :parent parent :projection projection)
-
-  (when (after-render this)
-    (let ((*parent* this))
-      (funcall (after-render this) this))))
-
-;;(funcall (slot-value this 'func) :parent-transform (or matrix parent) :projection-transform projection))
-
-(defmethod slow-render ((this entity))
-  (gl:matrix-mode :modelview)
-  ;;(use-transform this)
-  (when (shader this)
-    (use-shader (shader this)))
-  (loop
-     with tex-unit = 0
-     for (atr-or-uni name value) in (render-values this)
-     do (cond ((eql atr-or-uni :uniform) (apply #'attach-uniform (shader this) name value))
-	      ((and (eql atr-or-uni :attribute)
-		    (typep value 'texture)) (bind-sampler value (shader this) name tex-unit) (incf tex-unit))
-	      ((and (eql atr-or-uni :attribute)
-		    (typep value 'buffer)) 
-	       (bind-buffer-to-attribute-array value (shader this) name))
-	      ((eql atr-or-uni :attribute) (apply #'bind-static-values-to-attribute (shader this) name value))
-	      ((eql atr-or-uni :vertices) 
-	       (bind-buffer-to-vertex-array name))))
-
-  (draw-with-index-buffer (indexes this)))
-
+  (draw this :parent parent :projection projection))
 
 (defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
 
@@ -291,26 +204,7 @@ none of the indices are below or above the range 0 to (vertices_length/stride - 
 
 (defmethod unload ((this entity) &key)
   "Release entity resources."
-
-  (let ((s (shader this)))
-    (when s (unref s)))
-  
-  (let ((i (indexes this)))
-    (when i (unref i)))
-  
-  (let ((vals (render-values this)))
-    (when vals
-      (loop for i in vals
-	 do (let ((v (third i)))
-	      (when (typep v 'refcount)
-		(unref v))))))      
-  
-  (let ((v (vertices this)))
-    (when v (unref v)))
-  
-  (let ((n (normals this)))
-    (when n (unref n))))
-
+  )
 
 (defmacro entity (&body rest)
 

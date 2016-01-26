@@ -1,5 +1,10 @@
+;;;; clinch.lisp
+;;;; Please see the licence.txt for the CLinch 
+
 (in-package #:clinch)
 
+(setf *current-shader-attributes* (trivial-garbage:make-weak-hash-table))
+(setf *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table))
 
 (defun split-keywords (lst &optional keys objects)
   (cond 
