@@ -151,11 +151,7 @@
 				      (gl:delete-shader geo-val))
 				    (gl:delete-program program-val)))))
 
-
-
-    
     (when attributes
-
       (loop for (name type) in attributes
 	 for location = (gl:get-attrib-location program name)
 	 if (>= location 0)
@@ -189,7 +185,6 @@
   (let ((id (gethash uniform
 		     (slot-value this 'uniforms))))
     (when (and id (>= (cdr id) 0)) id)))
-
 
 (defmethod get-attribute-id ((this shader) (id integer))
   "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
@@ -232,7 +227,7 @@
 		(apply f id (list value))))))))
     
 (defmethod attach-uniform ((this shader) (uniform string) (matrix array))
-  "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
+  "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to a matrix value."
 
   (let ((ret (get-uniform-id this uniform)))
     (when ret 
@@ -244,7 +239,7 @@
 	    (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
     
 (defmethod attach-uniform ((this shader) (uniform string) (matrix node))
-  "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
+  "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to the matrix of a node."
 
   (let ((ret (get-uniform-id this uniform)))
     (when ret 
@@ -301,14 +296,29 @@
 	  (slot-value this 'uniforms) nil)))
 
 
-(defmethod (setf shader-attribute) (value (this shader) key)
+(defmethod shader-attribute ((this shader) key)
+  "Gets a shader attribute"
+  (gethash key (slot-value this 'shader-attribute)))
 
+(defmethod (setf shader-attribute) (value (this shader) key)
+  "Sets a shader attribute."
   (setf (gethash key (slot-value this 'shader-attribute)) value))
 
-(defmethod (setf shader-uniform) (value (this shader) key)
+(defmethod remove-shader-attribute ((this shader) key)
+  "Removes a shader attribute"
+  (remhash key (slot-value this 'shader-attribute)))
 
+(defmethod shader-uniform ((this shader) key)
+  "Gets a shader uniform"
+  (gethash key (slot-value this 'shader-uniform)))
+
+(defmethod (setf shader-uniform) (value (this shader) key)
+  "Sets a shader uniform."
   (setf (gethash key (slot-value this 'shader-uniform)) value))
 
+(defmethod remove-shader-uniform ((this shader) key)
+  "Removes a shader uniform"
+  (remhash key (slot-value this 'shader-uniform)))
 
 (defmacro gl-shader (&body rest)
 

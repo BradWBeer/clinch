@@ -1,5 +1,6 @@
 ;;;; shapes.lisp
 ;;;; Please see the licence.txt for the CLinch 
+;; Not used. (yet?)
 
 (in-package #:clinch)
 

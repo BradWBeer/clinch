@@ -41,15 +41,17 @@
    (camera-node
     :accessor camera-node
     :initform nil
-    :initarg  :camera-node)))
+    :initarg  :camera-node))
+  (:documentation "Creates a viewport. Maybe it can use a camera?"))
 
 
 (defmethod initialize-instance :after ((this viewport) &key)
-
+  "Creates a new viewport."
   )
 
 
 (defmethod resize ((this viewport) x y w h)
+  "Resize the viewport."
   (setf (x this) x
 	(y this) y
 	(width this) w
@@ -58,27 +60,25 @@
   (gl:viewport x y w h))
 
 (defmethod width ((this viewport))
+  "Get viewport width."
   (with-slots ((w width)) this
     w))
 
 (defmethod (setf width) (new-val (this viewport))
-  (sdl2:in-main-thread ()
-  (setf (slot-value this 'width) new-val)))
+  "Set viewport width."
+  (setf (slot-value this 'width) new-val))
 
 (defmethod height ((this viewport))
+  "Get the viewport height."
   (with-slots ((h height)) this
     h))
 
-
 (defmethod (setf height) (new-val (this viewport))
-  (sdl2:in-main-thread ()
-		       (setf (slot-value this 'height) new-val)))
-
-(defmethod update :before ((this viewport) &key parent force)
-  "Update this and child nodes if changed."
-  )
+  "Set the viewport height."
+  (setf (slot-value this 'height) new-val))
 
 (defmethod render ((this viewport) &key projection)
+  "Makes this viewport active."
   (with-accessors ((x x)
 		   (y y)
 		   (w width)
@@ -93,14 +93,14 @@
 	
 	(gl:clear-color r g b a)
 	(gl:clear :color-buffer-bit :depth-buffer-bit)))
-    
+    ;;; Remove this cruft!!!
     (when (projection-transform this)
       (gl:matrix-mode :projection)
       (gl:load-matrix (projection-transform this))
       (gl:matrix-mode :modelview))))
     
-
 (defmethod quick-set ((this viewport) x y w h)
+  "A quick method to set all the values in the viewport." 
   (sdl2:in-main-thread ()
   (setf (x this) x
 	(y this) y
@@ -124,14 +124,4 @@
 ;;   ;; (format s ")")
 
 ;;   )
-
-
-(defmacro viewport (&body args)
-  
-  (multiple-value-bind (keys children) (split-keywords args)
-    
-    `(let ((*parent* (make-instance 'viewport ,@keys :parent *parent*)))
-       ,@children
-       *parent*)))
-
 

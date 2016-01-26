@@ -18,7 +18,7 @@
 	       ;;(:file "progv") ;; Take this out until I need it.
 	       (:file "clinch")
 	       (:file "transform")
-	       (:file "vector")
+	       ;;(:file "vector") ;; REMOVE THIS!!!
 	       (:file "node")
 	       (:file "shader")
 	       (:file "buffer")

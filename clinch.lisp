@@ -5,17 +5,22 @@
 
 (defparameter *current-shader-attributes* (trivial-garbage:make-weak-hash-table))
 (defparameter *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table))
-(defparameter *uncollected*  (trivial-garbage:make-weak-hash-table :weakness :value))
+(defparameter *uncollected*  (trivial-garbage:make-weak-hash-table :weakness :value)
+  "Weak hash of loaded OpenGL objects.")
 
 (defun unload-all-uncollected ()
+  "Unloads all loaded OpenGL objects."
   (loop for key being the hash-keys of *uncollected*
      do (unload (gethash key *uncollected*))))
 
 (defmacro ! (&body body)
+  "Runs body in main thread for safe OpenGL calls."
   `(sdl2:in-main-thread ()
      ,@body))
 
 (defun decompose-transform (m)
+  "Decomposes a matrix into it's position vector3, rotation quaterion and scaling vector3.
+   Useful for creating/updating the node object."
   (let* ((rot (q:normalize
 	      (q:make-quat-from-rotation-matrix3
 	       (m4:to-matrix3 m))))

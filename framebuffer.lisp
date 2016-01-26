@@ -22,13 +22,15 @@
    (stencil :reader stencil-attachments
 	    :initform nil)
    (key :initform (gensym "framebuffer")
-	:reader key)))
+	:reader key))
+  (:documentation "The Frame Buffer Object or FBO. Use this to render to textures."))
 
 
 (defmethod initialize-instance :after ((this frame-buffer) &key
 							     color-attachments
 							     depth-attachment
 							     stencil-attachment)
+  "Creates an FBO with optional color attachments, depth-attachements and stencil attachments." ;; Check if color attachements is optional. !!!
   (sdl2:in-main-thread ()
     (with-slots ((id id)
 		 (color color)
@@ -65,7 +67,7 @@
     (unbind this)))
 
 (defmethod (setf depth-buffer) ((db texture) (this frame-buffer))
-
+  "Set the depth buffer to use."
   (sdl2:in-main-thread ()
     (setf (slot-value this 'depth) db)
     (bind this)
@@ -76,7 +78,7 @@
     (unbind this)))
 
 (defmethod add-color-buffer ((this frame-buffer) (tex texture) &optional (index 'number ))
-
+  "Add a color buffer at position index."
   (sdl2:in-main-thread ()
     (bind this)
     (bind tex)
@@ -84,57 +86,6 @@
       (gl:framebuffer-texture-2d :DRAW-FRAMEBUFFER attachment :texture-2d (tex-id tex) 0))
     (unbind tex)
     (unbind this)))
-
-;; Do I need this?
-;; (defmethod update ((this frame-buffer) &key)
-
-;;   (with-slots ((color color)
-;; 	       (depth depth)
-;; 	       (stencil stencil)) this
-
-
-;;   (bind this)
-
-;;   (loop
-;;      for x from 0
-;;      for attachment in color
-;;        do (progn
-;; 	    (typecase attachment
-
-;; 	      (texture (gl:framebuffer-texture-2d (target this)
-;; 							  (+ x (cffi:FOREIGN-ENUM-VALUE  'cl-opengl-bindings::enum :color-attachment0))
-;; 							  :TEXTURE-2D
-;; 							  (tex-id attachment)
-;; 							  0))
-;; 	      (render-buffer (gl:framebuffer-renderbuffer (target this)
-;; 							  (+ x (cffi:FOREIGN-ENUM-VALUE  'cl-opengl-bindings::enum :color-attachment0))
-;; 							  :render-buffer
-;; 							  (renderbuffer-id attachment))))))
-
-;;   (when depth
-;;     (typecase depth
-;;       (texture (gl:framebuffer-texture-2d (target this)
-;; 					  :depth-attachment
-;; 					  :texture-2d
-;; 					  (tex-id depth)
-;; 					  0))
-;;       (render-buffer (gl:framebuffer-renderbuffer (target this)
-;; 						  :depth-attachment
-;; 						  :render-buffer
-;; 						  (renderbuffer-id depth)))))
-
-;;   (when stencil
-;;     (typecase depth
-;;       (texture (gl:framebuffer-texture-2d (target this)
-;; 					  :stencil-attachment
-;; 					  :texture-2d
-;; 					  (tex-id stencil)
-;; 					  0))
-;;       (render-buffer (gl:framebuffer-renderbuffer (target this)
-;; 						  :stencil-attachment
-;; 						  :render-buffer
-;; 						  (renderbuffer-id stencil)))))))
-
 
 (defmethod bind ((this frame-buffer) &key )
   "Wrapper around glBindFrameBuffer. Puts the Framebuffer into play."
@@ -146,7 +97,6 @@
 
 (defmethod unload ((this frame-buffer) &key)
   "Unloads and releases all frame-buffer resources, also any renderbuffers"
-
   (with-slots ((id id)
 	       (color color)
 	       (depth depth)

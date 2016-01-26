@@ -38,7 +38,7 @@
     :initform nil)
    (key :initform (gensym "buffer")
 	:reader key))
-  (:documentation "Creates and keeps track of buffer object (shared memory with gpu, sort of). Base class of texture class."))
+  (:documentation "Creates and keeps track of GPU buffer object (shared memory with gpu)."))
 
 
 (defmethod initialize-instance :after ((this buffer) &key data)
@@ -114,10 +114,11 @@
 
 
 (defmethod bind ((this buffer) &key )
-  "Wrapper around glBindBuffer. Puts the buffer into play."
+  "Wrapper around glBindBuffer. Binds this buffer for use."
   (gl:bind-buffer (target this) (id this)))
 
 (defmethod unbind ((this buffer) &key)
+  "Wrapper around glBindBuffer with buffer 0, or no buffer."
   (gl:bind-buffer (target this) 0))
 
 (defmethod get-size ((this buffer) &key)
@@ -237,11 +238,7 @@
 	   (clinch::unmap-buffer-asynchronous ,buffer)))))
 
 (defmethod get-buffer-data ((this buffer))
+  "Returns the buffer's data."
   (clinch:with-mapped-buffer (ptr this :read-only)
     (loop for i from 0 to (1- (clinch:vertex-count this))
        collect (cffi:mem-aref ptr (clinch:qtype this) i))))
-
-
-(defmacro buffer (&body rest)
-
-  `(make-instance 'buffer ,@rest))

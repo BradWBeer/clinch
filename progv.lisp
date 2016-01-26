@@ -1,4 +1,5 @@
 (in-package :clinch)
+;; Not used (yet?)
 
 (defmacro dlet (args &body rest)
   `(progv 

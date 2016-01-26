@@ -15,26 +15,32 @@
    (render-values
     :initform nil
     :initarg :values
-    :reader render-values)))
+    :reader render-values)
+   (:documentation "Renders a mesh with a shader with attributes and uniforms.")))
 
 
 (defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
-  "Strict-index: ALL-INDICES-USED? on THIS"
+  "Creates an entity.
+    :parent adds itself to the given parent. The entity doesn't keep track of its parent."
   (when parent (add-child parent this)))
 
 (defmethod (setf shader) (new-value (this entity))
+  "Sets the shader to use."
   (sdl2:in-main-thread ()
     (setf (slot-value this 'shader) new-value)))
 
 (defmethod (setf indexes) (new-value (this entity))
+  "Sets the index array."
   (sdl2:in-main-thread ()
     (setf (slot-value this 'indexes) new-value)))
 
 (defmethod (setf render-values) (new-value (this entity))
+  "Sets all the render values. Be sure the use the correct format."
   (sdl2:in-main-thread ()
     (setf (slot-value this 'render-values) new-value)))
 		       
 (defun render-value-location (values key)
+  "Returns the 'location' of the key."
   (loop
      for i in values 
      for x from 0
@@ -47,10 +53,12 @@
       (assoc-on-second item (cdr lst))))
 
 (defmethod render-value ((this entity) name)
+  "Retuns the value of the render attribute or uniform."
   (third 
    (assoc-on-second name (clinch::render-values this))))
 
 (defmethod (setf render-value) (new-value (this entity) name)
+  "Sets the value of a single render attribute or uniform."
   (let ((ret
 	 (with-accessors ((lst render-values)) this
 	   (let ((loc (render-value-location lst name)))
@@ -91,7 +99,8 @@
     (values bret iret)))
 
 
-(defmethod triangle-intersection? ((this entity) start dir &key (vertex-name :vertices))
+(defmethod triangle-intersection? ((this entity) start dir &key (vertex-name :vertices)) ;; !!!
+  "Returns distance u, v coordinates and index of the closest triangle (if any) touched by the given the ray origin and direction and the name of the vertex buffer attribute."
   (labels ((rec (primitives i distance u v index)
 	     (multiple-value-bind (new-distance new-u new-v)
 		 
@@ -111,8 +120,7 @@
 
 
 (defmethod draw ((this entity) &key parent projection)
-  (gl:matrix-mode :modelview)
-  
+  "Draws the object. Should be removed and put into render.";; !!!!
   (with-accessors ((shader shader)) this
     (when shader 
       (let ((current-shader (if (typep shader 'function)
@@ -163,7 +171,8 @@
   )
 
 (defmethod render ((this entity) &key parent projection)
-
+  "Renders the entity (mesh).
+    :parent Sets the parent for the :model"
   (draw this :parent parent :projection projection))
 
 (defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
@@ -195,10 +204,6 @@
 	 finally (return (when dist (values dist u v point point-number)))))))
 
 (defmethod unload ((this entity) &key)
-  "Release entity resources."
+  "Release entity resources. Actually, there are none. It should just clear out it's values." ;; !!!!
   )
-
-(defmacro entity (&body rest)
-
-  `(make-instance 'entity ,@rest :parent *parent*))
 

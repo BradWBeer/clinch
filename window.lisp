@@ -10,32 +10,52 @@
 
 (defparameter *inited* nil)
 (defparameter *running* nil)
+
 (defparameter *controllers* nil)
 (defparameter *haptic* nil)
-(defparameter *event-handlers* nil)
-(defparameter *next* nil)
 
-(defparameter *on-window-size-changed* nil)
-(defparameter *on-window-resized* nil)
-(defparameter *on-window-hidden* nil)
-(defparameter *on-window-exposed* nil)
-(defparameter *on-window-moved* nil)
-(defparameter *on-window-minimized* nil)
-(defparameter *on-window-maximized* nil)
-(defparameter *on-window-restored* nil)
-(defparameter *on-window-enter* nil)
-(defparameter *on-window-leave* nil)
-(defparameter *on-window-focus-gained* nil)
-(defparameter *on-window-focus-lost* nil)
-(defparameter *on-window-close* nil)
+(defparameter *next* nil
+  "Runs before the next on-idle call. No arguments.")
+(defparameter *on-window-size-changed* nil
+  "Always called when window size changes. Arguments (window width height timestamp)")
+(defparameter *on-window-resized* nil
+  "Always called when window size changes. Arguments (window width height timestamp)")
+(defparameter *on-window-hidden* nil
+  "Called when window is hidden. Arguments (window timestamp)")
+(defparameter *on-window-exposed* nil
+  "Called when window is exposed and need redrawn. Arguments (window timestamp)")
+(defparameter *on-window-moved* nil
+  "Called when the window has been moved. Arguments (window x y timestamp)")
+(defparameter *on-window-minimized* nil
+  "Called when window is minimized. Arguments (window timestamp)")
+(defparameter *on-window-maximized* nil
+  "Called when window is maximized. Arguments (window timestamp)")
+(defparameter *on-window-restored* nil
+  "Called when window is restored to normal position and size. Arguments (window timestamp)")
+(defparameter *on-window-enter* nil
+  "Called when window gains mouse focus. Arguments (window timestamp)")
+(defparameter *on-window-leave* nil
+  "Called when window is loses mouse focus. Arguments (window timestamp)")
+(defparameter *on-window-focus-gained* nil
+  "Called when window gains focus. Arguments (window timestamp)")
+(defparameter *on-window-focus-lost* nil
+  "Called when window loses focus. Arguments (window timestamp)")
+(defparameter *on-window-close* nil
+  "Called when window is closing. Arguments (window timestamp)")
 
-(defparameter *on-key-down* nil)
-(defparameter *on-key-up* nil)
+(defparameter *on-key-down* nil
+  "Called when a key is pressed. Arguments (win keysym state ts)")
+(defparameter *on-key-up* nil
+  "Called when a key is released. Arguments (win keysym state ts)")
 
-(defparameter *on-mouse-move* nil)
-(defparameter *on-mouse-down* nil)
-(defparameter *on-mouse-up* nil)
-(defparameter *on-mouse-click* nil)
+(defparameter *on-mouse-move* nil
+  "Called when mouse is moved. Arguments (win mouse state x y xrel yrel ts)"
+(defparameter *on-mouse-down* nil
+"Called when mouse button is pressed. Arguments: (win mouse x y button state clicks ts)")
+(defparameter *on-mouse-up* nil
+"Called when mouse button is released. Arguments: (win mouse x y button state clicks ts)")
+(defparameter *on-mouse-click* nil
+  "Called when mouse button is released. Arguments: (win mouse x y button state clicks ts)") ;; This isn't correct. !!!
 (defparameter *on-mouse-double-click* nil)
 (defparameter *on-mouse-wheel-move* nil)
 
@@ -46,8 +66,10 @@
 (defparameter *on-controller-remapped* nil)
 (defparameter *on-controller-axis-move* nil)
 
-(defparameter *on-idle* nil)
-(defparameter *on-quit* nil)
+(defparameter *on-idle* nil
+  "Called when there are no pending events. Take no arguments.")
+(defparameter *on-quit* nil
+  "Called when clinch is about to exit. Take no arguments.")
 
 (defmacro with-main (&body body)
   "Enables REPL access via UPDATE-SWANK in the main loop using SDL2. Wrap this around
@@ -67,7 +89,6 @@ the sdl2:with-init code."
 error. Remember to hit C in slime or pick the restart so errors don't kill the app."
   `(restart-case (progn ,@body) (continue () :report "Continue")))
 
-
 (defun update-swank ()
   "Called from within the main loop, this keep the lisp repl
 working while cepl runs"
@@ -79,7 +100,6 @@ working while cepl runs"
 (defmacro call-all (loc &rest args)
   `(continuable
      (and ,loc (funcall ,loc ,@args))))
-
 
 (defun ensure-cepl-compatible-setup ()
   (unless (>= (gl:major-version) 3)
@@ -142,6 +162,7 @@ working while cepl runs"
 
   (call-all *next*)
   (setf *next* nil)
+  (call-all *on-window-size-changed* win w h nil)
   (call-all *on-window-resized* win w h nil)
 
   (sdl2:with-event-loop (:method :poll)
@@ -195,14 +216,14 @@ working while cepl runs"
 
     (:mouseclick
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
-     (call-all *on-mouse-click* win d1 d2 ts))
+     (call-all *on-mouse-click* win d1 d2 ts)) ;;; FIX THIS!!!
 
     (:mousedoubleclick
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
-     (call-all *on-mouse-double-click* win d1 d2 ts))
+     (call-all *on-mouse-double-click* win d1 d2 ts)) ;;; FIX THIS!!!
 
     (:mousewheel
-     (:window-id win :which mouse :x x :y y :timestamp ts)
+     (:window-id win :which mouse :x x :y y :timestamp ts) 
      (declare (ignore x))
      (call-all *on-mouse-wheel-move* win mouse x y ts))
     
@@ -212,17 +233,17 @@ working while cepl runs"
        (cond
 	 ((eql event :size-changed) (call-all *on-window-size-changed* win d1 d2 ts))
 	 ((eql event :resized) (call-all *on-window-resized* win d1 d2 ts))
-	 ((eql event :hidden) (call-all *on-window-hidden* win d1 d2 ts))
-	 ((eql event :exposed) (call-all *on-window-exposed* win d1 d2 ts))
+	 ((eql event :hidden) (call-all *on-window-hidden* win ts))
+	 ((eql event :exposed) (call-all *on-window-exposed* win ts))
 	 ((eql event :moved) (call-all *on-window-moved* win d1 d2 ts))
-	 ((eql event :minimized) (call-all *on-window-minimized* win d1 d2 ts))
-	 ((eql event :maximized) (call-all *on-window-maximized* win d1 d2 ts))
-	 ((eql event :restored) (call-all *on-window-restored* win d1 d2 ts))
-	 ((eql event :enter) (call-all *on-window-enter* win d1 d2 ts))
-	 ((eql event :leave) (call-all *on-window-leave* win d1 d2 ts))
-	 ((eql event :focus-gained) (call-all *on-window-focus-gained* win d1 d2 ts))
-	 ((eql event :focus-lost) (call-all *on-window-focus-lost* win d1 d2 ts))
-	 ((eql event :close) (call-all *on-window-close* win d1 d2 ts)
+	 ((eql event :minimized) (call-all *on-window-minimized* win ts))
+	 ((eql event :maximized) (call-all *on-window-maximized* win ts))
+	 ((eql event :restored) (call-all *on-window-restored* win ts))
+	 ((eql event :enter) (call-all *on-window-enter* win ts))
+	 ((eql event :leave) (call-all *on-window-leave* win ts))
+	 ((eql event :focus-gained) (call-all *on-window-focus-gained* win ts))
+	 ((eql event :focus-lost) (call-all *on-window-focus-lost* win ts))
+	 ((eql event :close) (call-all *on-window-close* win ts)
 	  (print "Done...")
 	  ))))
     
@@ -312,7 +333,6 @@ working while cepl runs"
 		  (*standard-input* local-input))
 	      
 	      (setf *running* t)
-	      ;;*event-handlers* (make-hash-table))
 	      
 	      (format t "Using SDL Library Version: ~D.~D.~D~%"
 		      sdl2-ffi:+sdl-major-version+

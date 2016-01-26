@@ -51,7 +51,7 @@
 					 depth-texture-mode
 					 texture-compare-mode
 					 texture-compare-function)
-    "Sets up a texture instance.
+    "Sets up a texture instance with gc finalizer. Do not depend on finalizers, release resources manually if you can.
       type:   cffi type NOTE: use :unsigned-int if you are creating an index buffer.
       id:     OpenGL buffer id
       vcount: vertex count (or number of tuples if not using vertexes)
@@ -157,13 +157,14 @@
 
 
 (defmethod bind-sampler ((this texture) shader name tex-unit)
-  "Shaders pass information by using named values called Uniforms. Textures are passed using Samplers. This sets a texture to a sampler uniform" 
+  "Shaders pass information by using named values called Uniforms. Textures are passed using Samplers. This sets a texture-unit to a sampler uniform" 
   (gl:active-texture (+ (cffi:foreign-enum-value '%gl:enum :texture0) tex-unit))
   (attach-uniform shader name tex-unit)
   (gl:bind-texture :texture-2d (tex-id this)))
 
 
 (defmethod unload :before ((this texture) &key)
+  "Unloads the texture. Also cancels gc finalization."
   (trivial-garbage:cancel-finalization this)
   (remhash (key this) *uncollected*)
   (sdl2:in-main-thread ()
@@ -176,8 +177,3 @@ Name is the symbol name to use for the buffer pointer.
 Just a passthrough to with-mapped-buffer, but I keep forgetting to use with-mapped-buffer."
   `(with-mapped-buffer (,name ,buffer ,access)
      ,body))
-     
-
-(defmacro texture (&body rest)
-
-  `(make-instance 'texture ,@rest))

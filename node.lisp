@@ -24,7 +24,7 @@
    (children :accessor children
 	     :initform nil
 	     :initarg  :children))
-  (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required."))
+  (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and is not required by Clinch."))
 
 (defgeneric reset (this))
 (defgeneric (setf rotation) (val this))
@@ -39,7 +39,9 @@
 (defgeneric scale (this scale &key))
 (defgeneric n* (this that &key))
 
-(defmethod initialize-instance :after ((this node) &key translation rotation scale copy)
+(defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix)
+  "Creats a node with optional translation (vector3), rotation (quaterion) and translation (vector3). Can also use another node or matrix to set its values. If a node and another value is give, the other value is used starting with the matrix."
+  ;;; add decompose-transform here !!!
   (setf (translation this) (or translation
 			       (and copy (copy-seq (translation copy)))
 			       (v! 0 0 0)))
@@ -51,6 +53,7 @@
 			 (v! 1 1 1))))
 
 (defmethod reset ((this node))
+  "Resets the node."
   (setf (translation this) (v! 0 0 0))
   (setf (rotation this)    (v! 1 0 0 0))
   (setf (scaling this)     (v! 1 1 1))
@@ -78,9 +81,6 @@
   "Add a child. Children must implement update and render."
   (with-accessors ((children children)) this
     (unless (member child children)
-      
-        
-
       (setf children
 	    (cons child children)))))
 
@@ -93,28 +93,9 @@
       (setf children
 	    (remove child children)))))
 
-;; I don't think i need this anymore...
-
-;; (defmethod update ((this node) &key parent force)
-;;   "Update this and child nodes if changed."
-;;   (when (or force (changed? this))
-;;     (setf (current-transform this)
-;; 	  (if parent
-;; 	      (sb-cga:matrix* (current-transform parent) (transform this))
-;; 	      (transform this)))
-;;     (setf force t))
-  
-;;   (loop for child in (children this)
-;;      do (update child :parent this :force force))
-  
-;;   (current-transform this))
-
 (defmethod render ((this node) &key parent projection)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (enabled this)
-    
-    ;; (when (changed? this)
-    ;;   (update this :parent parent))
     
     (loop for i in (children this)
        do (render i :parent this :projection projection))))
@@ -126,8 +107,8 @@
     (loop for i in this
        do (render i :parent parent :projection projection))))
 
-
 (defmethod (setf translation) (trans (this node))
+  "Sets the translation vector."
   (with-slots ((current trans)) this
     (if (v:= trans current) current
 	(progn
@@ -135,11 +116,13 @@
 		current trans)))))
 	
 (defmethod translation-matrix ((this node) &key)
+  "Gets the translation matrix."
   (or (slot-value this 't-matrix)
       (setf (slot-value this 't-matrix)
 	    (m4:translation (translation this)))))
 
 (defmethod (setf rotation) (rot (this node))
+  "Sets the rotation quaterion."
   (with-slots ((current rot)) this
     (if (v:= rot current) current
 	(progn
@@ -147,12 +130,14 @@
 		current rot)))))
 	
 (defmethod rotation-matrix ((this node) &key)
+  "Gets the rotation matrix."
   (or (slot-value this 'r-matrix)
       (setf (slot-value this 'r-matrix)
 	    (q:to-matrix4 
 	     (rotation this)))))
 
 (defmethod (setf scaling) (scale (this node))
+  "Sets the scaling vector."
   (with-slots ((current scale)) this
     (if (v:= scale current) current
 	(progn
@@ -160,11 +145,13 @@
 		current scale)))))
 	
 (defmethod scale-matrix ((this node) &key)
+  "Gets the scaling matrix."
   (or (slot-value this 's-matrix)
        (setf (slot-value this 's-matrix)
 	    (m4:scale (scaling this)))))
 
 (defmethod transform ((this node) &key)
+  "Gets the transform matrix."
   (with-slots ((scale s-matrix)
 	       (trans t-matrix)
 	       (rot   r-matrix)
@@ -178,24 +165,28 @@
 				    (or scale (scale-matrix this))))))))
 
 (defmethod rotate ((this node) rot &key (modify t))
+  "Rotate the node. Takes a quaterion."
   (if modify 
       (setf (rotation this) 
 	    (q:q*quat rot (rotation this)))
       (q:q*quat rot (rotation this))))
 
 (defmethod translate ((this node) trans &key (modify t))
+  "Translate the node. Takes a vector3."
   (if modify 
       (setf (translation this) 
 	    (v:+ trans (translation this)))
       (v:+ trans (translation this))))
 
 (defmethod scale ((this node) size &key (modify t))
+  "Scales a node. Takes a vector3."
   (if modify 
       (setf (scaling this) 
 	    (v:+ size (scaling this)))
       (v:+ size (scaling this))))
 
 (defmethod n* ((this node) (that node) &key new-node)
+  "Multiplies a node? I'm not sure if this works." ;;!!!!
   (if new-node
       (make-instance 'node
 		     :scale (v:* (scaling this) (scaling that))

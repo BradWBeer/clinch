@@ -3,28 +3,32 @@
 
 (in-package #:clinch)
 
-(defconstant +pi+ (coerce pi 'single-float))
+(defconstant +pi+ (coerce pi 'single-float)
+  "A single-float version of pi.")
 
 (defmacro ensure-float (x)
+  "Coerce a number to a single-float."
   `(coerce ,x 'single-float))
 
 
 (defmacro degrees->radians (degrees)
+  "Converts degrees to radians."
   `(coerce (* 2 pi (/ ,degrees 360)) 'single-float))
 
+(defmacro d->r (degrees)
+  "Converts degrees to radians."
+  `(degrees->radians ,degrees))
+
+
 (defmacro radians->degrees (radians)
+  "Converts radians to degrees."
   `(coerce (* 180 (/ ,radians pi)) 'single-float))
 
-(defun make-matrix (m11 m12 m13 m14 
-		    m21 m22 m23 m24
-		    m31 m32 m33 m34
-		    m41 m42 m43 m44)
-  (sb-cga:matrix (ENSURE-FLOAT M11) (ENSURE-FLOAT M12) (ENSURE-FLOAT M13) (ENSURE-FLOAT M14) 
-		 (ENSURE-FLOAT M21) (ENSURE-FLOAT M22) (ENSURE-FLOAT M23) (ENSURE-FLOAT M24) 
-		 (ENSURE-FLOAT M31) (ENSURE-FLOAT M32) (ENSURE-FLOAT M33) (ENSURE-FLOAT M34)
-		 (ENSURE-FLOAT M41) (ENSURE-FLOAT M42) (ENSURE-FLOAT M43) (ENSURE-FLOAT M44)))
+(defmacro r->d (radians)
+  "Converts radians to degrees."
+  `(radians->degrees ,radians))
 
-
+;;; Do I still need this? !!!
 (defun make-orthogonal-transform (width height near far)
   "Create a raw CFFI orthogonal matrix."
   (make-matrix (/ 2 width) 0.0 0.0 0.0
@@ -32,6 +36,7 @@
 	       0.0 0.0 (/ (- far near)) (/ (- near) (- far near)) 
 	       0.0 0.0 0.0 1.0))
 
+;;; Do I still need this? !!!
 (defun make-frustum-transform (left right bottom top near far)
   "Create a raw CFFI frustum matrix."  
   (let ((a (/ (+ right left) (- right left)))
@@ -44,13 +49,14 @@
 		 0 0 C D
 		 0 0 -1 0)))
 
+;;; Do I still need this? !!!
 (defun make-perspective-transform  (fovy aspect znear zfar)
   "Create a raw CFFI perspective matrix."
   (let* ((ymax (* znear (tan fovy)))
 	 (xmax (* ymax aspect)))
     (make-frustum-transform (- xmax) xmax (- ymax) ymax znear zfar)))
 
-
+;;; Do I still need this? !!!
 (defun transform-point (p m)
   (let ((w (/
 	    (+ (* (elt m 3) (elt p 0))
@@ -71,7 +77,7 @@
 			 (elt m 14))))))
 
 						     
-
+;;; Do I still need this? !!!
 (defun unproject (x y width height inv-transform)
   (let* ((new-x (1- (/ (* 2 x) width)))
 	 (new-y (- (1- (/ (* 2 y) height))))
@@ -81,7 +87,7 @@
     (values start
 	    (sb-cga:normalize (sb-cga:vec- end start)))))
   
-
+;;; Do I still need this? !!!
 (defun get-screen-direction (lens-1)
   (let ((start-of-box (clinch:transform-point (clinch:make-vector 0 0 0)
 					lens-1))
