@@ -9,7 +9,7 @@
    				    :widthvar  w
    				    :heightvar h)
     (make-instance 'clinch:texture
-		   :bits   bits
+		   :data   bits
 		   :width  w
 		   :height h
 		   :stride 4
