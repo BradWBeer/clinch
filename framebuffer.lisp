@@ -48,7 +48,7 @@
 
 				  (lambda ()
 				    (remhash key *uncollected*)
-				    (sdl2:in-main-thread () 
+				    (sdl2:in-main-thread (:background t) 
 				      (gl:delete-framebuffers (list id-value))))))
       (when color-attachments
 	(if (listp color-attachments)

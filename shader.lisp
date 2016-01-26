@@ -84,7 +84,6 @@
     (unless (gl:get-shader vs :compile-status)
       (error "Could not compile vertex shader!"))
 
-
     (gl:shader-source fs   (concatenate 'string
 					(format nil "~{#define ~A~%~}" defines)
 					(format nil "~{#undef ~A~%~}" undefs)
@@ -142,7 +141,7 @@
 				
 				(lambda ()
 				  (remhash key *uncollected*)
-				  (sdl2:in-main-thread () 
+				  (sdl2:in-main-thread (:background t) 
 				    (gl:detach-shader program-val fs-val)
 				    (gl:delete-shader fs-val)
 				    (gl:detach-shader program-val vs-val)

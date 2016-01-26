@@ -36,7 +36,7 @@
    (loaded
     :accessor loaded?
     :initform nil)
-   (key :initform (gensym "texture")
+   (key :initform (gensym "buffer")
 	:reader key))
   (:documentation "Creates and keeps track of buffer object (shared memory with gpu, sort of). Base class of texture class."))
 
@@ -76,7 +76,7 @@
 				      (key (key this)))
 				  (lambda ()
 				    (remhash key *uncollected*)
-				    (sdl2:in-main-thread ()
+				    (sdl2:in-main-thread (:background t)
 				      (gl:delete-buffers (list id-value))))))
       (gl:bind-buffer target id)
 

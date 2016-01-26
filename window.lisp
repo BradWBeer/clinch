@@ -77,7 +77,8 @@ working while cepl runs"
 	(swank::handle-requests connection t)))))
 
 (defmacro call-all (loc &rest args)
-  `(and ,loc (funcall ,loc ,@args)))
+  `(continuable
+     (and ,loc (funcall ,loc ,@args))))
 
 
 ;; (defun ensure-cepl-compatible-setup ()
@@ -138,7 +139,7 @@ working while cepl runs"
 
 (defun main-loop (win gl-context w h)
   ;;(declare (optimize (speed 3)))
-
+  
   (call-all *on-init*)
   (setf *on-init* nil)
   (call-all *on-window-resized* win w h nil)
@@ -351,6 +352,7 @@ working while cepl runs"
 		  (finish-output)
 
 		  (main-loop win gl-context width height)
+		  (unload-all-uncollected)
 		  (setf *running* nil
 			*inited* nil))))))))))
 

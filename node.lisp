@@ -5,13 +5,13 @@
 
 (defclass node ()
   ((trans :reader translation
-	  :initform (cepl:v! 0 0 0)
+	  :initform (v! 0 0 0)
 	  :initarg  :translation)
    (rot :reader rotation
 	:initform (q:identity-quat)
 	:initarg :rotation)
    (scale    :reader scaling
-	     :initform (cepl:v! 1 1 1)
+	     :initform (v! 1 1 1)
 	     :initarg  :scale)
    (t-matrix :initform nil)
    (r-matrix :initform nil)
@@ -42,18 +42,18 @@
 (defmethod initialize-instance :after ((this node) &key translation rotation scale copy)
   (setf (translation this) (or translation
 			       (and copy (copy-seq (translation copy)))
-			       (cepl:v! 0 0 0)))
+			       (v! 0 0 0)))
   (setf (rotation this) (or rotation
 			    (and copy (copy-seq (rotation copy)))
-			    (cepl:v! 1 0 0 0)))
+			    (v! 1 0 0 0)))
   (setf (scaling this) (or scale
 			 (and copy (copy-seq (scaling copy)))
-			 (cepl:v! 1 1 1))))
+			 (v! 1 1 1))))
 
 (defmethod reset ((this node))
-  (setf (translation this) (cepl:v! 0 0 0))
-  (setf (rotation this)    (cepl:v! 1 0 0 0))
-  (setf (scaling this)     (cepl:v! 1 1 1))
+  (setf (translation this) (v! 0 0 0))
+  (setf (rotation this)    (v! 1 0 0 0))
+  (setf (scaling this)     (v! 1 1 1))
   (setf (slot-value this 't-matrix) nil)
   (setf (slot-value this 'r-matrix) nil)
   (setf (slot-value this 's-matrix) nil)

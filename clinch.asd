@@ -13,8 +13,9 @@
 	       #:bordeaux-threads
 	       #:trivial-channels
 	       #:sdl2
-	       #:cepl)
+	       #:cl-game-math)
   :components ((:file "package")
+	       ;;(:file "progv") ;; Take this out until I need it.
 	       (:file "clinch")
 	       (:file "transform")
 	       (:file "vector")

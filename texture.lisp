@@ -80,7 +80,7 @@
 			      (let ((id-value (id this))
 				    (tex-id-value tex-id)
 				    (key (key this)))
-				(lambda () (sdl2:in-main-thread ()
+				(lambda () (sdl2:in-main-thread (:background t)
 					     (remhash key *uncollected*)
 					     (gl:delete-buffers (list id-value))
 					     (gl:delete-textures (list tex-id-value))))))

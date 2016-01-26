@@ -4,7 +4,7 @@
 (defpackage #:clinch
   (:use #:cl)
   ;;(:shadow )
-  (:import-from :cepl :v!)
+  (:import-from :cl-game-math.base-vectors :v!)
   (:export
    #:!
    #:v!
@@ -17,7 +17,8 @@
    #:ROTATE 
    #:RESIZE 
    #:N*
-
+   #:decompose-transform
+   
    #:init
    #:uninit
    #:*ON-WINDOW-SIZE-CHANGED*
