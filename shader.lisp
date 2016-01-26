@@ -206,7 +206,7 @@
   (let ((ret (get-uniform-id this uniform)))
 
     (when ret
-      (unless (eq (gethash ret *current-shader-uniforms*) value)
+      ;;(unless (eq (gethash ret *current-shader-uniforms*) value)
 	(setf (gethash ret *current-shader-uniforms*) value)
 	
 	(destructuring-bind (type . id) ret
@@ -224,26 +224,26 @@
 	  
 	    (if (listp value)
 		(apply f id value)
-		(apply f id (list value)))))))))
+		(apply f id (list value))))))))
     
 (defmethod attach-uniform ((this shader) (uniform string) (matrix array))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
 
   (let ((ret (get-uniform-id this uniform)))
     (when ret 
-      (unless (eq (gethash ret *current-shader-uniforms*) ret)
+      ;;(unless (eq (gethash ret *current-shader-uniforms*) ret)
 	(setf (gethash ret *current-shader-uniforms*) ret)
 	(destructuring-bind (type . id) ret
 	  
 	  (gl::with-foreign-matrix (foreign-matrix matrix)
-	    (%gl:uniform-matrix-4fv id 1 nil foreign-matrix)))))))
+	    (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
     
 (defmethod attach-uniform ((this shader) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
 
   (let ((ret (get-uniform-id this uniform)))
     (when ret 
-      (unless (eq (gethash ret *current-shader-uniforms*) matrix)
+      ;;(unless (eq (gethash ret *current-shader-uniforms*) matrix)
 	(setf (gethash ret *current-shader-uniforms*) matrix)
 	
 	(let ((ret (get-uniform-id this uniform)))
@@ -251,7 +251,7 @@
 	    (destructuring-bind (type . id) ret
 	      
 	      (gl::with-foreign-matrix (foreign-matrix (clinch:current-transform matrix))
-		(%gl:uniform-matrix-4fv id 1 nil foreign-matrix)))))))))
+		(%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))))
 
 (defmethod bind-static-values-to-attribute ((this shader) name &rest vals)
   "It is possible to bind static information to an attribute. Your milage may vary."

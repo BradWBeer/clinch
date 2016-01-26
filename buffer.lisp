@@ -59,51 +59,51 @@
 	       (usage   usage)
 	       (loaded? loaded))  this
     (sdl2:in-main-thread ()
-    ;; if they didn't give a vcount, see if we can derive one...
-    (when (and (not vcount) (length data))
-      (setf vcount (/ (length data) stride)))
-    
-    (unless id
-      (setf id (car (gl:gen-buffers 1))))
-
-    (trivial-garbage:cancel-finalization this)
-    (setf (gethash this *uncollected*) this)
-    (trivial-garbage:finalize this 
-			      (let ((id-value id))
-				(lambda () (sdl2:in-main-thread () (gl:delete-buffers (list id-value))))))
-    (gl:bind-buffer target id)
-
-    (cond
-      ;; Raw CFFI data?
-      ((cffi:pointerp data)
-
-       (%gl:Buffer-Data target
-			(size-in-bytes this)
-			data
-			usage)
-       (setf loaded? t))
+      ;; if they didn't give a vcount, see if we can derive one...
+      (when (and (not vcount) (length data))
+	(setf vcount (/ (length data) stride)))
       
-      ;; Data in List?
-      (data
+      (unless id
+	(setf id (car (gl:gen-buffers 1))))
 
-       (let ((p (cffi:foreign-alloc type :initial-contents data :count (get-size this))))
-	 (unwind-protect
-	      (progn (%gl:Buffer-Data target
-				      (size-in-bytes this)
-				      p
-				      usage)
-		     (setf loaded? t))
-	   
-	   (cffi:foreign-free p))))
-      
-      ;; No Data?
-      (t
+      (trivial-garbage:cancel-finalization this)
+      (setf (gethash this *uncollected*) this)
+      (trivial-garbage:finalize this 
+				(let ((id-value id))
+				  (lambda () (sdl2:in-main-thread () (gl:delete-buffers (list id-value))))))
+      (gl:bind-buffer target id)
 
-       (%gl:Buffer-Data target
-			(size-in-bytes this)
-			(cffi:null-pointer)
-			usage)
-       (setf loaded? nil))))))
+      (cond
+	;; Raw CFFI data?
+	((cffi:pointerp data)
+
+	 (%gl:Buffer-Data target
+			  (size-in-bytes this)
+			  data
+			  usage)
+	 (setf loaded? t))
+	
+	;; Data in List?
+	(data
+
+	 (let ((p (cffi:foreign-alloc type :initial-contents data :count (get-size this))))
+	   (unwind-protect
+		(progn (%gl:Buffer-Data target
+					(size-in-bytes this)
+					p
+					usage)
+		       (setf loaded? t))
+	     
+	     (cffi:foreign-free p))))
+	
+	;; No Data?
+	(t
+
+	 (%gl:Buffer-Data target
+			  (size-in-bytes this)
+			  (cffi:null-pointer)
+			  usage)
+	 (setf loaded? nil))))))
 
 
 (defmethod bind ((this buffer) &key )
@@ -193,21 +193,21 @@
   (gl:unmap-buffer (target this))
   (gl:bind-buffer (target this) 0))
 
-(defmethod map-buffer-asynchronous ((this buffer) &optional (access :READ-WRITE) (start 0) (end (size-in-bytes this)))
-  "Returns a pointer to the buffer data. YOU MUST CALL UNMAP-BUFFER AFTER YOU ARE DONE!
-   Access options are: :Read-Only, :Write-Only, and :READ-WRITE. NOTE: Using :read-write is slower than the others. If you can, use them instead."
+;; (defmethod map-buffer-asynchronous ((this buffer) &optional (access :READ-WRITE) (start 0) (end (size-in-bytes this)))
+;;   "Returns a pointer to the buffer data. YOU MUST CALL UNMAP-BUFFER AFTER YOU ARE DONE!
+;;    Access options are: :Read-Only, :Write-Only, and :READ-WRITE. NOTE: Using :read-write is slower than the others. If you can, use them instead."
 
-  (sdl2:in-main-thread ()
-		       (gl:bind-buffer (target this) (id this))
-		       (gl:buffer-sub-data (target this) start end)))
+;;   (sdl2:in-main-thread ()
+;;     (gl:bind-buffer (target this) (id this)) ))
+;;     ;(gl:buffer-sub-data (target this) 0 :offsetstart end)))
 
 
-(defmethod unmap-buffer-asynchronous ((this buffer))
-  "Release the pointer given by map-buffer. NOTE: THIS TAKES THE BUFFER OBJECT, NOT THE POINTER! ALSO, DON'T TRY TO RELASE THE POINTER."
+;; (defmethod unmap-buffer-asynchronous ((this buffer))
+;;   "Release the pointer given by map-buffer. NOTE: THIS TAKES THE BUFFER OBJECT, NOT THE POINTER! ALSO, DON'T TRY TO RELASE THE POINTER."
 
-  (sdl2:in-main-thread ()
-		       (gl:unmap-buffer (target this))
-		       (gl:bind-buffer (target this) 0)))
+;;   (sdl2:in-main-thread ()
+;;     (gl:unmap-buffer (target this))
+;;     (gl:bind-buffer (target this) 0)))
 
 
 (defmethod unload ((this buffer) &key)
