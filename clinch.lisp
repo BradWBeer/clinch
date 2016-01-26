@@ -3,8 +3,13 @@
 
 (in-package #:clinch)
 
-(setf *current-shader-attributes* (trivial-garbage:make-weak-hash-table))
-(setf *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table))
+(defparameter *current-shader-attributes* (trivial-garbage:make-weak-hash-table))
+(defparameter *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table))
+(defparameter *uncollected*  (trivial-garbage:make-weak-hash-table))
+
+(defun unload-all-uncollected ()
+  (loop for key being the hash-keys of *uncollected*
+     do (unload key)))
 
 (defun split-keywords (lst &optional keys objects)
   (cond 

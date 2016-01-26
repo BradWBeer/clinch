@@ -37,7 +37,7 @@
     :initform :pixel-unpack-buffer
     :initarg :target))
     (:documentation "Creates and keeps track of a texture object and its buffer (shared memory with gpu, sort of)."))
-
+ 
 
 
 (defmethod initialize-instance :after ((this texture)
@@ -69,12 +69,13 @@
 	       (dtype type)
 	       (eformat data-format)
 	       (iformat internal-format)) this
-    (sdl2:i-main-thread ()
+    (sdl2:in-main-thread ()
     (unless tex-id (setf tex-id (car (gl:gen-textures 1))))
 
     (trivial-garbage:cancel-finalization this)
+    (setf (gethash this *uncollected*) this)
     (trivial-garbage:finalize this 
-			      (let ((id-value (id))
+			      (let ((id-value (id this))
 				    (tex-id-value tex-id))
 				(lambda () (sdl2:in-main-thread () 
 								(gl:delete-buffers (list id-value))
@@ -160,8 +161,9 @@
 
 (defmethod unload :before ((this texture) &key)
   (trivial-garbage:cancel-finalization this)
+  (remhash this *uncollected*)
   (sdl2:in-main-thread ()
-  (gl:delete-textures (list (tex-id this)))))
+    (gl:delete-textures (list (tex-id this)))))
 
 
 (defmacro with-mapped-texture ((name buffer &optional (access :READ-WRITE)) &body body)

@@ -119,14 +119,6 @@
 				(funcall shader)
 				shader)))
 	(use-shader current-shader)
-
-	(if (vertices this)
-	    (bind-buffer-to-vertex-array (vertices this))
-	    (unbind-vertex-array))
-	
-	(if (normals this)
-	    (bind-buffer-to-normal-array (normals this))
-	    (unbind-normal-array))
 	
 	(loop
 	   with tex-unit = 0

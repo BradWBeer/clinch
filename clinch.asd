@@ -12,8 +12,7 @@
 	       #:trivial-garbage
 	       #:bordeaux-threads
 	       #:trivial-channels
-	       #:sdl2
-	       #:kit.sdl2)
+	       #:sdl2)
   :components ((:file "package")
 	       (:file "clinch")
 	       (:file "transform")

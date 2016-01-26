@@ -67,8 +67,9 @@
       (setf id (car (gl:gen-buffers 1))))
 
     (trivial-garbage:cancel-finalization this)
+    (setf (gethash this *uncollected*) this)
     (trivial-garbage:finalize this 
-			      (let ((id-value (id)))
+			      (let ((id-value id))
 				(lambda () (sdl2:in-main-thread () (gl:delete-buffers (list id-value))))))
     (gl:bind-buffer target id)
 
@@ -152,8 +153,8 @@
 
   (let ((id (cdr (get-attribute-id shader name))))
     (when id
-      (unless (eq (gethash id *current-shader-attributes*) value)
-	(setf (gethash id *current-shader-attributes*) value)
+      (unless (eq (gethash id *current-shader-attributes*) name)
+	(setf (gethash id *current-shader-attributes*) name)
 
 	(gl:enable-vertex-attrib-array id)
 	(gl:bind-buffer (target this) (id this))
@@ -212,6 +213,7 @@
 (defmethod unload ((this buffer) &key)
   "Release buffer resources."
   (trivial-garbage:cancel-finalization this)
+  (remhash this *uncollected*)
   (sdl2:in-main-thread () (gl:delete-buffers (list (id this))))
   (setf (slot-value this 'id) nil))
 

@@ -130,6 +130,7 @@
     (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
 
     (trivial-garbage:cancel-finalization this)
+    (setf (gethash this *uncollected*) this)
     (trivial-garbage:finalize this 
 			      (let ((program-val program)
 				    (fs-val fs)
@@ -230,8 +231,8 @@
 
   (let ((ret (get-uniform-id this uniform)))
     (when ret 
-      (unless (eq (gethash ret *current-shader-uniforms*) value)
-	(setf (gethash ret *current-shader-uniforms*) value)
+      (unless (eq (gethash ret *current-shader-uniforms*) ret)
+	(setf (gethash ret *current-shader-uniforms*) ret)
 	(destructuring-bind (type . id) ret
 	  
 	  (gl::with-foreign-matrix (foreign-matrix matrix)
@@ -240,16 +241,17 @@
 (defmethod attach-uniform ((this shader) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
 
-  (unless (eq (gethash ret *current-shader-uniforms*) value)
-    (setf (gethash ret *current-shader-uniforms*) value)
-    
-    (let ((ret (get-uniform-id this uniform)))
-      (when ret 
-	(destructuring-bind (type . id) ret
-	  
-	  (gl::with-foreign-matrix (foreign-matrix (clinch:current-transform matrix))
-	    (%gl:uniform-matrix-4fv id 1 nil foreign-matrix)))))))
-
+  (let ((ret (get-uniform-id this uniform)))
+    (when ret 
+      (unless (eq (gethash ret *current-shader-uniforms*) matrix)
+	(setf (gethash ret *current-shader-uniforms*) matrix)
+	
+	(let ((ret (get-uniform-id this uniform)))
+	  (when ret 
+	    (destructuring-bind (type . id) ret
+	      
+	      (gl::with-foreign-matrix (foreign-matrix (clinch:current-transform matrix))
+		(%gl:uniform-matrix-4fv id 1 nil foreign-matrix)))))))))
 
 (defmethod bind-static-values-to-attribute ((this shader) name &rest vals)
   "It is possible to bind static information to an attribute. Your milage may vary."
@@ -268,6 +270,7 @@
 	       (program program)) this
     
     (trivial-garbage:cancel-finalization this)
+    (remhash this *uncollected*)
     (when program
 
       (when vs
