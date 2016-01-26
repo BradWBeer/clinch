@@ -13,7 +13,7 @@
 (defparameter *controllers* nil)
 (defparameter *haptic* nil)
 (defparameter *event-handlers* nil)
-(defparameter *on-init* nil)
+(defparameter *next* nil)
 
 (defparameter *on-window-size-changed* nil)
 (defparameter *on-window-resized* nil)
@@ -81,22 +81,22 @@ working while cepl runs"
      (and ,loc (funcall ,loc ,@args))))
 
 
-;; (defun ensure-cepl-compatible-setup ()
-;;   (unless (>= (gl:major-version) 3)
-;;     (error "Cepl requires OpenGL 3.1 or higher. Found: ~a.~a"
-;;            (gl:major-version) (gl:minor-version))))
+(defun ensure-cepl-compatible-setup ()
+  (unless (>= (gl:major-version) 3)
+    (error "Cepl requires OpenGL 3.1 or higher. Found: ~a.~a"
+           (gl:major-version) (gl:minor-version))))
 
-;; (defun %set-default-gl-options ()
-;;   (print "Setting default options")
-;;   (gl:clear-color 0.0 0.0 0.0 0.0)
-;;   (gl:enable :cull-face)
-;;   (gl:cull-face :back)
-;;   (gl:front-face :ccw)
-;;   (gl:enable :depth-test)
-;;   (gl:depth-mask :true)
-;;   (gl:depth-func :less)
-;;   (gl:depth-range 0.0 1.0)
-;;   (gl:enable :depth-clamp))
+(defun set-default-gl-options ()
+  (print "Setting default options")
+  (gl:clear-color 0.0 0.0 0.0 0.0)
+  (gl:enable :cull-face)
+  (gl:cull-face :back)
+  (gl:front-face :ccw)
+  (gl:enable :depth-test)
+  (gl:depth-mask :true)
+  (gl:depth-func :less)
+  (gl:depth-range 0.0 1.0)
+  (gl:enable :depth-clamp))
 
 
 (defun init-controllers ()
@@ -139,9 +139,9 @@ working while cepl runs"
 
 (defun main-loop (win gl-context w h)
   ;;(declare (optimize (speed 3)))
-  
-  (call-all *on-init*)
-  (setf *on-init* nil)
+
+  (call-all *next*)
+  (setf *next* nil)
   (call-all *on-window-resized* win w h nil)
 
   (sdl2:with-event-loop (:method :poll)
@@ -228,7 +228,10 @@ working while cepl runs"
     
     (:idle ()  
 	   (if *running*
-	       (call-all *on-idle*)
+	       (progn
+		   (call-all *next*)
+		   (setf *next* nil)
+		   (call-all *on-idle*))
 	       (sdl2:push-event :quit))
 	   (gl:flush)
 	   (sdl2:gl-swap-window win)
@@ -316,31 +319,33 @@ working while cepl runs"
 		      sdl2-ffi:+sdl-minor-version+
 		      sdl2-ffi:+sdl-patchlevel+)
 	      (finish-output)
-	      
 	      ;;(init-controllers)
 
 	      (sdl2:with-window (win :w width :h height ;;; :title title
-				     :flags `(:shown :opengl :resizable))
-						     ;; ,(remove nil `(:shown :opengl
-						     ;; 			  ,(when fullscreen :fullscreen-desktop)
-						     ;; 			  ,(when resizable :resizable)
-						     ;; 			  ,(when no-frame :borderless)
-						     ;; 			  ,(when hidden :hidden)))))
+				     :flags `(:shown :opengl :resizable
+						     ,@(remove nil `(:shown :opengl
+									   ,(when fullscreen :fullscreen-desktop)
+									   ,(when resizable :resizable)
+									   ,(when no-frame :borderless)
+									   ,(when hidden :hidden)))))
 
-		;; (sdl2:gl-set-attr :context-profile-mask 1)
-		;; (sdl2:gl-set-attr :alpha-size alpha-size)
-		;; (sdl2:gl-set-attr :depth-size depth-size)
-		;; (sdl2:gl-set-attr :stencil-size stencil-size)
-		;; (sdl2:gl-set-attr :red-size red-size)
-		;; (sdl2:gl-set-attr :green-size green-size)
-		;; (sdl2:gl-set-attr :blue-size blue-size)
-		;; (sdl2:gl-set-attr :buffer-size buffer-size)
+		(sdl2:gl-set-attr :context-profile-mask 1)
+		(sdl2:gl-set-attr :alpha-size alpha-size)
+		(sdl2:gl-set-attr :depth-size depth-size)
+		(sdl2:gl-set-attr :stencil-size stencil-size)
+		(sdl2:gl-set-attr :red-size red-size)
+		(sdl2:gl-set-attr :green-size green-size)
+		(sdl2:gl-set-attr :blue-size blue-size)
+		(sdl2:gl-set-attr :buffer-size buffer-size)
 		(sdl2:gl-set-attr :doublebuffer (if double-buffer 1 0))
 
 		(sdl2:with-gl-context (gl-context win)
 
 		  (setf *window* win
-			*context* gl-context)	  
+			*context* gl-context)	
+		  
+		  (ensure-cepl-compatible-setup)
+		  (set-default-gl-options)
 
 		  ;; basic window/gl setup
 		  (format t "Setting up window/gl.~%")

@@ -8,6 +8,7 @@
   (:export
    #:!
    #:v!
+   #:RESET
    #:ROTATION
    #:SCALE
    #:TRANSLATION
@@ -21,6 +22,7 @@
    
    #:init
    #:uninit
+   #:*next*
    #:*ON-WINDOW-SIZE-CHANGED*
    #:*ON-WINDOW-RESIZED*
    #:*ON-WINDOW-HIDDEN*
