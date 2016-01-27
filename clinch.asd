@@ -12,12 +12,11 @@
 	       #:bordeaux-threads
 	       #:trivial-channels
 	       #:sdl2
-	       #:cl-game-math)
+	       #:cl-game-math
+	       #:swank)
   :components ((:file "package")
-	       ;;(:file "progv") ;; Take this out until I need it.
 	       (:file "clinch")
 	       (:file "transform")
-	       ;;(:file "vector") ;; REMOVE THIS!!!
 	       (:file "node")
 	       (:file "shader")
 	       (:file "buffer")

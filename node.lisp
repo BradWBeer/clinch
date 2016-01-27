@@ -26,7 +26,7 @@
 	     :initarg  :children))
   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and is not required by Clinch."))
 
-(defgeneric reset (this))
+(defgeneric !reset (this))
 (defgeneric (setf rotation) (val this))
 (defgeneric (setf scaling) (val this))
 (defgeneric (setf translation) (val this))
@@ -52,7 +52,7 @@
 			 (and copy (copy-seq (scaling copy)))
 			 (v! 1 1 1))))
 
-(defmethod reset ((this node))
+(defmethod !reset ((this node))
   "Resets the node."
   (setf (translation this) (v! 0 0 0))
   (setf (rotation this)    (v! 1 0 0 0))
@@ -62,6 +62,9 @@
   (setf (slot-value this 's-matrix) nil)
   (setf (slot-value this 's-matrix) nil)
   (setf (slot-value this 'transform) nil))
+
+(defmethod !0 ((this node))
+  (!reset this))
   
 (defmethod print-object ((this node) s)
   "Print function for node."

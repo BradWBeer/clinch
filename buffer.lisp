@@ -242,3 +242,21 @@
   (clinch:with-mapped-buffer (ptr this :read-only)
     (loop for i from 0 to (1- (clinch:vertex-count this))
        collect (cffi:mem-aref ptr (clinch:qtype this) i))))
+
+(defmethod triangle-intersection? ((this buffer) start dir &key)
+  "Returns distance u, v coordinates and index of the closest triangle (if any) touched by the given the ray origin and direction and the name of the vertex buffer attribute."
+  (labels ((rec (primitives i distance u v index)
+	     (multiple-value-bind (new-distance new-u new-v)
+		 
+		 (ray-triangle-intersect? start dir (first (car primitives)) (second (car primitives)) (third (car primitives)))
+	       (when (and new-distance
+			  (or (null distance)
+			      (< new-distance distance)))
+		 (setf distance new-distance
+		       u new-u
+		       v new-v
+		       index i)))
+	     (if (cdr primitives)
+		 (rec (cdr primitives) (1+ i) distance u v index)
+		 (values distance u v index))))
+    (rec (get-primitive this vertex-name) 0 nil nil nil nil)))
