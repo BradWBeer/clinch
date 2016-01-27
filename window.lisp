@@ -49,7 +49,7 @@
   "Called when a key is released. Arguments (win keysym state ts)")
 
 (defparameter *on-mouse-move* nil
-  "Called when mouse is moved. Arguments (win mouse state x y xrel yrel ts)"
+  "Called when mouse is moved. Arguments (win mouse state x y xrel yrel ts)")
 (defparameter *on-mouse-down* nil
 "Called when mouse button is pressed. Arguments: (win mouse x y button state clicks ts)")
 (defparameter *on-mouse-up* nil
@@ -57,7 +57,8 @@
 (defparameter *on-mouse-click* nil
   "Called when mouse button is released. Arguments: (win mouse x y button state clicks ts)") ;; This isn't correct. !!!
 (defparameter *on-mouse-double-click* nil)
-(defparameter *on-mouse-wheel-move* nil)
+(defparameter *on-mouse-wheel-move* nil
+  "Called when the mouse wheel is moved. Arguments: (win mouse x y ts)")
 
 (defparameter *on-controller-button-down* nil)
 (defparameter *on-controller-button-up* nil)

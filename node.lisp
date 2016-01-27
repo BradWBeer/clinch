@@ -195,6 +195,7 @@
       (m4:m* (transform this)
 	     (transform that))))
 
-
+(defmethod inverse ((this node))
+  (m4:affine-inverse (transform this)))
 
 

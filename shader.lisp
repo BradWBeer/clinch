@@ -20,10 +20,10 @@
     :reader geo-shader
     :initform nil)
    (attributes
-    :reader shader-attribute 
+    :reader shader-attributes
     :initform nil)
   (uniforms
-    :reader shader-uniform
+    :reader shader-uniforms
     :initform nil)
    (key :initform (gensym "shader")
 	:reader key))

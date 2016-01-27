@@ -83,29 +83,21 @@
 		   (y y)
 		   (w width)
 		   (h height)) this
-    
-    (gl:scissor x y w h)
-    (gl:viewport x y w h)
-    
-    (when (clear-color this)
-      (destructuring-bind (&optional (r 0) (g 0) (b 0) (a 1)) (clear-color this)
-	(gl:scissor x y w h)
-	
-	(gl:clear-color r g b a)
-	(gl:clear :color-buffer-bit :depth-buffer-bit)))
-    ;;; Remove this cruft!!!
-    (when (projection-transform this)
-      (gl:matrix-mode :projection)
-      (gl:load-matrix (projection-transform this))
-      (gl:matrix-mode :modelview))))
+    (!!
+      (gl:scissor x y w h)
+      (gl:viewport x y w h)
+      
+      (when (clear-color this)
+	(destructuring-bind (&optional (r 0) (g 0) (b 0) (a 1)) (clear-color this)
+	  (gl:scissor x y w h)
+	  (gl:clear-color r g b a))))))
     
 (defmethod quick-set ((this viewport) x y w h)
   "A quick method to set all the values in the viewport." 
-  (sdl2:in-main-thread ()
   (setf (x this) x
 	(y this) y
 	(width this) w
-	(height this) h)))
+	(height this) h))
 
 ;; (defmethod print-object ((this viewport) s)
 

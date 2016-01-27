@@ -15,8 +15,8 @@
    (render-values
     :initform nil
     :initarg :values
-    :reader render-values)
-   (:documentation "Renders a mesh with a shader with attributes and uniforms.")))
+    :reader render-values))
+  (:documentation "Renders a mesh with a shader with attributes and uniforms."))
 
 
 (defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
@@ -138,23 +138,21 @@
 			   ((eql atr-or-uni :uniform)
 			    
 			    (attach-uniform current-shader name (cond ((eql value :projection) projection)
-								      ((eql value :Model)      (or parent (sb-cga:identity-matrix)))
+								      ((eql value :Model)      (or parent (m4:identity)))
 								      ((eql value :model-1) (typecase parent
-											      (node (sb-cga:inverse-matrix
-												     (current-transform parent)))
-											      (array (sb-cga:inverse-matrix parent))
-											      (t (sb-cga:identity-matrix))))
-								      ((eql value :projection-1) (sb-cga:inverse-matrix projection))
+											      (node (inverse parent))
+											      (array (m4:affine-inverse parent))
+											      (t (m4:identity))))
+								      ((eql value :projection-1) (m4:affine-inverse projection))
 								      ((eql value :normal) (typecase parent
 											     (node
-											      (convert-matrix4-to-matrix3
-											       (sb-cga:transpose-matrix
-												(sb-cga:inverse-matrix
-												 (current-transform parent)))))
-											     (array (convert-matrix4-to-matrix3
-												     (sb-cga:transpose-matrix
-												      (sb-cga:inverse-matrix parent))))
-											     (t (make-identity-matrix3))))
+											      (m4:to-matrix3 
+											       (m4:transpose
+												(m4:affine-inverse (transform parent)))))
+											     (array (m4:to-matrix3 
+												     (m4:transpose
+												      (m4:affine-inverse parent))))
+											     (t (m4:identity))))
 								      (t value))))
 			   
 			   ((and (eql atr-or-uni :attribute)

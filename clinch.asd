@@ -8,7 +8,6 @@
   :license "MIT"
   :version "0.1"
   :depends-on (#:cl-opengl
-	       #:sb-cga
 	       #:trivial-garbage
 	       #:bordeaux-threads
 	       #:trivial-channels

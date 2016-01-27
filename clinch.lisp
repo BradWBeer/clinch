@@ -14,9 +14,15 @@
      do (unload (gethash key *uncollected*))))
 
 (defmacro ! (&body body)
-  "Runs body in main thread for safe OpenGL calls."
+  "Runs body in main thread for safe OpenGL calls. Waits for return value."
   `(sdl2:in-main-thread ()
      ,@body))
+
+(defmacro !! (&body body)
+  "Runs body in main thread for safe OpenGL calls. Returns immediately."
+  `(sdl2:in-main-thread (:background t)
+     ,@body))
+
 
 (defun decompose-transform (m)
   "Decomposes a matrix into it's position vector3, rotation quaterion and scaling vector3.

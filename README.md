@@ -49,7 +49,7 @@ Although Clinch can be used as a complete engine, most parts of Clinch are indep
 
 ### Transforms
 
-A transform is a 4x4 matrix which is used to hold and apply a C array of 16 floating values. SB-CGA is used as the default linear algebra library and its arrays may be passed to the shader. There are funcions for creating various projection matrices.
+A transform is a 4x4 matrix which is used to hold and apply a C array of 16 floating values. CL-game-math is used as the default linear algebra library and its arrays may be passed to the shader. There are funcions for creating various projection matrices.
 
 ### Nodes
 
