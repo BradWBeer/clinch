@@ -12,16 +12,13 @@
     :initform nil)
    (frag-shader
     :reader frag-shader
-    :initform nil
-    :initarg :frag)
+    :initform nil)
    (vert-shader
     :reader vert-shader
-    :initform nil
-    :initarg :vert)
+    :initform nil)
    (geo-shader
     :reader geo-shader
-    :initform nil
-    :initarg :geo)
+    :initform nil)
    (attributes
     :reader shader-program-attributes
     :initform nil)
@@ -54,6 +51,9 @@
 		:undefs undefs))
 
 
+(defmethod attach-shader ((program shader-program) (shader shader))
+  (gl:attach-shader (id program) (id shader)))
+
 (defmethod build-shader-program ((this shader-program) &key
 					 name
 					 vertex-shader-text
@@ -68,22 +68,15 @@
   	       (fs frag-shader)
 	       (geo geo-shader)
   	       (program program)) this
-
-    ;; Vertex and Fragment shaders are always required.
-    (setf vs (or vs (gl:create-shader :vertex-shader)))
-    (setf fs (or fs (gl:create-shader :fragment-shader)))
-
-    ;; if there is already a program...unload it, but keep the number.
-    (if program
-	(gl:delete-program program)
-	(setf program (gl:create-program))
+    (setf vs (gl:create-shader :vertex-shader))
+    (setf fs (gl:create-shader :fragment-shader))    
 
     (gl:shader-source vs (concatenate 'string
 				      (format nil "~{#define ~A~%~}" defines)
 				      (format nil "~{#undef ~A~%~}" undefs)
 				      vertex-shader-text))
 
-
+    (if program (unload this))
     
     (gl:compile-shader vs)
 
@@ -125,6 +118,7 @@
       (unless (gl:get-shader geo :compile-status)
 	(error "Could not compile geometry shader!")))
 
+    (setf program (gl:create-program))
     ;; You can attach the same shader to multiple different programs.
     (gl:attach-shader program vs)
     (gl:attach-shader program fs)

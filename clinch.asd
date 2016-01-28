@@ -18,6 +18,7 @@
 	       (:file "clinch")
 	       (:file "transform")
 	       (:file "node")
+	       (:file "shaders")
 	       (:file "shader-program")
 	       (:file "buffer")
 	       (:file "texture")
