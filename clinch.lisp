@@ -40,6 +40,14 @@
 		       (m:elm scale 1 1)
 		       (m:elm scale 2 2)))))
 
+(defun set-assoc-value (alist item value)
+  (setf (cdr (assoc item alist)) value))
+
+(defun set-assoc-name (alist item value)
+  (setf (car (assoc item alist)) value))
+
+
+
 (defun ray-triangle-intersect? (origin ray-dir v0 v1 v2)
   (let ((epsilon 1.0e-6))
     (let ((edge1 (v3:- v1 v0))
@@ -79,6 +87,8 @@
      (push (first lst) objects) 
      (split-keywords (cdr lst) keys objects))))
 
+
+
 (defun transform-tree (tester transformer tree)
   (cond ((consp tree)
 	 ;; it's a cons. process the two subtrees.
@@ -98,4 +108,5 @@
 	 (funcall transformer tree))
 	;; it failed the test. leave it alone.
 	(t tree)))
+
 
