@@ -156,7 +156,7 @@
   (gl:Disable-Client-State :NORMAL-ARRAY))
 
 
-(defmethod bind-buffer-to-attribute-array ((this buffer) (shader shader) name)
+(defmethod bind-buffer-to-attribute-array ((this buffer) (shader shader-program) name)
   "Bind buffer to a shader attribute."
 
   (let ((id (cdr (get-attribute-id shader name))))
@@ -171,10 +171,10 @@
 				  (qtype this)
 				  0 0 (cffi:null-pointer))))))
 
-(defmethod unbind-buffer-attribute-array ((this buffer) (shader shader) name)
-  "Bind buffer to a shader attribute."
+(defmethod unbind-buffer-attribute-array ((this buffer) (shader-program shader-program) name)
+  "Bind buffer to a shader-program attribute."
 
-  (let ((id (cdr (get-attribute-id shader name))))
+  (let ((id (cdr (get-attribute-id shader-program name))))
     (when id
       (remhash id *current-shader-attributes*)
       

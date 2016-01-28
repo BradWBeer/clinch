@@ -18,7 +18,7 @@
 	       (:file "clinch")
 	       (:file "transform")
 	       (:file "node")
-	       (:file "shader")
+	       (:file "shader-program")
 	       (:file "buffer")
 	       (:file "texture")
 	       (:file "entity")

@@ -4,10 +4,10 @@
 (in-package #:clinch)
 
 (defclass entity ()
-  ((shader
+  ((shader-program
     :initform nil
-    :initarg :shader
-    :reader shader)
+    :initarg :shader-program
+    :reader shader-program)
    (indexes
     :initform nil
     :initarg :indexes
@@ -16,7 +16,7 @@
     :initform nil
     :initarg :values
     :reader render-values))
-  (:documentation "Renders a mesh with a shader with attributes and uniforms."))
+  (:documentation "Renders a mesh with a shader-program with attributes and uniforms."))
 
 
 (defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
@@ -24,10 +24,10 @@
     :parent adds itself to the given parent. The entity doesn't keep track of its parent."
   (when parent (add-child parent this)))
 
-(defmethod (setf shader) (new-value (this entity))
-  "Sets the shader to use."
+(defmethod (setf shader-program) (new-value (this entity))
+  "Sets the shader-program to use."
   (sdl2:in-main-thread ()
-    (setf (slot-value this 'shader) new-value)))
+    (setf (slot-value this 'shader-program) new-value)))
 
 (defmethod (setf indexes) (new-value (this entity))
   "Sets the index array."
@@ -100,12 +100,12 @@
 
 (defmethod draw ((this entity) &key parent projection)
   "Draws the object. Should be removed and put into render.";; !!!!
-  (with-accessors ((shader shader)) this
-    (when shader 
-      (let ((current-shader (if (typep shader 'function)
-				(funcall shader)
-				shader)))
-	(use-shader current-shader)
+  (with-accessors ((shader-program shader-program)) this
+    (when shader-program 
+      (let ((current-shader-program (if (typep shader-program 'function)
+				(funcall shader-program)
+				shader-program)))
+	(use-shader-program current-shader-program)
 	
 	(loop
 	   with tex-unit = 0
@@ -113,10 +113,10 @@
 	   if (typep value 'function) do (setf value (funcall value))
 	   collect (progn
 		     (cond ((and (eql atr-or-uni :uniform)
-				 (typep value 'texture)) (prog1 (bind-sampler value current-shader name tex-unit) (incf tex-unit)))
+				 (typep value 'texture)) (prog1 (bind-sampler value current-shader-program name tex-unit) (incf tex-unit)))
 			   ((eql atr-or-uni :uniform)
 			    
-			    (attach-uniform current-shader name (cond ((eql value :projection) projection)
+			    (attach-uniform current-shader-program name (cond ((eql value :projection) projection)
 								      ((eql value :Model)      (or parent (m4:identity)))
 								      ((eql value :model-1) (typecase parent
 											      (node (inverse parent))
@@ -136,10 +136,10 @@
 			   
 			   ((and (eql atr-or-uni :attribute)
 				 (typep value 'buffer)) 
-			    (bind-buffer-to-attribute-array value current-shader name))
+			    (bind-buffer-to-attribute-array value current-shader-program name))
 			   ((eql atr-or-uni :attribute) (if (atom value)
-							    (bind-static-values-to-attribute current-shader name value)
-							    (bind-static-values-to-attribute current-shader name value)))))))))
+							    (bind-static-values-to-attribute current-shader-program name value)
+							    (bind-static-values-to-attribute current-shader-program name value)))))))))
 
   
   (draw-with-index-buffer (indexes this)))
