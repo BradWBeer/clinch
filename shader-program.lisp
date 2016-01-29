@@ -1,9 +1,9 @@
-;;;; shader.lisp
+;;;; shader-program.lisp
 ;;;; Please see the licence.txt for the CLinch
 
 (in-package #:clinch)
 
-(defclass shader ()
+(defclass shader-program ()
   ((name
     :reader name
     :initform nil)
@@ -20,17 +20,17 @@
     :reader geo-shader
     :initform nil)
    (attributes
-    :reader shader-attributes
+    :reader shader-program-attributes
     :initform nil)
-  (uniforms
-    :reader shader-uniforms
+   (uniforms
+    :reader shader-program-uniforms
     :initform nil)
-   (key :initform (gensym "shader")
+   (key :initform (gensym "shader-program")
 	:reader key))
    
-  (:documentation "Creates and keeps track of the shader objects. Requires an UNLOAD call when you are done. Bind Buffer functions are in Buffer.l"))
+  (:documentation "Creates and keeps track of the shader-program objects. Requires an UNLOAD call when you are done. Bind Buffer functions are in Buffer.l"))
 
-(defmethod initialize-instance :after ((this shader) &key
+(defmethod initialize-instance :after ((this shader-program) &key
 				       name
 				       vertex-shader-text
 				       fragment-shader-text
@@ -39,9 +39,9 @@
 				       uniforms
 				       defines
 				       undefs)
-  "Create the shader. Currently there is no way to change the shader. You must make a new one."
+  "Create the shader program. Currently there is no way to change the shader. You must make a new one."
 
-  (build-shader this :name name
+  (build-shader-program this :name name
 		:vertex-shader-text vertex-shader-text
 		:fragment-shader-text fragment-shader-text
 		:geometry-shader-text geometry-shader-text
@@ -51,7 +51,10 @@
 		:undefs undefs))
 
 
-(defmethod build-shader ((this shader) &key
+(defmethod attach-shader ((program shader-program) (shader shader))
+  (gl:attach-shader (id program) (id shader)))
+
+(defmethod build-shader-program ((this shader-program) &key
 					 name
 					 vertex-shader-text
 					 fragment-shader-text
@@ -172,27 +175,27 @@
     (when name (setf (slot-value this 'name) name))))
   
 
-(defmethod use-shader ((this shader) &key)
-  "Start using the shader."
+(defmethod use-shader-program ((this shader-program) &key)
+  "Start using the shader-program."
   (gl:use-program (program this)))
 
-(defmethod get-uniform-id ((this shader) (id integer))
+(defmethod get-uniform-id ((this shader-program) (id integer))
   "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
   (when (and id (>= (cdr id) 0)) id))
 
-(defmethod get-uniform-id ((this shader) (uniform string))
+(defmethod get-uniform-id ((this shader-program) (uniform string))
   "Shaders pass information by using named values called Uniforms and Attributes. This gets the gl id of a uniform name."
   (let ((id (gethash uniform
 		     (slot-value this 'uniforms))))
     (when (and id (>= (cdr id) 0)) id)))
 
-(defmethod get-attribute-id ((this shader) (id integer))
+(defmethod get-attribute-id ((this shader-program) (id integer))
   "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
   (when (and id
 	     (>= (cdr id) 0))
     id))
 
-(defmethod get-attribute-id ((this shader) (attribute string))
+(defmethod get-attribute-id ((this shader-program) (attribute string))
   "Shaders pass information by using named values called Uniforms and Attributes. This gets the gl id of a attribute name."
   (let ((id (gethash attribute
 		     (slot-value this 'attributes))))
@@ -201,7 +204,7 @@
 	       id)))
 
 
-(defmethod attach-uniform ((this shader) (uniform string) value)
+(defmethod attach-uniform ((this shader-program) (uniform string) value)
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
   (let ((ret (get-uniform-id this uniform)))
 
@@ -226,7 +229,7 @@
 		(apply f id value)
 		(apply f id (list value))))))))
     
-(defmethod attach-uniform ((this shader) (uniform string) (matrix array))
+(defmethod attach-uniform ((this shader-program) (uniform string) (matrix array))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to a matrix value."
 
   (let ((ret (get-uniform-id this uniform)))
@@ -238,7 +241,7 @@
 	  (gl::with-foreign-matrix (foreign-matrix matrix)
 	    (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
     
-(defmethod attach-uniform ((this shader) (uniform string) (matrix node))
+(defmethod attach-uniform ((this shader-program) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to the matrix of a node."
 
   (let ((ret (get-uniform-id this uniform)))
@@ -253,7 +256,7 @@
 	      (gl::with-foreign-matrix (foreign-matrix (transform matrix))
 		(%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))))
 
-(defmethod bind-static-values-to-attribute ((this shader) name &rest vals)
+(defmethod bind-static-values-to-attribute ((this shader-program) name &rest vals)
   "It is possible to bind static information to an attribute. Your milage may vary."
   (let ((id (cdr (get-attribute-id this name))))
     (when id 
@@ -261,8 +264,8 @@
       (apply #'gl:vertex-attrib id vals))))
 
 
-(defmethod unload ((this shader) &key)
-  "Unloads and releases all shader resources."
+(defmethod unload ((this shader-program) &key)
+  "Unloads and releases all shader-program resources."
 
   (with-slots ((vs vert-shader)
 	       (fs frag-shader)
@@ -296,31 +299,27 @@
 	  (slot-value this 'uniforms) nil)))
 
 
-(defmethod shader-attribute ((this shader) key)
-  "Gets a shader attribute"
-  (gethash key (slot-value this 'shader-attribute)))
+(defmethod shader-program-attribute ((this shader-program) key)
+  "Gets a shader-program attribute"
+  (gethash key (slot-value this 'shader-program-program-attribute)))
 
-(defmethod (setf shader-attribute) (value (this shader) key)
-  "Sets a shader attribute."
-  (setf (gethash key (slot-value this 'shader-attribute)) value))
+(defmethod (setf shader-program-attribute) (value (this shader-program) key)
+  "Sets a shader-program attribute."
+  (setf (gethash key (slot-value this 'shader-program-attribute)) value))
 
-(defmethod remove-shader-attribute ((this shader) key)
-  "Removes a shader attribute"
-  (remhash key (slot-value this 'shader-attribute)))
+(defmethod remove-shader-program-attribute ((this shader-program) key)
+  "Removes a shader-program attribute"
+  (remhash key (slot-value this 'shader-program-attribute)))
 
-(defmethod shader-uniform ((this shader) key)
-  "Gets a shader uniform"
-  (gethash key (slot-value this 'shader-uniform)))
+(defmethod shader-program-uniform ((this shader-program) key)
+  "Gets a shader-program uniform"
+  (gethash key (slot-value this 'shader-program-uniform)))
 
-(defmethod (setf shader-uniform) (value (this shader) key)
-  "Sets a shader uniform."
-  (setf (gethash key (slot-value this 'shader-uniform)) value))
+(defmethod (setf shader-program-uniform) (value (this shader-program) key)
+  "Sets a shader-program uniform."
+  (setf (gethash key (slot-value this 'shader-program-uniform)) value))
 
-(defmethod remove-shader-uniform ((this shader) key)
-  "Removes a shader uniform"
-  (remhash key (slot-value this 'shader-uniform)))
-
-(defmacro gl-shader (&body rest)
-
-  `(make-instance 'shader ,@rest))
+(defmethod remove-shader-program-uniform ((this shader-program) key)
+  "Removes a shader-program uniform"
+  (remhash key (slot-value this 'shader-program-uniform)))
 

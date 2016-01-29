@@ -56,7 +56,7 @@
    #:*ON-QUIT*
 
    #:unload-all-uncollected
-   #:shader #:name #:program #:frag-shader #:vert-shader #:attributes #:uniforms #:use-shader #:get-uniform-id #:get-attribute-id #:attach-uniform #:unload #:bind-static-values-to-attribute
+   #:shader-program #:name #:program #:frag-shader #:vert-shader #:attributes #:uniforms #:use-shader-program #:get-uniform-id #:get-attribute-id #:attach-uniform #:unload #:bind-static-values-to-attribute
    
    #:buffer #:id #:qtype #:usage #:stride #:vertex-count #:target #:loaded #:get-size #:size-in-bytes #:bind-buffer-to-vertex-array #:bind-buffer-to-attribute-array #:draw-with-index-buffer #:map-buffer #:unmap-buffer #:unload #:with-mapped-buffer #:get-buffer-data
    
@@ -68,7 +68,7 @@
    #:enabled
    #:make-foreign-array #:make-identity-matrix #:list->matrix #:copy-foreign-array #:fill-foreign-array #:cached-matrix #:matrix #:get-current-matrix #:update-current-matrix #:read-gl-matrix #:get-current-gl-matrix #:use-matrix #:save-matrix  #:print-node-data #:m*m #:mT #:det #:m-1 
    
-   #:entity #:shader #:gl-shader #:render-values #:indexes #:render #:make-render-func #:slow-render #:render-value #:ray-entity-intersect?
+   #:entity #:render-values #:indexes #:render #:make-render-func #:slow-render #:render-value #:ray-entity-intersect?
    
    #:make-pipeline #:pipeline-get-loop #:pipeline-get-init #:pipeline-get-uninit #:run-loop #:run-init #:run-uninit
      
