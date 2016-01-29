@@ -55,7 +55,7 @@
   (with-slots ((id id)) this
 
     (unless id
-      (setf id (gl:create-shader (shader-type this))))
+      (create-shader this))
 
     (gl:shader-source id (concatenate 'string
 				      (format nil "~{#define ~A~%~}" defs)
@@ -70,6 +70,17 @@
     (unless (gl:get-shader id :compile-status)
       (error "Could not compile shader!"))))
 
+(defmethod create-shader ((this vertex-shader))
+  (setf (slot-value this 'id)
+	(gl:create-shader :vertex-shader)))
+
+(defmethod create-shader ((this fragment-shader))
+  (setf (slot-value this 'id)
+	(gl:create-shader :fragment-shader)))
+
+(defmethod create-shader ((this geometry-shader))
+  (setf (slot-value this 'id)
+	(gl:create-shader :geometry-shader)))
   
 (defmethod unload ((this shader) &key)
   "Unloads and releases the shader."

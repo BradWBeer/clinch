@@ -41,7 +41,7 @@
 				       undefs)
   "Create the shader program. Currently there is no way to change the shader. You must make a new one."
 
-  (build-shader-program this :name name
+  (build-shader-program this
 		:vertex-shader-text vertex-shader-text
 		:fragment-shader-text fragment-shader-text
 		:geometry-shader-text geometry-shader-text
@@ -53,18 +53,30 @@
 
 (defmethod attach-shader ((program shader-program) (shader shader))
 
-  (format t "program ~A and shader ~A added to hash~%" program shader)
-  
-    ;; Keep track of which programs use which shaders
-  (format t "~A~%" (setf (gethash shader *shaders->shader-programs*)
-			 (push program (gethash shader *shaders->shader-programs*))))
+  ;; Keep track of which programs use which shaders
+  (unless (member program (gethash shader *shaders->shader-programs*))
+    (setf (gethash shader *shaders->shader-programs*)
+	  (push program (gethash shader *shaders->shader-programs*))))
   
   (when (id shader)    
     (gl:attach-shader (program program) (id shader))))
 
-(defmethod detach-shader ((program shader-program) (shader shader))
+(defmethod attach-shader :after ((program shader-program) (shader vertex-shader))
+  
+  (when (id shader)    
+    (setf (slot-value program 'vert-shader) shader)))
 
-  (format t "program ~A and shader ~A removed to hash~%" program shader)
+(defmethod attach-shader :after ((program shader-program) (shader fragment-shader))
+
+  (when (id shader)    
+    (setf (slot-value program 'frag-shader) shader)))
+
+(defmethod attach-shader :after ((program shader-program) (shader geometry-shader))
+
+  (when (id shader)    
+    (setf (slot-value program 'geo-shader) shader)))
+
+(defmethod detach-shader ((program shader-program) (shader shader))
 
   (unless (setf (gethash shader *shaders->shader-programs*)
 		(remove-if (lambda (x)
@@ -76,9 +88,23 @@
   (when (id shader)    
     (gl:detach-shader (program program) (id shader))))
 
+(defmethod detach-shader :after ((program shader-program) (shader vertex-shader))
+  
+  (when (id shader)    
+    (setf (slot-value program 'vert-shader) nil)))
+
+(defmethod detach-shader :after ((program shader-program) (shader fragment-shader))
+  
+  (when (id shader)    
+    (setf (slot-value program 'frag-shader) nil)))
+
+(defmethod detach-shader :after ((program shader-program) (shader geometry-shader))
+  
+  (when (id shader)    
+    (setf (slot-value program 'geo-shader) nil)))
+
 
 (defmethod build-shader-program ((this shader-program) &key
-					 name
 					 vertex-shader-text
 					 fragment-shader-text
 					 geometry-shader-text
@@ -92,49 +118,36 @@
 	       (geo geo-shader)
   	       (program program)) this
 
-    (setf vs 
-	  (typecase vs
-	    (integer vs)
-	    (shader vs)
-	    (t (make-instance 'shader :shader-type :vertex-shader :code vertex-shader-text :defs defines :undefs undefs))))
+    (unless vs 
+      (setf vs 
+	    (make-instance 'vertex-shader :shader-type :vertex-shader :code vertex-shader-text :defs defines :undefs undefs)))
 
-    (setf fs 
-	  (typecase fs
-	    (integer fs)
-	    (shader fs)
-	    (t (make-instance 'shader :shader-type :fragment-shader :code fragment-shader-text :defs defines :undefs undefs))))
 
-    ;;(format t "VS = %A~%" vs)
-    (if program (unload this))
-    
+    (unless fs 
+      (setf fs 
+	    (make-instance 'fragment-shader :shader-type :fragment-shader :code fragment-shader-text :defs defines :undefs undefs)))
+
+
     (when geometry-shader-text
-      (setf geo (gl:create-shader :geometry-shader))
-      (gl:shader-source geo  (concatenate 'string
-					  (format nil "~{#define ~A~%~}" defines)
-					  (format nil "~{#undef ~A~%~}" undefs)
-					  geometry-shader-text))
+      (unless geo 
+	(setf geo 
+	      (make-instance 'geometry-shader :shader-type :geometry-shader :code geometry-shader-text :defs defines :undefs undefs))))
 
-      (gl:compile-shader geo)
-      
-      (let ((log (gl:get-shader-info-log geo)))
-	(unless (string-equal log "")
-	  (format t "Shader Log: ~A~%" log)))
 
-      (unless (gl:get-shader geo :compile-status)
-	(error "Could not compile geometry shader!")))
+    (unless program (setf program (gl:create-program)))
 
-    (setf program (gl:create-program))
     ;; You can attach the same shader to multiple different programs.
     (attach-shader this vs)
     (attach-shader this fs)
-
     (when geo
-      (gl:attach-shader program geo))
+      (attach-shader program geo))
+
+
     ;; Don't forget to link the program after attaching the
     ;; shaders. This step actually puts the attached shader together
     ;; to form the program.
     (gl:link-program program)
-    
+
     (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
     (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
 
