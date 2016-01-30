@@ -3,8 +3,12 @@
 
 (in-package #:clinch)
 
+;; not currently using these
 (defparameter *current-shader-attributes* (trivial-garbage:make-weak-hash-table))
 (defparameter *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table))
+
+(defparameter *shaders->shader-programs* (make-hash-table))
+
 (defparameter *uncollected*  (trivial-garbage:make-weak-hash-table :weakness :value)
   "Weak hash of loaded OpenGL objects.")
 
@@ -108,5 +112,4 @@
 	 (funcall transformer tree))
 	;; it failed the test. leave it alone.
 	(t tree)))
-
 

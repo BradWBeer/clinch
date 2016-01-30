@@ -1,4 +1,4 @@
-;;;; shader-program.lisp
+;;; shader-program.lisp
 ;;;; Please see the licence.txt for the CLinch
 
 (in-package #:clinch)
@@ -41,7 +41,7 @@
 				       undefs)
   "Create the shader program. Currently there is no way to change the shader. You must make a new one."
 
-  (build-shader-program this :name name
+  (build-shader-program this
 		:vertex-shader-text vertex-shader-text
 		:fragment-shader-text fragment-shader-text
 		:geometry-shader-text geometry-shader-text
@@ -52,10 +52,59 @@
 
 
 (defmethod attach-shader ((program shader-program) (shader shader))
-  (gl:attach-shader (id program) (id shader)))
+
+  ;; Keep track of which programs use which shaders
+  (unless (member program (gethash shader *shaders->shader-programs*))
+    (setf (gethash shader *shaders->shader-programs*)
+	  (push program (gethash shader *shaders->shader-programs*))))
+  
+  (when (id shader)    
+    (gl:attach-shader (program program) (id shader))))
+
+(defmethod attach-shader :after ((program shader-program) (shader vertex-shader))
+  
+  (when (id shader)    
+    (setf (slot-value program 'vert-shader) shader)))
+
+(defmethod attach-shader :after ((program shader-program) (shader fragment-shader))
+
+  (when (id shader)    
+    (setf (slot-value program 'frag-shader) shader)))
+
+(defmethod attach-shader :after ((program shader-program) (shader geometry-shader))
+
+  (when (id shader)    
+    (setf (slot-value program 'geo-shader) shader)))
+
+(defmethod detach-shader ((program shader-program) (shader shader))
+
+  (unless (setf (gethash shader *shaders->shader-programs*)
+		(remove-if (lambda (x)
+			     (eql x program))
+			   (gethash shader *shaders->shader-programs*)))
+    (remhash shader *shaders->shader-programs*))
+  
+
+  (when (id shader)    
+    (gl:detach-shader (program program) (id shader))))
+
+(defmethod detach-shader :after ((program shader-program) (shader vertex-shader))
+  
+  (when (id shader)    
+    (setf (slot-value program 'vert-shader) nil)))
+
+(defmethod detach-shader :after ((program shader-program) (shader fragment-shader))
+  
+  (when (id shader)    
+    (setf (slot-value program 'frag-shader) nil)))
+
+(defmethod detach-shader :after ((program shader-program) (shader geometry-shader))
+  
+  (when (id shader)    
+    (setf (slot-value program 'geo-shader) nil)))
+
 
 (defmethod build-shader-program ((this shader-program) &key
-					 name
 					 vertex-shader-text
 					 fragment-shader-text
 					 geometry-shader-text
@@ -68,68 +117,37 @@
   	       (fs frag-shader)
 	       (geo geo-shader)
   	       (program program)) this
-    (setf vs (gl:create-shader :vertex-shader))
-    (setf fs (gl:create-shader :fragment-shader))    
 
-    (gl:shader-source vs (concatenate 'string
-				      (format nil "~{#define ~A~%~}" defines)
-				      (format nil "~{#undef ~A~%~}" undefs)
-				      vertex-shader-text))
-
-    (if program (unload this))
-    
-    (gl:compile-shader vs)
-
-    (let ((log (gl:get-shader-info-log vs)))
-      (unless (string-equal log "")
-	(format t "Shader Log: ~A~%" log)))
-    
-    (unless (gl:get-shader vs :compile-status)
-      (error "Could not compile vertex shader!"))
-
-    (gl:shader-source fs   (concatenate 'string
-					(format nil "~{#define ~A~%~}" defines)
-					(format nil "~{#undef ~A~%~}" undefs)
-					fragment-shader-text))
-
-    (gl:compile-shader fs)
-    
-    (let ((log (gl:get-shader-info-log fs)))
-      (unless (string-equal log "")
-	(format t "Shader Log: ~A~%" log)))
+    (unless vs 
+      (setf vs 
+	    (make-instance 'vertex-shader :shader-type :vertex-shader :code vertex-shader-text :defs defines :undefs undefs)))
 
 
-    (unless (gl:get-shader fs :compile-status)
-      (error "Could not compile fragment shader!"))
+    (unless fs 
+      (setf fs 
+	    (make-instance 'fragment-shader :shader-type :fragment-shader :code fragment-shader-text :defs defines :undefs undefs)))
+
 
     (when geometry-shader-text
-      (setf geo (gl:create-shader :geometry-shader))
-      (gl:shader-source geo  (concatenate 'string
-					  (format nil "~{#define ~A~%~}" defines)
-					  (format nil "~{#undef ~A~%~}" undefs)
-					  geometry-shader-text))
+      (unless geo 
+	(setf geo 
+	      (make-instance 'geometry-shader :shader-type :geometry-shader :code geometry-shader-text :defs defines :undefs undefs))))
 
-      (gl:compile-shader geo)
-      
-      (let ((log (gl:get-shader-info-log geo)))
-	(unless (string-equal log "")
-	  (format t "Shader Log: ~A~%" log)))
 
-      (unless (gl:get-shader geo :compile-status)
-	(error "Could not compile geometry shader!")))
+    (unless program (setf program (gl:create-program)))
 
-    (setf program (gl:create-program))
     ;; You can attach the same shader to multiple different programs.
-    (gl:attach-shader program vs)
-    (gl:attach-shader program fs)
-
+    (attach-shader this vs)
+    (attach-shader this fs)
     (when geo
-      (gl:attach-shader program geo))
+      (attach-shader program geo))
+
+
     ;; Don't forget to link the program after attaching the
     ;; shaders. This step actually puts the attached shader together
     ;; to form the program.
     (gl:link-program program)
-    
+
     (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
     (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
 
@@ -137,18 +155,16 @@
     (setf (gethash (key this) *uncollected*) this)
     (trivial-garbage:finalize this
 			      (let ((program-val program)
-				    (fs-val fs)
 				    (vs-val vs)
+				    (fs-val fs)
 				    (geo-val geo)
 				    (key (key this)))
 				
 				(lambda ()
 				  (remhash key *uncollected*)
 				  (sdl2:in-main-thread (:background t) 
-				    (gl:detach-shader program-val fs-val)
-				    (gl:delete-shader fs-val)
-				    (gl:detach-shader program-val vs-val)
-				    (gl:delete-shader vs-val)
+				    (detach-shader program-val fs-val)
+				    (detach-shader program-val vs-val)
 				    (when geo-val 
 				      (gl:detach-shader program-val geo-val)
 				      (gl:delete-shader geo-val))
@@ -169,15 +185,37 @@
 	 if (>= location 0)
 	 do (setf (gethash name (slot-value this 'uniforms))
 		  (cons type location))
-	 else do (format t "could not find uniform ~A!~%" name)))
-			
+	 else do (format t "could not find uniform ~A!~%" name)))))
 
-    (when name (setf (slot-value this 'name) name))))
+(defmethod pullg ((this shader-program))
+  (!
+    (append
+     (loop for i in (gl:get-attached-shaders (program this))
+	collect (list (cffi:foreign-enum-keyword '%gl::enum 
+						 (gl:get-shader i :shader-type))
+		      (gl:get-shader-source i)))
+     (list (list :uniforms (list-shader-uniforms this))
+	   (list :attributes (list-shader-attributes this))))))
+	   
   
 
 (defmethod use-shader-program ((this shader-program) &key)
   "Start using the shader-program."
   (gl:use-program (program this)))
+
+(defmethod list-shader-uniforms ((this shader-program))
+  (! (loop for i from 0 below (gl:get-program (program this) :active-uniforms) 
+	collect (cons i (multiple-value-list (gl:get-active-uniform (program this) i))))))
+
+(defmethod list-shader-attributes ((this shader-program))
+  (! (loop for i from 0 below (gl:get-program (program this) :active-attributes) 
+	collect (cons i (multiple-value-list (gl:get-active-attrib (program this) i))))))
+
+;;doesn't work yet...
+;; (defmethod list-shader-uniform-blocks ((this shader-program))
+;;   (! (loop for i from 0 below (gl:get-program (program this) :active-uniform-blocks) 
+;; 	collect (cons i (multiple-value-list (gl:get-active-uniform-block-name (program this) i))))))
+
 
 (defmethod get-uniform-id ((this shader-program) (id integer))
   "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
@@ -278,12 +316,10 @@
     (when program
 
       (when vs
-	(gl:detach-shader program vs)
-	(gl:delete-shader vs))
+	(detach-shader this vs))
       
       (when fs
-	(gl:delete-shader fs)
-	(gl:detach-shader program fs))
+	(detach-shader this fs))
 
       (when geo
 	(gl:detach-shader program geo)
@@ -295,8 +331,8 @@
     (setf (slot-value this 'uniforms) nil
 	  (slot-value this 'attributes) nil
 	  (slot-value this 'name) nil
-	  (slot-value this 'attributes) nil
-	  (slot-value this 'uniforms) nil)))
+	  (slot-value this 'vert-shader) nil
+	  (slot-value this 'frag-shader) nil)))
 
 
 (defmethod shader-program-attribute ((this shader-program) key)
