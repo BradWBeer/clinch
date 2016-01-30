@@ -11,8 +11,10 @@
 (defparameter *inited* nil)
 (defparameter *running* nil)
 
-(defparameter *controllers* nil)
-(defparameter *haptic* nil)
+(defparameter *controllers* nil
+  "An alist of discovered controllers. Format: (controller-id . sdl-controller-handle)")
+(defparameter *haptic* nil
+  "An alist of discovered haptic feedback devices. Format: (controller-id . sdl-haptic-device-handle)")
 
 (defparameter *next* nil
   "Runs before the next on-idle call. No arguments.")
@@ -60,12 +62,18 @@
 (defparameter *on-mouse-wheel-move* nil
   "Called when the mouse wheel is moved. Arguments: (win mouse x y ts)")
 
-(defparameter *on-controller-button-down* nil)
+(defparameter *on-controller-button-down* nil
+  "Called when a controller's button is pressed. Arguments: (controller-id axis-id value timestamp)")
 (defparameter *on-controller-button-up* nil)
+  "Called when a controller's button is released. Arguments: (controller-id axis-id value timestamp)")
 (defparameter *on-controller-added* nil)
-(defparameter *on-controller-removed* nil)
-(defparameter *on-controller-remapped* nil)
-(defparameter *on-controller-axis-move* nil)
+  "Called when a new controller is discovered. Arguments: (controller-id axis-id value timestamp)")
+(defparameter *on-controller-removed* nil
+  "Called when a controller is removed. Arguments: (window data1 data2 timestamp)")
+(defparameter *on-controller-remapped* nil
+    "Called when a controller is remapped. Arguments: (window data1 data2 timestamp)")
+(defparameter *on-controller-axis-move* nil
+  "Called when a controller's axis moves. Arguments (controller-id axis-id position timestamp)")
 
 (defparameter *on-idle* nil
   "Called when there are no pending events. Take no arguments.")
@@ -280,7 +288,9 @@ working while cepl runs"
 	       (double-buffer t)
 	       (hidden nil)
 	       (resizable :resizable))
-
+"Creates Clinch's window in it's own thread. 
+ Use ! (wait and return a value from main thread) or 
+ Use !! (return immediately with a nil"
   (bordeaux-threads:make-thread (lambda ()
 				  (_init width 
 					 height 
@@ -340,7 +350,7 @@ working while cepl runs"
 		      sdl2-ffi:+sdl-minor-version+
 		      sdl2-ffi:+sdl-patchlevel+)
 	      (finish-output)
-	      ;;(init-controllers)
+	      (init-controllers)
 
 	      (sdl2:with-window (win :w width :h height ;;; :title title
 				     :flags `(:shown :opengl :resizable
