@@ -113,12 +113,3 @@
 	;; it failed the test. leave it alone.
 	(t tree)))
 
-
-
-(defun list-shader-uniforms (shader)
-	   (! (loop for i from 0 below (gl:get-program (program shader) :active-uniforms) 
-		 collect (cons i (multiple-value-list (gl:get-active-uniform (program shader) i))))))
-
-(defun list-shader-attributes (shader)
-  (! (loop for i from 0 below (gl:get-program (program shader) :active-attributes) 
-	collect (cons i (multiple-value-list (gl:get-active-attrib (program shader) i))))))

@@ -1,4 +1,4 @@
-;;;; shader-program.lisp
+;;; shader-program.lisp
 ;;;; Please see the licence.txt for the CLinch
 
 (in-package #:clinch)
@@ -189,15 +189,33 @@
 
 (defmethod pullg ((this shader-program))
   (!
-    (loop for i in (gl:get-attached-shaders (program this))
-       collect (list (cffi:foreign-enum-keyword '%gl::enum 
-						(gl:get-shader i :shader-type))
-		     (gl:get-shader-source i)))))
+    (append
+     (loop for i in (gl:get-attached-shaders (program this))
+	collect (list (cffi:foreign-enum-keyword '%gl::enum 
+						 (gl:get-shader i :shader-type))
+		      (gl:get-shader-source i)))
+     (list (list :uniforms (list-shader-uniforms this))
+	   (list :attributes (list-shader-attributes this))))))
+	   
   
 
 (defmethod use-shader-program ((this shader-program) &key)
   "Start using the shader-program."
   (gl:use-program (program this)))
+
+(defmethod list-shader-uniforms ((this shader-program))
+  (! (loop for i from 0 below (gl:get-program (program this) :active-uniforms) 
+	collect (cons i (multiple-value-list (gl:get-active-uniform (program this) i))))))
+
+(defmethod list-shader-attributes ((this shader-program))
+  (! (loop for i from 0 below (gl:get-program (program this) :active-attributes) 
+	collect (cons i (multiple-value-list (gl:get-active-attrib (program this) i))))))
+
+;;doesn't work yet...
+;; (defmethod list-shader-uniform-blocks ((this shader-program))
+;;   (! (loop for i from 0 below (gl:get-program (program this) :active-uniform-blocks) 
+;; 	collect (cons i (multiple-value-list (gl:get-active-uniform-block-name (program this) i))))))
+
 
 (defmethod get-uniform-id ((this shader-program) (id integer))
   "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
