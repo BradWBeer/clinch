@@ -1,8 +1,6 @@
 (in-package #:clinch)
 
-(cl:defpackage :clinch-cairo
-  (:export #:clear-cairo-context
-	   #:with-surface-for-texture
-	   #:with-context-for-texture
-	   #:create-texture-from-png
-	   ))
+(export 'clear-cairo-context)
+(export 'with-surface-for-texture)
+(export 'with-context-for-texture)
+(export 'create-texture-from-png)

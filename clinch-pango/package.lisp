@@ -1,6 +1,4 @@
 (in-package #:clinch)
 
-(cl:defpackage :clinch-pango
-  (:export :print-text
-	   :with-paragraph
-	   ))
+(export 'print-text)
+(export 'with-paragraph)
