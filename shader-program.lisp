@@ -27,28 +27,28 @@
     :initform nil)
    (key :initform (gensym "shader-program")
 	:reader key))
-   
+  
   (:documentation "Creates and keeps track of the shader-program objects. Requires an UNLOAD call when you are done. Bind Buffer functions are in Buffer.l"))
 
 (defmethod initialize-instance :after ((this shader-program) &key
-				       name
-				       vertex-shader-text
-				       fragment-shader-text
-				       geometry-shader-text
-				       attributes
-				       uniforms
-				       defines
-				       undefs)
+							       name
+							       vertex-shader-text
+							       fragment-shader-text
+							       geometry-shader-text
+							       attributes
+							       uniforms
+							       defines
+							       undefs)
   "Create the shader program. Currently there is no way to change the shader. You must make a new one."
 
   (build-shader-program this
-		:vertex-shader-text vertex-shader-text
-		:fragment-shader-text fragment-shader-text
-		:geometry-shader-text geometry-shader-text
-		:attributes attributes
-		:uniforms uniforms
-		:defines defines
-		:undefs undefs))
+			:vertex-shader-text vertex-shader-text
+			:fragment-shader-text fragment-shader-text
+			:geometry-shader-text geometry-shader-text
+			:attributes attributes
+			:uniforms uniforms
+			:defines defines
+			:undefs undefs))
 
 
 (defmethod attach-shader ((program shader-program) (shader shader))
@@ -105,87 +105,87 @@
 
 
 (defmethod build-shader-program ((this shader-program) &key
-					 vertex-shader-text
-					 fragment-shader-text
-					 geometry-shader-text
-					 attributes
-					 uniforms
-					 defines
-					 undefs)
+							 vertex-shader-text
+							 fragment-shader-text
+							 geometry-shader-text
+							 attributes
+							 uniforms
+							 defines
+							 undefs)
+  (!
+    (with-slots ((vs vert-shader)
+		 (fs frag-shader)
+		 (geo geo-shader)
+		 (program program)) this
 
-  (with-slots ((vs vert-shader)
-  	       (fs frag-shader)
-	       (geo geo-shader)
-  	       (program program)) this
-
-    (unless vs 
-      (setf vs 
-	    (make-instance 'vertex-shader :shader-type :vertex-shader :code vertex-shader-text :defs defines :undefs undefs)))
-
-
-    (unless fs 
-      (setf fs 
-	    (make-instance 'fragment-shader :shader-type :fragment-shader :code fragment-shader-text :defs defines :undefs undefs)))
+      (unless vs 
+	(setf vs 
+	      (make-instance 'vertex-shader :shader-type :vertex-shader :code vertex-shader-text :defs defines :undefs undefs)))
 
 
-    (when geometry-shader-text
-      (unless geo 
-	(setf geo 
-	      (make-instance 'geometry-shader :shader-type :geometry-shader :code geometry-shader-text :defs defines :undefs undefs))))
+      (unless fs 
+	(setf fs 
+	      (make-instance 'fragment-shader :shader-type :fragment-shader :code fragment-shader-text :defs defines :undefs undefs)))
 
 
-    (unless program (setf program (gl:create-program)))
-
-    ;; You can attach the same shader to multiple different programs.
-    (attach-shader this vs)
-    (attach-shader this fs)
-    (when geo
-      (attach-shader program geo))
+      (when geometry-shader-text
+	(unless geo 
+	  (setf geo 
+		(make-instance 'geometry-shader :shader-type :geometry-shader :code geometry-shader-text :defs defines :undefs undefs))))
 
 
-    ;; Don't forget to link the program after attaching the
-    ;; shaders. This step actually puts the attached shader together
-    ;; to form the program.
-    (gl:link-program program)
+      (unless program (setf program (gl:create-program)))
 
-    (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
-    (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
+      ;; You can attach the same shader to multiple different programs.
+      (attach-shader this vs)
+      (attach-shader this fs)
+      (when geo
+	(attach-shader program geo))
 
-    (trivial-garbage:cancel-finalization this)
-    (setf (gethash (key this) *uncollected*) this)
-    (trivial-garbage:finalize this
-			      (let ((program-val program)
-				    (vs-val vs)
-				    (fs-val fs)
-				    (geo-val geo)
-				    (key (key this)))
-				
-				(lambda ()
-				  (remhash key *uncollected*)
-				  (sdl2:in-main-thread (:background t) 
-				    (detach-shader program-val fs-val)
-				    (detach-shader program-val vs-val)
-				    (when geo-val 
-				      (gl:detach-shader program-val geo-val)
-				      (gl:delete-shader geo-val))
-				    (gl:delete-program program-val)))))
 
-    (when attributes
-      (loop for (name type) in attributes
-	 for location = (gl:get-attrib-location program name)
-	 if (>= location 0)
-	 do (setf (gethash name (slot-value this 'attributes))
-		  (cons type location))
+      ;; Don't forget to link the program after attaching the
+      ;; shaders. This step actually puts the attached shader together
+      ;; to form the program.
+      (gl:link-program program)
+
+      (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
+      (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
+
+      (trivial-garbage:cancel-finalization this)
+      (setf (gethash (key this) *uncollected*) this)
+      (trivial-garbage:finalize this
+				(let ((program-val program)
+				      (vs-val vs)
+				      (fs-val fs)
+				      (geo-val geo)
+				      (key (key this)))
+				  
+				  (lambda ()
+				    (remhash key *uncollected*)
+				    (sdl2:in-main-thread (:background t) 
+				      (detach-shader program-val fs-val)
+				      (detach-shader program-val vs-val)
+				      (when geo-val 
+					(gl:detach-shader program-val geo-val)
+					(gl:delete-shader geo-val))
+				      (gl:delete-program program-val)))))
+
+      (when attributes
+	(loop for (name type) in attributes
+	   for location = (gl:get-attrib-location program name)
+	   if (>= location 0)
+	   do (setf (gethash name (slot-value this 'attributes))
+		    (cons type location))
 	   else do (format t "could not find attribute ~A!~%" name)))
-	         
+      
 
-    (when uniforms
-      (loop for (name type) in uniforms
-	 for location = (gl:Get-Uniform-Location program name)
-	 if (>= location 0)
-	 do (setf (gethash name (slot-value this 'uniforms))
-		  (cons type location))
-	 else do (format t "could not find uniform ~A!~%" name)))))
+      (when uniforms
+	(loop for (name type) in uniforms
+	   for location = (gl:Get-Uniform-Location program name)
+	   if (>= location 0)
+	   do (setf (gethash name (slot-value this 'uniforms))
+		    (cons type location))
+	   else do (format t "could not find uniform ~A!~%" name))))))
 
 (defmethod pullg ((this shader-program))
   (!
@@ -196,8 +196,8 @@
 		      (gl:get-shader-source i)))
      (list (list :uniforms (list-shader-uniforms this))
 	   (list :attributes (list-shader-attributes this))))))
-	   
-  
+
+
 
 (defmethod use-shader-program ((this shader-program) &key)
   "Start using the shader-program."
@@ -239,7 +239,7 @@
 		     (slot-value this 'attributes))))
     (when (and id
 	       (>= (cdr id) 0))
-	       id)))
+      id)))
 
 
 (defmethod attach-uniform ((this shader-program) (uniform string) value)
@@ -248,51 +248,51 @@
 
     (when ret
       ;;(unless (eq (gethash ret *current-shader-uniforms*) value)
-	(setf (gethash ret *current-shader-uniforms*) value)
+      (setf (gethash ret *current-shader-uniforms*) value)
+      
+      (destructuring-bind (type . id) ret
 	
-	(destructuring-bind (type . id) ret
-	  
-	  (let ((f (case type
-		     (:float #'gl:uniformf)
-		     (:int #'gl:uniformi)
-		     (:matrix (lambda (id value)
-				(gl:uniform-matrix id 2 (cond
-							  ((arrayp value) value)
-							  ((typep value 'node) (transform
-										value))
-							  (t (error "Unknown Type in attach-uniform!")))))))))
+	(let ((f (case type
+		   (:float #'gl:uniformf)
+		   (:int #'gl:uniformi)
+		   (:matrix (lambda (id value)
+			      (gl:uniform-matrix id 2 (cond
+							((arrayp value) value)
+							((typep value 'node) (transform
+									      value))
+							(t (error "Unknown Type in attach-uniform!")))))))))
 	  
 	  
-	    (if (listp value)
-		(apply f id value)
-		(apply f id (list value))))))))
-    
+	  (if (listp value)
+	      (apply f id value)
+	      (apply f id (list value))))))))
+
 (defmethod attach-uniform ((this shader-program) (uniform string) (matrix array))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to a matrix value."
 
   (let ((ret (get-uniform-id this uniform)))
     (when ret 
       ;;(unless (eq (gethash ret *current-shader-uniforms*) ret)
-	(setf (gethash ret *current-shader-uniforms*) ret)
-	(destructuring-bind (type . id) ret
-	  
-	  (gl::with-foreign-matrix (foreign-matrix matrix)
-	    (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
-    
+      (setf (gethash ret *current-shader-uniforms*) ret)
+      (destructuring-bind (type . id) ret
+	
+	(gl::with-foreign-matrix (foreign-matrix matrix)
+	  (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
+
 (defmethod attach-uniform ((this shader-program) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to the matrix of a node."
 
   (let ((ret (get-uniform-id this uniform)))
     (when ret 
       ;;(unless (eq (gethash ret *current-shader-uniforms*) matrix)
-	(setf (gethash ret *current-shader-uniforms*) matrix)
-	
-	(let ((ret (get-uniform-id this uniform)))
-	  (when ret 
-	    (destructuring-bind (type . id) ret
-	      
-	      (gl::with-foreign-matrix (foreign-matrix (transform matrix))
-		(%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))))
+      (setf (gethash ret *current-shader-uniforms*) matrix)
+      
+      (let ((ret (get-uniform-id this uniform)))
+	(when ret 
+	  (destructuring-bind (type . id) ret
+	    
+	    (gl::with-foreign-matrix (foreign-matrix (transform matrix))
+	      (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))))
 
 (defmethod bind-static-values-to-attribute ((this shader-program) name &rest vals)
   "It is possible to bind static information to an attribute. Your milage may vary."

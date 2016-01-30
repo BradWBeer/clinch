@@ -237,9 +237,9 @@
 	   (clinch::unmap-buffer ,buffer)
 	   (clinch::unmap-buffer-asynchronous ,buffer)))))
 
-(defmethod get-buffer-data ((this buffer))
+(defmethod pull-g-raw ((this buffer))
   "Returns the buffer's data."
-  (clinch:with-mapped-buffer (ptr this :read-only)
+  (with-mapped-buffer (ptr this :read-only)
     (loop for i from 0 to (1- (clinch:vertex-count this))
        collect (cffi:mem-aref ptr (clinch:qtype this) i))))
 

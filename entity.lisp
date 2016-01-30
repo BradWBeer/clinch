@@ -15,7 +15,11 @@
    (render-values
     :initform nil
     :initarg :values
-    :reader render-values))
+    :reader render-values)
+   (enabled
+    :accessor enabled
+    :initform t
+    :initarg :enabled))
   (:documentation "Renders a mesh with a shader-program with attributes and uniforms."))
 
 
@@ -150,7 +154,8 @@
 (defmethod render ((this entity) &key parent projection)
   "Renders the entity (mesh).
     :parent Sets the parent for the :model"
-  (draw this :parent parent :projection projection))
+  (when (enabled this)
+    (draw this :parent parent :projection projection)))
 
 (defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
 

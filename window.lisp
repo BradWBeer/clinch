@@ -53,9 +53,9 @@
 (defparameter *on-mouse-move* nil
   "Called when mouse is moved. Arguments (win mouse state x y xrel yrel ts)")
 (defparameter *on-mouse-down* nil
-"Called when mouse button is pressed. Arguments: (win mouse x y button state clicks ts)")
+  "Called when mouse button is pressed. Arguments: (win mouse x y button state clicks ts)")
 (defparameter *on-mouse-up* nil
-"Called when mouse button is released. Arguments: (win mouse x y button state clicks ts)")
+  "Called when mouse button is released. Arguments: (win mouse x y button state clicks ts)")
 (defparameter *on-mouse-click* nil
   "Called when mouse button is released. Arguments: (win mouse x y button state clicks ts)") ;; This isn't correct. !!!
 (defparameter *on-mouse-double-click* nil)
@@ -64,14 +64,14 @@
 
 (defparameter *on-controller-button-down* nil
   "Called when a controller's button is pressed. Arguments: (controller-id axis-id value timestamp)")
-(defparameter *on-controller-button-up* nil)
+(defparameter *on-controller-button-up* nil
   "Called when a controller's button is released. Arguments: (controller-id axis-id value timestamp)")
-(defparameter *on-controller-added* nil)
+(defparameter *on-controller-added* nil
   "Called when a new controller is discovered. Arguments: (controller-id axis-id value timestamp)")
 (defparameter *on-controller-removed* nil
   "Called when a controller is removed. Arguments: (window data1 data2 timestamp)")
 (defparameter *on-controller-remapped* nil
-    "Called when a controller is remapped. Arguments: (window data1 data2 timestamp)")
+  "Called when a controller is remapped. Arguments: (window data1 data2 timestamp)")
 (defparameter *on-controller-axis-move* nil
   "Called when a controller's axis moves. Arguments (controller-id axis-id position timestamp)")
 
@@ -102,18 +102,18 @@ error. Remember to hit C in slime or pick the restart so errors don't kill the a
   "Called from within the main loop, this keep the lisp repl
 working while cepl runs"
   (continuable
-    (let ((connection (or swank::*emacs-connection* (swank::default-connection))))
-      (when connection
-	(swank::handle-requests connection t)))))
+   (let ((connection (or swank::*emacs-connection* (swank::default-connection))))
+     (when connection
+       (swank::handle-requests connection t)))))
 
 (defmacro call-all (loc &rest args)
   `(continuable
-     (and ,loc (funcall ,loc ,@args))))
+    (and ,loc (funcall ,loc ,@args))))
 
 (defun ensure-cepl-compatible-setup ()
   (unless (>= (gl:major-version) 3)
     (error "Cepl requires OpenGL 3.1 or higher. Found: ~a.~a"
-           (gl:major-version) (gl:minor-version))))
+	   (gl:major-version) (gl:minor-version))))
 
 (defun set-default-gl-options ()
   (print "Setting default options")
@@ -259,9 +259,9 @@ working while cepl runs"
     (:idle ()  
 	   (if *running*
 	       (progn
-		   (call-all *next*)
-		   (setf *next* nil)
-		   (call-all *on-idle*))
+		 (call-all *next*)
+		 (setf *next* nil)
+		 (call-all *on-idle*))
 	       (sdl2:push-event :quit))
 	   (gl:flush)
 	   (sdl2:gl-swap-window win)
@@ -288,7 +288,7 @@ working while cepl runs"
 	       (double-buffer t)
 	       (hidden nil)
 	       (resizable :resizable))
-"Creates Clinch's window in it's own thread. 
+  "Creates Clinch's window in it's own thread. 
  Use ! (wait and return a value from main thread) or 
  Use !! (return immediately with a nil"
   (bordeaux-threads:make-thread (lambda ()
@@ -312,24 +312,24 @@ working while cepl runs"
 				(cons (cons '*standard-output* *standard-output* )
 				      (cons (cons '*standard-input* *standard-input*)
 					    bordeaux-threads:*default-special-bindings*))))
-	       
+
 
 (defun _init (&optional
-	       (width 800)
-	       (height 600)
-	       (title "Clank")
-	       (fullscreen nil)
-	       (no-frame nil)
-	       (alpha-size 8)
-	       (depth-size 32)
-	       (stencil-size 32)
-	       (red-size 8)
-	       (green-size 8)
-	       (blue-size 8)
-	       (buffer-size 0)
-	       (double-buffer t)
-	       (hidden nil)
-	       (resizable :resizable))
+		(width 800)
+		(height 600)
+		(title "Clank")
+		(fullscreen nil)
+		(no-frame nil)
+		(alpha-size 8)
+		(depth-size 32)
+		(stencil-size 32)
+		(red-size 8)
+		(green-size 8)
+		(blue-size 8)
+		(buffer-size 0)
+		(double-buffer t)
+		(hidden nil)
+		(resizable :resizable))
 
   (unless *running* 
     (let ((local-stdout *standard-output*)
@@ -337,66 +337,66 @@ working while cepl runs"
       
       (with-main
 
-	(unless *inited*
-	  (sdl2:with-init (:everything)
-	    
-	    (let ((*standard-output* local-stdout)
-		  (*standard-input* local-input))
+	  (unless *inited*
+	    (sdl2:with-init (:everything)
 	      
-	      (setf *running* t)
-	      
-	      (format t "Using SDL Library Version: ~D.~D.~D~%"
-		      sdl2-ffi:+sdl-major-version+
-		      sdl2-ffi:+sdl-minor-version+
-		      sdl2-ffi:+sdl-patchlevel+)
-	      (finish-output)
-	      (init-controllers)
+	      (let ((*standard-output* local-stdout)
+		    (*standard-input* local-input))
+		
+		(setf *running* t)
+		
+		(format t "Using SDL Library Version: ~D.~D.~D~%"
+			sdl2-ffi:+sdl-major-version+
+			sdl2-ffi:+sdl-minor-version+
+			sdl2-ffi:+sdl-patchlevel+)
+		(finish-output)
+		(init-controllers)
 
-	      (sdl2:with-window (win :w width :h height ;;; :title title
-				     :flags `(:shown :opengl :resizable
-						     ,@(remove nil `(:shown :opengl
-									   ,(when fullscreen :fullscreen-desktop)
-									   ,(when resizable :resizable)
-									   ,(when no-frame :borderless)
-									   ,(when hidden :hidden)))))
+		(sdl2:with-window (win :w width :h height ;;; :title title
+				       :flags `(:shown :opengl :resizable
+						       ,@(remove nil `(:shown :opengl
+									      ,(when fullscreen :fullscreen-desktop)
+									      ,(when resizable :resizable)
+									      ,(when no-frame :borderless)
+									      ,(when hidden :hidden)))))
 
-		(sdl2:gl-set-attr :context-profile-mask 1)
-		(sdl2:gl-set-attr :alpha-size alpha-size)
-		(sdl2:gl-set-attr :depth-size depth-size)
-		(sdl2:gl-set-attr :stencil-size stencil-size)
-		(sdl2:gl-set-attr :red-size red-size)
-		(sdl2:gl-set-attr :green-size green-size)
-		(sdl2:gl-set-attr :blue-size blue-size)
-		(sdl2:gl-set-attr :buffer-size buffer-size)
-		(sdl2:gl-set-attr :doublebuffer (if double-buffer 1 0))
+		  (sdl2:gl-set-attr :context-profile-mask 1)
+		  (sdl2:gl-set-attr :alpha-size alpha-size)
+		  (sdl2:gl-set-attr :depth-size depth-size)
+		  (sdl2:gl-set-attr :stencil-size stencil-size)
+		  (sdl2:gl-set-attr :red-size red-size)
+		  (sdl2:gl-set-attr :green-size green-size)
+		  (sdl2:gl-set-attr :blue-size blue-size)
+		  (sdl2:gl-set-attr :buffer-size buffer-size)
+		  (sdl2:gl-set-attr :doublebuffer (if double-buffer 1 0))
 
-		(sdl2:with-gl-context (gl-context win)
+		  (sdl2:with-gl-context (gl-context win)
 
-		  (setf *window* win
-			*context* gl-context)	
-		  
-		  (ensure-cepl-compatible-setup)
-		  (set-default-gl-options)
+		    (setf *window* win
+			  *context* gl-context)	
+		    
+		    (ensure-cepl-compatible-setup)
+		    (set-default-gl-options)
 
-		  ;; basic window/gl setup
-		  (format t "Setting up window/gl.~%")
-		  (finish-output)
-		  (sdl2:gl-make-current win gl-context)
-		  (gl:viewport 0 0 width height)
-		  (gl:clear :color-buffer)
-		  (format t "Beginning main loop.~%")
-		  (finish-output)
+		    ;; basic window/gl setup
+		    (format t "Setting up window/gl.~%")
+		    (finish-output)
+		    (sdl2:gl-make-current win gl-context)
+		    (gl:viewport 0 0 width height)
+		    (gl:clear :color-buffer)
+		    (format t "Beginning main loop.~%")
+		    (finish-output)
 
-		  (main-loop win gl-context width height)
-		  (unload-all-uncollected)
-		  (setf *running* nil
-			*inited* nil))))))))))
+		    (main-loop win gl-context width height)
+		    (unload-all-uncollected)
+		    (setf *running* nil
+			  *inited* nil))))))))))
 
 
 (defun uninit ()
   (with-main
-    (setf *running* nil
-	  *inited* nil)
+      (setf *running* nil
+	    *inited* nil)
 
     (uninit-controllers) 
     (sdl2:push-event :quit)))
