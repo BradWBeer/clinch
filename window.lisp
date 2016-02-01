@@ -106,7 +106,7 @@ working while cepl runs"
      (when connection
        (swank::handle-requests connection t)))))
 
-(defmacro call-all (loc &rest args)
+(defmacro fire (loc &rest args)
   `(continuable
     (and ,loc (funcall ,loc ,@args))))
 
@@ -169,106 +169,109 @@ working while cepl runs"
 (defun main-loop (win gl-context w h)
   ;;(declare (optimize (speed 3)))
 
-  (call-all *next*)
+  (fire *next*)
   (setf *next* nil)
-  (call-all *on-window-size-changed* win w h nil)
-  (call-all *on-window-resized* win w h nil)
+  (fire *on-window-size-changed* win w h nil)
+  (fire *on-window-resized* win w h nil)
 
   (sdl2:with-event-loop (:method :poll)
     
     (:keydown
      (:window-id win :state state :keysym keysym :timestamp ts)
-     (call-all *on-key-down* win keysym state ts))
+     (fire *on-key-down* win keysym state ts))
 
     (:keyup
      (:window-id win :state state :keysym keysym :timestamp ts)
-     (call-all *on-key-up* win keysym state ts))
+     (fire *on-key-up* win keysym state ts))
     
     (:controlleraxismotion
      (:which controller-id :axis axis-id :value value :timestamp ts)
-     (call-all *on-controller-axis-move* controller-id axis-id value ts))
+     (fire *on-controller-axis-move* controller-id axis-id value ts))
     
     (:controllerbuttondown
      (:which controller-id :button button :timestamp ts)
-     (call-all *on-controller-button-down* controller-id button ts))
+     (fire *on-controller-button-down* controller-id button ts))
 
     (:controllerbuttonup
      (:which controller-id :button button :timestamp ts)
-     (call-all *on-controller-button-up* controller-id button ts))
+     (fire *on-controller-button-up* controller-id button ts))
 
     (:controlleradded 
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
-     (call-all *on-controller-added* win d1 d2 ts))
+     (fire *on-controller-added* win d1 d2 ts))
     
     (:controllerremoved
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
-     (call-all *on-controller-removed* win d1 d2 ts))
+     (fire *on-controller-removed* win d1 d2 ts))
 
     (:controllerremapped
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
-     (call-all *on-controller-remapped* win d1 d2 ts))
+     (fire *on-controller-remapped* win d1 d2 ts))
     
     (:mousemotion
      (:window-id win :which mouse :state state :x x :y y :xrel xrel :yrel yrel :timestamp ts)
      (declare (ignore x))
-     (call-all *on-mouse-move* win mouse state x y xrel yrel ts))
+     (fire *on-mouse-move* win mouse state x y xrel yrel ts))
 
     (:mousebuttondown
      (:window-id win :which mouse :x x :y y :button button :state state :clicks clicks :timestamp ts)
      (declare (ignore x))
-     (call-all *on-mouse-down* win mouse x y button state clicks ts))
+     (fire *on-mouse-down* win mouse x y button state clicks ts))
 
     (:mousebuttonup
      (:window-id win :which mouse :x x :y y :button button :state state :clicks clicks :timestamp ts)
      (declare (ignore x))
-     (call-all *on-mouse-up* win mouse x y button state clicks ts))
+     (fire *on-mouse-up* win mouse x y button state clicks ts))
 
     (:mouseclick
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
-     (call-all *on-mouse-click* win d1 d2 ts)) ;;; FIX THIS!!!
+     (fire *on-mouse-click* win d1 d2 ts)) ;;; FIX THIS!!!
 
     (:mousedoubleclick
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
-     (call-all *on-mouse-double-click* win d1 d2 ts)) ;;; FIX THIS!!!
+     (fire *on-mouse-double-click* win d1 d2 ts)) ;;; FIX THIS!!!
 
     (:mousewheel
      (:window-id win :which mouse :x x :y y :timestamp ts) 
      (declare (ignore x))
-     (call-all *on-mouse-wheel-move* win mouse x y ts))
+     (fire *on-mouse-wheel-move* win mouse x y ts))
     
     (:windowevent
      (:event raw-event :window-id win :data1 d1 :data2 d2 :timestamp ts)
      (let ((event (autowrap:enum-key 'sdl2-ffi:sdl-window-event-id raw-event)))
        (cond
-	 ((eql event :size-changed) (call-all *on-window-size-changed* win d1 d2 ts))
-	 ((eql event :resized) (call-all *on-window-resized* win d1 d2 ts))
-	 ((eql event :hidden) (call-all *on-window-hidden* win ts))
-	 ((eql event :exposed) (call-all *on-window-exposed* win ts))
-	 ((eql event :moved) (call-all *on-window-moved* win d1 d2 ts))
-	 ((eql event :minimized) (call-all *on-window-minimized* win ts))
-	 ((eql event :maximized) (call-all *on-window-maximized* win ts))
-	 ((eql event :restored) (call-all *on-window-restored* win ts))
-	 ((eql event :enter) (call-all *on-window-enter* win ts))
-	 ((eql event :leave) (call-all *on-window-leave* win ts))
-	 ((eql event :focus-gained) (call-all *on-window-focus-gained* win ts))
-	 ((eql event :focus-lost) (call-all *on-window-focus-lost* win ts))
-	 ((eql event :close) (call-all *on-window-close* win ts)
+	 ((eql event :size-changed) (fire *on-window-size-changed* win d1 d2 ts))
+	 ((eql event :resized) (fire *on-window-resized* win d1 d2 ts))
+	 ((eql event :hidden) (fire *on-window-hidden* win ts))
+	 ((eql event :exposed) (fire *on-window-exposed* win ts))
+	 ((eql event :moved) (fire *on-window-moved* win d1 d2 ts))
+	 ((eql event :minimized) (fire *on-window-minimized* win ts))
+	 ((eql event :maximized) (fire *on-window-maximized* win ts))
+	 ((eql event :restored) (fire *on-window-restored* win ts))
+	 ((eql event :enter) (fire *on-window-enter* win ts))
+	 ((eql event :leave) (fire *on-window-leave* win ts))
+	 ((eql event :focus-gained) (fire *on-window-focus-gained* win ts))
+	 ((eql event :focus-lost) (fire *on-window-focus-lost* win ts))
+	 ((eql event :close) (fire *on-window-close* win ts)
 	  (print "Done...")
 	  ))))
     
     (:idle ()  
 	   (if *running*
 	       (progn
-		 (call-all *next*)
+		 (fire *next*)
 		 (setf *next* nil)
-		 (call-all *on-idle*))
+		 (fire *on-idle*))
 	       (sdl2:push-event :quit))
 	   (gl:flush)
 	   (sdl2:gl-swap-window win)
-	   (update-swank))
+
+	   ;; Doesn this make any sense here?
+	   ;;(update-swank)
+	   )
     
     (:quit ()
-	   (call-all *on-quit*)
+	   (fire *on-quit*)
 	   t)))
 
 
