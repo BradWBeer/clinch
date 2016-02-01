@@ -7,6 +7,7 @@
   (:import-from :cl-game-math.base-vectors :v!)
   (:export
    #:*uncollected*
+   #:defevent
    #:*controllers*
    #:*haptic*
 

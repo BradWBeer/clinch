@@ -4,12 +4,16 @@
 (in-package #:clinch)
 
 ;;;; window.lisp
-
 (defparameter *window* nil)
 (defparameter *context* nil)
 
 (defparameter *inited* nil)
 (defparameter *running* nil)
+
+(defmacro defevent (event args &body body)
+  "Creates and updates an event handler."
+  `(setf ,event (lambda ,args
+		  ,@body)))
 
 (defparameter *controllers* nil
   "An alist of discovered controllers. Format: (controller-id . sdl-controller-handle)")
