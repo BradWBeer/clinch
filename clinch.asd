@@ -26,6 +26,7 @@
 	       (:file "entity")
 	       (:file "viewport")
 	       (:file "framebuffer")
-	       (:file "window")))
+	       (:file "window")
+	       (:file "shapes")))
 
 
