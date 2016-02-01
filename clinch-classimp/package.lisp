@@ -1,6 +1,10 @@
 (in-package #:clinch)
 
-;; (export 'clear-cairo-context)
+(export 'load-mesh)
+(export 'make-simple-texture-shader)
+(export 'make-simple-color-shader)
+(export '*simple-texture-shader*)
+(export '*simple-color-shader*)
 ;; (export 'with-surface-for-texture)
 ;; (export 'with-context-for-texture)
 ;; (export 'create-texture-from-png)
