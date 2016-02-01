@@ -53,8 +53,8 @@
     
     (when (member child children)
 
-      (when (typep child 'refcount)
-	(unref child))
+      ;; (when (typep child 'refcount)
+      ;; 	(unref child))
       
       (setf children
 	    (remove child children)))))
@@ -74,7 +74,7 @@
   
   (current-transform this))
 
-(defmethod render ((this node) &key parent)
+(defmethod render ((this node) &key parent projection)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (enabled this)
     (when (once this)
@@ -93,19 +93,19 @@
     (load-matrix this)
     
     (loop for i in (children this)
-       do (render i :parent this))
+       do (render i :parent this :projection projection))
 
     (when (after-render this)
       (let ((*parent* this))
 	(funcall (after-render this) this)))))
 
-(defmethod render ((this list) &key parent matrix)
+(defmethod render ((this list) &key parent projection)
   "Render a list of rendables."
   (when (enabled this)
     (load-matrix this)
     
     (loop for i in this
-       do (render i :parent parent :matrix matrix))))
+       do (render i :parent parent :projection projection))))
 
 
 (defmethod (setf transform)  ((other-node array) (this node))

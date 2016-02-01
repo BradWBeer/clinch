@@ -48,7 +48,8 @@
       target: OpenGL buffer target. If you use this, think about subclassing. For more info lookup glBindBuffer().
               NOTE: use :element-array-buffer if you are creating an index buffer.
       usage:  Tells OpenGL how often you wish to access the buffer. 
-     loaded: Has data been put into the buffer. Buffers without data is just future storage, just be sure to set it before you use it."
+      loaded: Has data been put into the buffer. Buffers without data is just future storage, just be sure to set it before you use it.
+      data:   The data with which to fill the buffer. If data has a size, vcount does not need to be set."
   
   (with-slots ((type    type)
 	       (id      id)
@@ -59,7 +60,7 @@
 	       (loaded? loaded))  this
 
     ;; if they didn't give a vcount, see if we can derive one...
-    (when (and (not vcount) (listp data))
+    (when (and (not vcount) (length data))
       (setf vcount (/ (length data) stride)))
     
     (unless id
@@ -104,6 +105,8 @@
   "Wrapper around glBindBuffer. Puts the buffer into play."
   (gl:bind-buffer (target this) (id this)))
 
+(defmethod unbind ((this buffer) &key)
+  (gl:bind-buffer (target this) 0))
 
 (defmethod get-size ((this buffer) &key)
   "Calculates the number of VALUES (stride + vcount) this buffer contains."
@@ -129,6 +132,15 @@
   (gl:Enable-Client-State :NORMAL-ARRAY)
   (gl:bind-buffer (target this) (id this))
   (%gl:normal-pointer (qtype this) 0 (cffi:null-pointer)))
+
+
+(defmethod unbind-vertex-array ()
+  "Stop using the vertex array"
+  (gl:disable-Client-State :VERTEX-ARRAY))
+
+(defmethod unbind-normal-array ()
+  "Stop using the normal array"
+  (gl:Disable-Client-State :NORMAL-ARRAY))
 
 
 (defmethod bind-buffer-to-attribute-array ((this buffer) (shader shader) name)

@@ -90,7 +90,7 @@
   (world-set-gravity *physics-world* 0 -6 0)
   (world-set-cfm *physics-world* 1e-5)
   (world-set-damping *physics-world* .001 .001)
-  (world-set-linear-damping-threshold *physics-world* 0.00001)
+  (world-set-linear-damping-threshold *physics-world* 0.001)
   (world-set-angular-damping-threshold *physics-world* .005)
   (clode:world-set-auto-disable-flag  *physics-world* 1)
   

@@ -37,9 +37,9 @@
 		 :initarg :mode
 		 :accessor surface-mode
 		 :type :int)
-   (surface-mu :INITFORM 1d100 :INITARG :mu :ACCESSOR surface-mu)
+   (surface-mu :INITFORM .000001 :INITARG :mu :ACCESSOR surface-mu)
    (surface-mu2 :INITFORM 0 :INITARG :mu2 :ACCESSOR surface-mu2)
-   (surface-rho :INITFORM .1d0 :INITARG :rho :ACCESSOR surface-rho)
+   (surface-rho :INITFORM .1 :INITARG :rho :ACCESSOR surface-rho)
    (surface-rho2 :INITFORM 0 :INITARG :rho2 :ACCESSOR surface-rho2)
    (surface-rhon :INITFORM 0 :INITARG :rhon :ACCESSOR surface-rhon)
    (surface-bounce :INITFORM 0 :INITARG :bounce :ACCESSOR surface-bounce)

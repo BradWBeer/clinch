@@ -40,22 +40,31 @@
             fix)
            package))))))
 
+
+(defmacro defcfun-rename-function (name &rest rest)
+  (let ((lisp-name (swig-lispify-noprefix name 'function)))
+    `(progn
+       (defcfun (,name ,lisp-name)
+	   ,@rest)
+       (cl:export (swig-lispify-noprefix ,name 'function)))))
+
+
 (defcfun-rename-function "dGetConfiguration" :string)
   
-(defvar is-double-precision?)
-(setf is-double-precision? (search "ODE_double_precision" (get-configuration)))
+(defvar is-double-precision? nil)
+;;(setf is-double-precision? (search "ODE_double_precision" (get-configuration)))
 
 
 (defun number->dreal (x)
-  (coerce x (if is-double-precision?
-		'double-float
-		'single-float)))
+  (coerce x ;(if is-double-precision?
+  ;;'double-float
+		'single-float))
 
 ;;(if is-double-precision?
-    (defctype dreal (:wrapper :double
-			      :to-c number->dreal))
-   ;; (defctype dreal (:wrapper :float
-   ;; 			      :to-c number->dreal)))
+    ;; (defctype dreal (:wrapper :double
+    ;; 			      :to-c number->dreal))
+(defctype dreal (:wrapper :float
+			  :to-c number->dreal))
 
 
 (defmacro infinity (&optional (precision is-double-precision?))
@@ -80,13 +89,6 @@
          #+lispworks #.(read-from-string "10E999")
          #+scl ext:double-float-positive-infinity
          #+t most-positive-double-float)))
-
-(defmacro defcfun-rename-function (name &rest rest)
-  (let ((lisp-name (swig-lispify-noprefix name 'function)))
-    `(progn
-       (defcfun (,name ,lisp-name)
-	   ,@rest)
-       (cl:export (swig-lispify-noprefix ,name 'function)))))
 
 (defmacro ode-num (x)
   `(coerce ,x 'double-float))
@@ -529,11 +531,6 @@
 (defcfun-rename-function "dWorldStep" :void
   (world dWorldID)
   (step_size dReal))
-
-(defcfun-rename-function "dBodySetMovedCallback" :void
-  (b dBodyID)
-  (callback :pointer))
-
 
 (defcfun-rename-function "dCreateSphere" dGeomID
   (space dSpaceID)

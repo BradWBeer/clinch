@@ -20,6 +20,10 @@
     :accessor qtype
     :initarg :qtype
     :initform :unsigned-char)
+   (internal-format
+    :accessor internal-format
+    :initform :rgba
+    :initarg :internal-format)
    (data-format
     :accessor data-format
     :initform :bgra
@@ -36,12 +40,15 @@
 
 
 
-(defmethod initialize-instance :after ((this texture) &key
-				       (format :bgra)
-				       (wrap-s :repeat)
-				       (wrap-t :repeat)
-				       (mag-filter :linear)
-				       (min-filter :linear))
+(defmethod initialize-instance :after ((this texture)
+				       &key
+					 (wrap-s :repeat)
+					 (wrap-t :repeat)
+					 (mag-filter :linear)
+					 (min-filter :linear)
+					 depth-texture-mode
+					 texture-compare-mode
+					 texture-compare-function)
     "Sets up a texture instance.
       type:   cffi type NOTE: use :unsigned-int if you are creating an index buffer.
       id:     OpenGL buffer id
@@ -53,12 +60,15 @@
       format: The OpenGL Format of the Color Data. blue-green-red-alpha is default and prefered for simplicity.
       wrap-s & wrap-t: Wrap texture vertical or horizontal.
       mag-filter & min-filter: Magnification an minimization method."
-  
+
+ 
   (with-slots ((tex-id tex-id)
 	       (w width)
 	       (h height)
 	       (this-target target)
-	       (dtype type)) this
+	       (dtype type)
+	       (eformat data-format)
+	       (iformat internal-format)) this
     
     (unless tex-id (setf tex-id (car (gl:gen-textures 1))))
     
@@ -67,12 +77,18 @@
     (gl:tex-parameter :texture-2d :texture-wrap-t wrap-t)
     (gl:tex-parameter :texture-2d :texture-mag-filter mag-filter)
     (gl:tex-parameter :texture-2d :texture-min-filter min-filter)
+
+    (when depth-texture-mode (gl:Tex-Parameter :TEXTURE-2D :DEPTH-TEXTURE-MODE depth-texture-mode))
+    (when texture-compare-mode (gl:Tex-Parameter :TEXTURE-2D :TEXTURE-COMPARE-MODE texture-compare-mode))
+    (when texture-compare-function (gl:Tex-Parameter :TEXTURE-2D :TEXTURE-COMPARE-func texture-compare-function))
     
-    (when (loaded? this)
-      (gl:tex-image-2d :texture-2d 0 :rgba w h 0 format
-		       (cffi-type->gl-type dtype)
-		       (cffi:null-pointer))
-      tex-id)))
+    (gl:bind-buffer (target this) (if (loaded? this)
+				      (id this) 
+				      0))
+    (gl:tex-image-2d :texture-2d 0 iformat w h 0 eformat
+		     (cffi-type->gl-type dtype)
+		     (cffi:null-pointer))
+    tex-id))
     
     
 (defmethod get-size ((this texture) &key)
@@ -89,6 +105,11 @@
   (gl:bind-buffer (target this) (id this))
   (gl:bind-texture :texture-2d (tex-id this)))
 
+(defmethod unbind ((this texture) &key )
+  (gl:bind-buffer (target this) 0)
+  (gl:bind-texture :texture-2d 0))
+
+
 (defmethod map-buffer ((this texture) &optional (access :READ-WRITE))
   "Returns a pointer to the texture data. YOU MUST CALL UNMAP-BUFFER AFTER YOU ARE DONE!
    Access options are: :Read-Only, :Write-Only, and :READ-WRITE. NOTE: Using :read-write is slower than the others. If you can, use them instead."
@@ -99,7 +120,7 @@
   "Release the pointer given by map-buffer. NOTE: THIS TAKES THE BUFFER OBJECT, NOT THE POINTER! ALSO, DON'T TRY TO RELASE THE POINTER."
   (gl:unmap-buffer (target this))
   (gl:bind-texture  :texture-2d (tex-id this))
-  (gl:Tex-Image-2D :texture-2d 0 :rgba  (width this) (height this) 0 :bgra (cffi-type->gl-type (qtype this)) (cffi:null-pointer))
+  (gl:Tex-Image-2D :texture-2d 0 (internal-format this)  (width this) (height this) 0 :bgra (cffi-type->gl-type (qtype this)) (cffi:null-pointer))
   
   (gl:bind-texture :texture-2d 0)
   (gl:bind-buffer (target this) 0))

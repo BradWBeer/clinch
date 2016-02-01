@@ -40,6 +40,26 @@
 				       undefs)
   "Create the shader. Currently there is no way to change the shader. You must make a new one."
 
+  (build-shader this :name name
+		:vertex-shader-text vertex-shader-text
+		:fragment-shader-text fragment-shader-text
+		:geometry-shader-text geometry-shader-text
+		:attributes attributes
+		:uniforms uniforms
+		:defines defines
+		:undefs undefs))
+
+
+(defmethod build-shader ((this shader) &key
+					 name
+					 vertex-shader-text
+					 fragment-shader-text
+					 geometry-shader-text
+					 attributes
+					 uniforms
+					 defines
+					 undefs)
+
   (with-slots ((vs vert-shader)
   	       (fs frag-shader)
 	       (geo geo-shader)
@@ -51,9 +71,15 @@
 				      (format nil "~{#define ~A~%~}" defines)
 				      (format nil "~{#undef ~A~%~}" undefs)
 				      vertex-shader-text))
-    (print "Compiling vertex shader...")
+
+    (if program (unload this))
+    
     (gl:compile-shader vs)
-    (print (gl:get-shader-info-log vs))
+
+    (let ((log (gl:get-shader-info-log vs)))
+      (unless (string-equal log "")
+	(format t "Shader Log: ~A~%" log)))
+    
     (unless (gl:get-shader vs :compile-status)
       (error "Could not compile vertex shader!"))
 
@@ -62,9 +88,14 @@
 					(format nil "~{#define ~A~%~}" defines)
 					(format nil "~{#undef ~A~%~}" undefs)
 					fragment-shader-text))
-    (print "Compiling fragment shader...")
+
     (gl:compile-shader fs)
-    (print (gl:get-shader-info-log fs))
+    
+    (let ((log (gl:get-shader-info-log fs)))
+      (unless (string-equal log "")
+	(format t "Shader Log: ~A~%" log)))
+
+
     (unless (gl:get-shader fs :compile-status)
       (error "Could not compile fragment shader!"))
 
@@ -74,13 +105,15 @@
 					  (format nil "~{#define ~A~%~}" defines)
 					  (format nil "~{#undef ~A~%~}" undefs)
 					  geometry-shader-text))
-      (print "Compiling geometry shader...")
+
       (gl:compile-shader geo)
-      (print (gl:get-shader-info-log geo))
+      
+      (let ((log (gl:get-shader-info-log geo)))
+	(unless (string-equal log "")
+	  (format t "Shader Log: ~A~%" log)))
+
       (unless (gl:get-shader geo :compile-status)
 	(error "Could not compile geometry shader!")))
-
-
 
     (setf program (gl:create-program))
     ;; You can attach the same shader to multiple different programs.
@@ -100,20 +133,24 @@
     (when attributes
 
       (loop for (name type) in attributes
-	   do (setf (gethash name (slot-value this 'attributes))
-		    (cons type
-			  (gl:get-attrib-location program name)))))
-      
+	 for location = (gl:get-attrib-location program name)
+	 if (>= location 0)
+	 do (setf (gethash name (slot-value this 'attributes))
+		  (cons type location))
+	   else do (format t "could not find attribute ~A!~%" name)))
+	         
 
     (when uniforms
       (loop for (name type) in uniforms
+	 for location = (gl:Get-Uniform-Location program name)
+	 if (>= location 0)
 	 do (setf (gethash name (slot-value this 'uniforms))
-		  (cons type
-			(gl:Get-Uniform-Location program name)))))
-      
+		  (cons type location))
+	 else do (format t "could not find uniform ~A!~%" name)))
+			
 
     (when name (setf (slot-value this 'name) name))))
-
+  
 
 (defmethod use-shader ((this shader) &key)
   "Start using the shader."
@@ -121,20 +158,24 @@
 
 (defmethod get-uniform-id ((this shader) uniform)
   "Shaders pass information by using named values called Uniforms and Attributes. This gets the gl id of a uniform name."
-  (gethash uniform
-	 (slot-value this 'uniforms)))
+  (let ((id (gethash uniform
+		     (slot-value this 'uniforms))))
+    (when (and id (>= (cdr id) 0)) id)))
 
 (defmethod get-attribute-id ((this shader) attribute)
   "Shaders pass information by using named values called Uniforms and Attributes. This gets the gl id of a attribute name."
-  (gethash attribute
-	   (slot-value this 'attributes)))
+  (let ((id (gethash attribute
+		     (slot-value this 'attributes))))
+    (when (and id
+	       (>= (cdr id) 0))
+	       id)))
 
 
 (defmethod attach-uniform ((this shader) (uniform string) value)
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
   (let ((ret (get-uniform-id this uniform)))
-
-    (when ret 
+    
+    (when ret
       (destructuring-bind (type . id) ret
 	
 	(let ((f (case type
@@ -143,7 +184,7 @@
 		   (:matrix (lambda (id value)
 			      (gl:uniform-matrix id 2 (cond
 							((arrayp value) value)
-							((typep value 'node) (transform
+							((typep value 'node) (current-transform
 									      value))
 							(t (error "Unknown Type in attach-uniform!")))))))))
 	  
@@ -152,18 +193,25 @@
 	      (apply f id value)
 	      (apply f id (list value))))))))
     
-    (defmethod attach-uniform ((this shader) (uniform string) (matrix array))
+(defmethod attach-uniform ((this shader) (uniform string) (matrix array))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
 
-  (destructuring-bind (type . id) (get-uniform-id this uniform)
-    (gl:uniform-matrix id 4 matrix)))
-
+  (let ((ret (get-uniform-id this uniform)))
+    (when ret 
+      (destructuring-bind (type . id) ret
+	
+	(gl::with-foreign-matrix (foreign-matrix matrix)
+	  (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
+    
 (defmethod attach-uniform ((this shader) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
 
-  (destructuring-bind (type . id) (get-uniform-id this uniform)
-    (gl:uniform-matrix id 4 (transform matrix))))
-
+  (let ((ret (get-uniform-id this uniform)))
+    (when ret 
+      (destructuring-bind (type . id) ret
+	
+	(gl::with-foreign-matrix (foreign-matrix (clinch:current-transform matrix))
+	  (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
 
 
 (defmethod bind-static-values-to-attribute ((this shader) name &rest vals)
@@ -177,7 +225,6 @@
 (defmethod unload ((this shader) &key)
   "Unloads and releases all shader resources."
 
-  (format t "Unloading shader!!!~%")
   (with-slots ((vs vert-shader)
 	       (fs frag-shader)
 	       (geo geo-shader)
