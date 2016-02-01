@@ -21,6 +21,7 @@
 	       (:file "shaders")
 	       (:file "shader-program")
 	       (:file "buffer")
+	       (:file "index-buffer")
 	       (:file "texture")
 	       (:file "entity")
 	       (:file "viewport")
