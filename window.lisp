@@ -271,7 +271,7 @@ working while cepl runs"
 	   (sdl2:gl-swap-window win)
 
 	   ;; Doesn this make any sense here?
-	   ;;(update-swank)
+	   (update-swank)
 	   )
     
     (:quit ()

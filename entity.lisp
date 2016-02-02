@@ -16,6 +16,14 @@
     :initform nil
     :initarg :values
     :reader render-values)
+   (uniforms 
+    :initform nil
+    :initarg :uniforms 
+    :reader uniforms)
+   (attributes
+    :initform nil
+    :initarg :attributes
+    :reader attributes)
    (enabled
     :accessor enabled
     :initform t
@@ -37,6 +45,34 @@
   "Sets the index array."
   (sdl2:in-main-thread ()
     (setf (slot-value this 'indexes) new-value)))
+
+(defmethod attribute ((this entity) name)
+  (assoc name (attributes this) :test #'equal))
+
+(defmethod (setf attribute) (new-value (this entity) name)
+  (with-slots ((attr attributes)) this
+
+    (if (null new-value)
+	(setf attr (remove-if (lambda (x) (equal (car x) name)) attr))
+	(let ((item (assoc name attr :test #'equal)))
+	  (if item
+	      (setf (cdr item) new-value)
+	      (setf attr (acons name new-value attr))))))
+  new-value)
+
+(defmethod uniform ((this entity) name)
+  (assoc name (uniforms this) :test #'equal))
+
+(defmethod (setf uniform) (new-value (this entity) name)
+  (with-slots ((uni uniforms)) this
+
+    (if (null new-value)
+	(setf uni (remove-if (lambda (x) (equal (car x) name)) uni))
+	(let ((item (assoc name uni :test #'equal)))
+	  (if item
+	      (setf (cdr item) new-value)
+	      (setf uni (acons name new-value uni))))))
+  new-value)
 
 (defmethod (setf render-values) (new-value (this entity))
   "Sets all the render values. Be sure the use the correct format."
@@ -68,7 +104,7 @@
 	   (let ((loc (render-value-location lst name)))
 	     (if loc
 		 (sdl2:in-main-thread ()
-		 (setf (third (nth loc lst)) new-value)))))))
+		   (setf (third (nth loc lst)) new-value)))))))
     ret))
 
 (defmethod get-primitive ((this entity) name)
