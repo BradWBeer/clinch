@@ -47,9 +47,11 @@
     (setf (slot-value this 'indexes) new-value)))
 
 (defmethod attribute ((this entity) name)
+  "Returns an attribute by name. Should work with numbers and strings."
   (assoc name (attributes this) :test #'equal))
 
 (defmethod (setf attribute) (new-value (this entity) name)
+  "Sets an attribute's value. If the name doesn't exist, it's added. If the new value is nil, the entry is deleted."
   (with-slots ((attr attributes)) this
 
     (if (null new-value)
@@ -61,9 +63,11 @@
   new-value)
 
 (defmethod uniform ((this entity) name)
+  "Returns a uniform by name. Should work with numbers and strings."
   (assoc name (uniforms this) :test #'equal))
 
 (defmethod (setf uniform) (new-value (this entity) name)
+  "Sets a uniform's value. If the name doesn't exist, it's added. If the new value is nil, the entry is deleted."
   (with-slots ((uni uniforms)) this
 
     (if (null new-value)
