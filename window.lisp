@@ -138,7 +138,12 @@ working while cepl runs"
 
   (format t "Opening game controllers. ~A ~%"
 	  (sdl2-ffi.functions::sdl-game-controller-add-mappings-from-rw
-	   (sdl2::sdl-rw-from-file  "gamecontrollerdb.txt" "rw") 1))
+	   (sdl2::sdl-rw-from-file 
+	    (concatenate 'string 
+			 (directory-namestring
+			  (asdf:system-relative-pathname :clinch "clinch.asd"))
+			 "SDL_GameControllerDB/gamecontrollerdb.txt")
+	    "rw") 1))
   (finish-output)
   ;; open any game controllers
 
