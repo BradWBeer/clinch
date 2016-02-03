@@ -279,7 +279,7 @@ working while cepl runs"
 	   t)))
 
 
-(defun init (&optional
+(defun init (&key
 	       (asynchronous t) 
 	       (width 800)
 	       (height 600)
@@ -300,47 +300,47 @@ working while cepl runs"
  Use ! (wait and return a value from main thread) or 
  Use !! (return immediately with a nil."
   (if asynchronous 
-      (bordeaux-threads:make-thread (lambda ()
-				  (_init asynchronous
-					 width 
-					 height 
-					 title 
-					 fullscreen
-					 no-frame
-					 alpha-size
-					 depth-size 
-					 stencil-size 
-					 red-size 
-					 green-size 
-					 blue-size 
-					 buffer-size
-					 double-buffer
-					 hidden 
-					 resizable))
-				:name "Main Clank Thread"
-				:initial-bindings
-				(cons (cons '*standard-output* *standard-output* )
-				      (cons (cons '*standard-input* *standard-input*)
-					    bordeaux-threads:*default-special-bindings*)))
-      (_init asynchronous
-	     width 
-	     height 
-	     title 
-	     fullscreen
-	     no-frame
-	     alpha-size
-	     depth-size 
-	     stencil-size 
-	     red-size 
-	     green-size 
-	     blue-size 
-	     buffer-size
-	     double-buffer
-	     hidden 
-	     resizable)))
+      (bordeaux-threads:make-thread
+       (lambda ()
+	 (_init :asynchronous asynchronous
+		:width width 
+		:height height 
+		:title title 
+		:fullscreen fullscreen
+		:no-frame no-frame
+		:alpha-size alpha-size
+		:depth-size depth-size 
+		:stencil-size stencil-size 
+		:red-size red-size 
+		:green-size green-size 
+		:blue-size blue-size 
+		:buffer-size buffer-size
+		:double-buffer double-buffer
+		:hidden hidden 
+		:resizable resizable))
+       :name "Main Clank Thread"
+       :initial-bindings
+       (cons (cons '*standard-output* *standard-output* )
+	     (cons (cons '*standard-input* *standard-input*)
+		   bordeaux-threads:*default-special-bindings*)))
+      (_init :asynchronous asynchronous
+	     :width width 
+	     :height height 
+	     :title title 
+	     :fullscreen fullscreen
+	     :no-frame no-frame
+	     :alpha-size alpha-size
+	     :depth-size depth-size 
+	     :stencil-size stencil-size 
+	     :red-size red-size 
+	     :green-size green-size 
+	     :blue-size blue-size 
+	     :buffer-size buffer-size
+	     :double-buffer double-buffer
+	     :hidden hidden 
+	     :resizable resizable)))
 
-
-(defun _init (&optional
+(defun _init (&key
 		(asynchronous t) 
 		(width 800)
 		(height 600)
@@ -379,7 +379,7 @@ working while cepl runs"
 		(finish-output)
 		(init-controllers)
 
-		(sdl2:with-window (win :w width :h height ;;; :title title
+		(sdl2:with-window (win :w width :h height :title title
 				       :flags `(:shown :opengl :resizable
 						       ,@(remove nil `(:shown :opengl
 									      ,(when fullscreen :fullscreen-desktop)
