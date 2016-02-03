@@ -175,7 +175,7 @@ working while cepl runs"
 	  (format t "sdl2:game-controller-close~%")
 	  (sdl2:game-controller-close controller))))
 
-(defun main-loop (win gl-context w h)
+(defun main-loop (win gl-context w h &optional asynchronous)
   ;;(declare (optimize (speed 3)))
 
   (fire *next*)
@@ -276,7 +276,7 @@ working while cepl runs"
 	   (sdl2:gl-swap-window win)
 
 	   ;; Doesn this make any sense here?
-	   (update-swank)
+	   (unless asynchronous (update-swank))
 	   )
     
     (:quit ()
@@ -284,7 +284,8 @@ working while cepl runs"
 	   t)))
 
 
-(defun init (&optional
+(defun init (&key
+	       (asynchronous t) 
 	       (width 800)
 	       (height 600)
 	       (title "Clank")
@@ -302,31 +303,50 @@ working while cepl runs"
 	       (resizable :resizable))
   "Creates Clinch's window in it's own thread. 
  Use ! (wait and return a value from main thread) or 
- Use !! (return immediately with a nil"
-  (bordeaux-threads:make-thread (lambda ()
-				  (_init width 
-					 height 
-					 title 
-					 fullscreen
-					 no-frame
-					 alpha-size
-					 depth-size 
-					 stencil-size 
-					 red-size 
-					 green-size 
-					 blue-size 
-					 buffer-size
-					 double-buffer
-					 hidden 
-					 resizable))
-				:name "Main Clank Thread"
-				:initial-bindings
-				(cons (cons '*standard-output* *standard-output* )
-				      (cons (cons '*standard-input* *standard-input*)
-					    bordeaux-threads:*default-special-bindings*))))
+ Use !! (return immediately with a nil."
+  (if asynchronous 
+      (bordeaux-threads:make-thread
+       (lambda ()
+	 (_init :asynchronous asynchronous
+		:width width 
+		:height height 
+		:title title 
+		:fullscreen fullscreen
+		:no-frame no-frame
+		:alpha-size alpha-size
+		:depth-size depth-size 
+		:stencil-size stencil-size 
+		:red-size red-size 
+		:green-size green-size 
+		:blue-size blue-size 
+		:buffer-size buffer-size
+		:double-buffer double-buffer
+		:hidden hidden 
+		:resizable resizable))
+       :name "Main Clank Thread"
+       :initial-bindings
+       (cons (cons '*standard-output* *standard-output* )
+	     (cons (cons '*standard-input* *standard-input*)
+		   bordeaux-threads:*default-special-bindings*)))
+      (_init :asynchronous asynchronous
+	     :width width 
+	     :height height 
+	     :title title 
+	     :fullscreen fullscreen
+	     :no-frame no-frame
+	     :alpha-size alpha-size
+	     :depth-size depth-size 
+	     :stencil-size stencil-size 
+	     :red-size red-size 
+	     :green-size green-size 
+	     :blue-size blue-size 
+	     :buffer-size buffer-size
+	     :double-buffer double-buffer
+	     :hidden hidden 
+	     :resizable resizable)))
 
-
-(defun _init (&optional
+(defun _init (&key
+		(asynchronous t) 
 		(width 800)
 		(height 600)
 		(title "Clank")
@@ -364,7 +384,7 @@ working while cepl runs"
 		(finish-output)
 		(init-controllers)
 
-		(sdl2:with-window (win :w width :h height ;;; :title title
+		(sdl2:with-window (win :w width :h height :title title
 				       :flags `(:shown :opengl :resizable
 						       ,@(remove nil `(:shown :opengl
 									      ,(when fullscreen :fullscreen-desktop)
@@ -399,7 +419,7 @@ working while cepl runs"
 		    (format t "Beginning main loop.~%")
 		    (finish-output)
 
-		    (main-loop win gl-context width height)
+		    (main-loop win gl-context width height asynchronous)
 		    (unload-all-uncollected)
 		    (setf *running* nil
 			  *inited* nil))))))))))
