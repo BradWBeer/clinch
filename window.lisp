@@ -170,7 +170,7 @@ working while cepl runs"
 	  (format t "sdl2:game-controller-close~%")
 	  (sdl2:game-controller-close controller))))
 
-(defun main-loop (win gl-context w h)
+(defun main-loop (win gl-context w h &optional asynchronous)
   ;;(declare (optimize (speed 3)))
 
   (fire *next*)
@@ -271,7 +271,7 @@ working while cepl runs"
 	   (sdl2:gl-swap-window win)
 
 	   ;; Doesn this make any sense here?
-	   ;;(update-swank)
+	   (unless asynchronous (update-swank))
 	   )
     
     (:quit ()
@@ -280,6 +280,7 @@ working while cepl runs"
 
 
 (defun init (&optional
+	       (asynchronous t) 
 	       (width 800)
 	       (height 600)
 	       (title "Clank")
@@ -297,9 +298,11 @@ working while cepl runs"
 	       (resizable :resizable))
   "Creates Clinch's window in it's own thread. 
  Use ! (wait and return a value from main thread) or 
- Use !! (return immediately with a nil"
-  (bordeaux-threads:make-thread (lambda ()
-				  (_init width 
+ Use !! (return immediately with a nil."
+  (if asynchronous 
+      (bordeaux-threads:make-thread (lambda ()
+				  (_init asynchronous
+					 width 
 					 height 
 					 title 
 					 fullscreen
@@ -318,10 +321,27 @@ working while cepl runs"
 				:initial-bindings
 				(cons (cons '*standard-output* *standard-output* )
 				      (cons (cons '*standard-input* *standard-input*)
-					    bordeaux-threads:*default-special-bindings*))))
+					    bordeaux-threads:*default-special-bindings*)))
+      (_init asynchronous
+	     width 
+	     height 
+	     title 
+	     fullscreen
+	     no-frame
+	     alpha-size
+	     depth-size 
+	     stencil-size 
+	     red-size 
+	     green-size 
+	     blue-size 
+	     buffer-size
+	     double-buffer
+	     hidden 
+	     resizable)))
 
 
 (defun _init (&optional
+		(asynchronous t) 
 		(width 800)
 		(height 600)
 		(title "Clank")
@@ -394,7 +414,7 @@ working while cepl runs"
 		    (format t "Beginning main loop.~%")
 		    (finish-output)
 
-		    (main-loop win gl-context width height)
+		    (main-loop win gl-context width height asynchronous)
 		    (unload-all-uncollected)
 		    (setf *running* nil
 			  *inited* nil))))))))))

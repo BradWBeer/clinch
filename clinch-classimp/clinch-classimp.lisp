@@ -93,9 +93,8 @@
 
 
 (defun make-index-buffer (v)
-  (let* ((len (* (length v) (length (elt v 0))))
-    (vector (cffi:make-shareable-byte-vector len)))
-    (cffi:with-pointer-to-vector-data (p vector)
+  (let* ((len (* (length v) (length (elt v 0)))))
+    (cffi:with-foreign-object (p :unsigned-int len)
       (loop 
 	 for i from 0 below (length v)
 	 do (loop 
@@ -103,7 +102,7 @@
 	       for j from 0 below 3
 	       do (setf (cffi:mem-aref p :int (+ (* 3 i) j))
 			(elt tuple j))))
-
+      
       (make-instance 'index-buffer
 		     :data p
 		     :count len
@@ -112,9 +111,8 @@
 
 (defun make-vector-buffer (v &key stride)
   (let* ((stride (or stride (length (elt v 0))))
-	 (len (* (length v)))
-	 (vector (cffi:make-shareable-byte-vector len)))
-    (cffi:with-pointer-to-vector-data (p vector)
+	 (len (* (length v) stride)))
+    (cffi:with-foreign-object (p :float len)
       (loop 
 	 for i from 0 below (length v)
 	 do (loop 
