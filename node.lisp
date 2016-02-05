@@ -104,7 +104,8 @@
 
     (let ((current-transform
 	   (cond ((and parent (typep parent 'node)) (m4:m* (transform this) (transform parent)))
-		 ((and parent (arrayp parent)) (m4:m* (transform this) parent)))))
+		 ((and parent (arrayp parent)) (m4:m* (transform this) parent))
+		 (t (transform this)))))
     
     (loop for i in (children this)
        do (render i :parent current-transform :projection projection)))))

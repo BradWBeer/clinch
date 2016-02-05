@@ -10,14 +10,17 @@
      :processing-flags '(:ai-Process-Triangulate :ai-Process-Join-Identical-Vertices :ai-Process-Sort-By-P-Type))))
 
 
-(defun translate-node-to-clinch (node) 
+(defun translate-node-to-clinch (node entities) 
   (make-instance 'node 
 		 :matrix (classimp:transform node)
 		 :children (append 
-			    (coerce (classimp:meshes node) 'list)
+			    (map 'list
+				 (lambda (x)
+				   (nth x entities))
+				 (coerce (classimp:meshes node) 'list))
 			    (reverse (map 'list 
 					  (lambda (x)
-					    (translate-node x))
+					    (translate-node-to-clinch x entities))
 					  (classimp:children node))))))
 
 (defun get-base-path (file)
