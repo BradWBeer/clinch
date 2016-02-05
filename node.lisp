@@ -17,6 +17,8 @@
    (r-matrix :initform nil)
    (s-matrix :initform nil)
    (transform :initform nil)
+   (current-transform :initform nil
+		      :reader current-transform)
    (enabled
     :accessor enabled
     :initform t
@@ -99,16 +101,26 @@
 (defmethod render ((this node) &key parent projection)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (enabled this)
+
+    (let ((current-transform
+	   (cond ((and parent (typep parent 'node)) (m4:m* (transform this) (transform parent)))
+		 ((and parent (arrayp parent)) (m4:m* (transform this) parent)))))
     
     (loop for i in (children this)
-       do (render i :parent this :projection projection))))
+       do (render i :parent current-transform :projection projection)))))
 
 (defmethod render ((this list) &key parent projection)
   "Render a list of rendables."
   (when (enabled this)
-        
-    (loop for i in this
-       do (render i :parent parent :projection projection))))
+
+    (let ((current-transform
+	   (cond ((and parent (typep parent 'node)) (m4:m* (transform this) (transform parent)))
+		 ((and parent (arrayp parent)) (m4:m* (transform this) parent)))))
+      
+      (loop for i in this
+	 do (progn 
+	      (when (arrayp i) (setf current-transform (m4:m* i current-transform)))
+	      (render i :parent current-transform :projection projection))))))
 
 (defmethod (setf translation) (trans (this node))
   "Sets the translation vector."
