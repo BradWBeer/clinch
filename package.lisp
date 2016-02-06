@@ -4,7 +4,7 @@
 (defpackage #:clinch
   (:use #:cl)
   ;;(:shadow )
-  (:import-from :cl-game-math.base-vectors :v!)
+  (:import-from :rtg-math.vectors :v!)
   (:export
    #:*uncollected*
    #:defevent

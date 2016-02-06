@@ -169,10 +169,10 @@
 								      ((eql value :projection-1) (m4:affine-inverse projection))
 								      ((eql value :normal) (typecase parent
 											     (node
-											      (m4:to-matrix3 
+											      (m4:to-mat3 
 											       (m4:transpose
 												(m4:affine-inverse (transform parent)))))
-											     (array (m4:to-matrix3 
+											     (array (m4:to-mat3 
 												     (m4:transpose
 												      (m4:affine-inverse parent))))
 											     (t (m4:identity))))

@@ -32,12 +32,12 @@
   "Decomposes a matrix into it's position vector3, rotation quaterion and scaling vector3.
    Useful for creating/updating the node object."
   (let* ((rot (q:normalize
-	      (q:make-quat-from-rotation-matrix3
-	       (m4:to-matrix3 m))))
+	      (q:from-mat3
+	       (m4:to-mat3 m))))
 	 (pos (subseq (m4:get-column m 3) 0 3))
-	 (scale (m4:m*
+	 (scale (m4:*
 		 (m4:affine-inverse
-		  (q:to-matrix4 rot)) m)))
+		  (q:to-mat4 rot)) m)))
     (values pos
 	    rot
 	    (clinch:v! (m:elm scale 0 0)

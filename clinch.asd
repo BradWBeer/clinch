@@ -12,7 +12,7 @@
 	       #:bordeaux-threads
 	       #:trivial-channels
 	       #:sdl2
-	       #:cl-game-math
+	       #:rtg-math
 	       #:swank)
   :components ((:file "package")
 	       (:file "clinch")

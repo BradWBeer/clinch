@@ -8,7 +8,7 @@
 	  :initform (v! 0 0 0)
 	  :initarg  :translation)
    (rot :reader rotation
-	:initform (q:identity-quat)
+	:initform (q:identity)
 	:initarg :rotation)
    (scale    :reader scaling
 	     :initform (v! 1 1 1)
@@ -103,8 +103,8 @@
   (when (enabled this)
 
     (let ((current-transform
-	   (cond ((and parent (typep parent 'node)) (m4:m* (transform this) (transform parent)))
-		 ((and parent (arrayp parent)) (m4:m* (transform this) parent))
+	   (cond ((and parent (typep parent 'node)) (m:* (transform this) (transform parent)))
+		 ((and parent (arrayp parent)) (m:* (transform this) parent))
 		 (t (transform this)))))
     
     (loop for i in (children this)
@@ -115,18 +115,18 @@
   (when (enabled this)
 
     (let ((current-transform
-	   (cond ((and parent (typep parent 'node)) (m4:m* (transform this) (transform parent)))
-		 ((and parent (arrayp parent)) (m4:m* (transform this) parent)))))
+	   (cond ((and parent (typep parent 'node)) (m:* (transform this) (transform parent)))
+		 ((and parent (arrayp parent)) (m:* (transform this) parent)))))
       
       (loop for i in this
 	 do (progn 
-	      (when (arrayp i) (setf current-transform (m4:m* i current-transform)))
+	      (when (arrayp i) (setf current-transform (m:* i current-transform)))
 	      (render i :parent current-transform :projection projection))))))
 
 (defmethod (setf translation) (trans (this node))
   "Sets the translation vector."
   (with-slots ((current trans)) this
-    (if (v:= trans current) current
+    (if (v3:= trans current) current
 	(progn
 	  (setf (slot-value this 't-matrix) nil
 		current trans)))))
@@ -140,7 +140,7 @@
 (defmethod (setf rotation) (rot (this node))
   "Sets the rotation quaterion."
   (with-slots ((current rot)) this
-    (if (v:= rot current) current
+    (if (v4:= rot current) current
 	(progn
 	  (setf (slot-value this 'r-matrix) nil
 		current rot)))))
@@ -149,13 +149,13 @@
   "Gets the rotation matrix."
   (or (slot-value this 'r-matrix)
       (setf (slot-value this 'r-matrix)
-	    (q:to-matrix4 
+	    (q:to-mat4 
 	     (rotation this)))))
 
 (defmethod (setf scaling) (scale (this node))
   "Sets the scaling vector."
   (with-slots ((current scale)) this
-    (if (v:= scale current) current
+    (if (v3:= scale current) current
 	(progn
 	  (setf (slot-value this 's-matrix) nil
 		current scale)))))
@@ -176,7 +176,7 @@
     (if (and scale rot trans transform)
 	transform
 	(setf transform
-	      (reduce #'m4:m* (list (or trans (translation-matrix this))
+	      (reduce #'m:* (list (or trans (translation-matrix this))
 				    (or rot   (rotation-matrix this))
 				    (or scale (scale-matrix this))))))))
 
@@ -184,8 +184,8 @@
   "Rotate the node. Takes a quaterion."
   (if modify 
       (setf (rotation this) 
-	    (q:q*quat rot (rotation this)))
-      (q:q*quat rot (rotation this))))
+	    (q:* rot (rotation this)))
+      (q:* rot (rotation this))))
 
 (defmethod translate ((this node) trans &key (modify t))
   "Translate the node. Takes a vector3."
@@ -206,9 +206,9 @@
   (if new-node
       (make-instance 'node
 		     :scale (v:* (scaling this) (scaling that))
-		     :rotation (q:q*quat (rotation this) (rotation that))
+		     :rotation (q:* (rotation this) (rotation that))
 		     :translation (v:+ (translation this) (translation that)))
-      (m4:m* (transform this)
+      (m:* (transform this)
 	     (transform that))))
 
 (defmethod inverse ((this node))

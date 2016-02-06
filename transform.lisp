@@ -44,7 +44,7 @@
 	(c (- (/ (+ far near) (- far near))))
 	(d (- (/ (* 2 far near) (- far near)))))
     
-    (m4:! (/ (* 2 near) (- right left)) 0.0 A 0.0
+    (rtg-math:m! (/ (* 2 near) (- right left)) 0.0 A 0.0
 		 0.0 (/ (* 2 near) (- top bottom)) B 0.0
 		 0.0 0.0 C D
 		 0.0 0.0 -1.0 0.0)))

@@ -4,15 +4,12 @@
 
 (defparameter *quad-mesh*  nil)
 (defparameter *texture-shader* nil)
-(defparameter *color-shader* nil)
 (defparameter *texture* nil)
 (defparameter *node* nil)
 (defparameter *projection* nil)
 (defparameter *viewport* nil)
 
 (defparameter *simple-texture-shader* nil)
-(defparameter *simple-color-shader* nil)
-
 
 (defun make-simple-texture-shader ()
   (or *simple-texture-shader*
@@ -60,7 +57,7 @@ out vec4 fragColor;
 				       ("v" :float)
 				       ))))))
 
-(defun init-common-structs ()
+(defun init ()
   (setf *quad-mesh*
 	(make-instance 'clinch:entity
 		       :indexes (make-instance 'clinch:index-buffer :data '(0 1 2 0 2 3))
@@ -102,49 +99,36 @@ out vec4 fragColor;
   (setf *node* (make-instance 'clinch:node :children (list *quad-mesh*)))
   (clinch:translate *node* (clinch:v! 0 0 -2)))
 
-(defun on-init ()
-  (init-common-structs)
+
+;; Next runs one time before the next on-idle.
+(clinch:defevent clinch:*next* ()
+  (init)
   (setf *viewport* (make-instance 'clinch:viewport))
   (gl:clear-color 0 0 1 0))
 
-(defun on-idle ()
-  
+(clinch:defevent clinch:*on-idle* ()
   (clinch:rotate *node*
-		 (q:make-quat-from-fixed-angles 0 0
-						(clinch:degrees->radians 2))) 
+		 (q:from-fixed-angles 0 0
+				      (clinch:degrees->radians 2))) 
   (gl:clear :color-buffer-bit :depth-buffer-bit)
-
   (clinch:render *node* :projection *projection*))
 
-(defun on-mouse-move (win mouse state x y xrel yrel ts)
-  ;;(format t "x:~A y:~A mouse:~A state:~A~%" x y mouse state)
-  )
-  
-(defun on-resize (win width height ts)
+(clinch:defevent clinch:*on-mouse-move* (win mouse state x y xrel yrel ts)
+  (format t "x:~A y:~A mouse:~A state:~A~%" x y mouse state))
+    
+(clinch:defevent clinch:*on-window-resized* (win width height ts)
   (format t "Resized: ~A ~A~%" width height)
   (clinch::quick-set *viewport* 0 0 width height)
-  ;;(setf *projection* sb-cga:+identity-matrix+)
   
-  ;;(setf *projection* (clinch:make-orthogonal-transform width height .25 1000))
   (setf *projection* (clinch::make-perspective-transform (clinch:degrees->radians 45)
 							 (/ width height) .1 1000))
   (clinch:render *viewport*))
 
-(defun wheel (win mouse x y ts)
+(clinch:defevent clinch:*on-mouse-wheel-move* (win mouse x y ts)
   (format t "win=~A mouse=~A x=~A y=~A ts=~A~%" win mouse x y ts)
   (clinch:translate *node* (clinch:v! 0 0 (/ y 1))))
 
-(setf clinch:*on-mouse-wheel-move* (lambda (win mouse x y ts)
-				     (wheel win mouse x y ts)))
-
-
-(setf clinch:*next* (lambda () (on-init)))
-(setf clinch:*on-idle* (lambda () (on-idle)))
-(setf clinch:*on-mouse-move* (lambda (win mouse state x y xrel yrel ts) (on-mouse-move win mouse state x y xrel yrel ts)))
-(setf clinch:*on-window-resized* (lambda (win width height ts)
-				  (on-resize win width height ts)))
-
-(clinch:init :asynchronous nil)
+(clinch:init :asynchronous t)
 
 (let ((vs t))
   (defun toggle-vsync ()
