@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass texture (buffer)
+(defclass texture ()
   ((tex-id
     :accessor tex-id
     :initform nil
@@ -32,6 +32,10 @@
     :reader Stride
     :initform 4
     :initarg :stride)
+   (Vertex-Count
+    :reader Vertex-Count
+    :initform nil
+    :initarg :count)
    (target
     :reader target
     :initform :pixel-unpack-buffer
@@ -42,7 +46,7 @@
  
 
 
-(defmethod initialize-instance :after ((this texture)
+(defmethod initialize-instance ((this texture)
 				       &key
 					 (wrap-s :repeat)
 					 (wrap-t :repeat)
@@ -50,7 +54,8 @@
 					 (min-filter :linear)
 					 depth-texture-mode
 					 texture-compare-mode
-					 texture-compare-function)
+					 texture-compare-function
+					 data)
     "Sets up a texture instance with gc finalizer. Do not depend on finalizers, release resources manually if you can.
       type:   cffi type NOTE: use :unsigned-int if you are creating an index buffer.
       id:     OpenGL buffer id
@@ -77,12 +82,10 @@
     (trivial-garbage:cancel-finalization this)
     (setf (gethash (key this) *uncollected*) this)
     (trivial-garbage:finalize this 
-			      (let ((id-value (id this))
-				    (tex-id-value tex-id)
+			      (let ((tex-id-value tex-id)
 				    (key (key this)))
 				(lambda () (sdl2:in-main-thread (:background t)
 					     (remhash key *uncollected*)
-					     (gl:delete-buffers (list id-value))
 					     (gl:delete-textures (list tex-id-value))))))
     
     (gl:bind-texture :texture-2d (tex-id this))
@@ -94,13 +97,19 @@
     (when depth-texture-mode (gl:Tex-Parameter :TEXTURE-2D :DEPTH-TEXTURE-MODE depth-texture-mode))
     (when texture-compare-mode (gl:Tex-Parameter :TEXTURE-2D :TEXTURE-COMPARE-MODE texture-compare-mode))
     (when texture-compare-function (gl:Tex-Parameter :TEXTURE-2D :TEXTURE-COMPARE-func texture-compare-function))
-    
-    (gl:bind-buffer (target this) (if (loaded? this)
-				      (id this) 
-				      0))
+
+    ;;(gl:bind-buffer (target this) 0)
+    ;; (gl:bind-buffer (target this) (if (loaded? this)
+    ;; 				      (id this) 
+    ;; 				      0))
+    ;; (gl:tex-image-2d :texture-2d 0 iformat w h 0 eformat
+    ;; 		     (cffi-type->gl-type dtype)
+    ;; 		     (cffi:null-pointer))
     (gl:tex-image-2d :texture-2d 0 iformat w h 0 eformat
 		     (cffi-type->gl-type dtype)
-		     (cffi:null-pointer))
+		     data)
+
+
     tex-id)))
     
     
@@ -115,11 +124,11 @@
 
 (defmethod bind ((this texture) &key )
   "Wrapper around glBindBuffer. Puts the texture into play."
-  (gl:bind-buffer (target this) (id this))
+  ;;(gl:bind-buffer (target this) (id this))
   (gl:bind-texture :texture-2d (tex-id this)))
 
 (defmethod unbind ((this texture) &key )
-  (gl:bind-buffer (target this) 0)
+  ;;(gl:bind-buffer (target this) 0)
   (gl:bind-texture :texture-2d 0))
 
 
@@ -152,8 +161,8 @@
   (gl:bind-texture  :texture-2d (tex-id this))
   (gl:Tex-Image-2D :texture-2d 0 (internal-format this)  (width this) (height this) 0 :bgra (cffi-type->gl-type (qtype this)) (cffi:null-pointer))
   
-  (gl:bind-texture :texture-2d 0)
-  (gl:bind-buffer (target this) 0)))
+  (gl:bind-texture :texture-2d 0)))
+  ;(gl:bind-buffer (target this) 0)))
 
 
 (defmethod bind-sampler ((this texture) shader-program name tex-unit)
@@ -163,7 +172,7 @@
   (gl:bind-texture :texture-2d (tex-id this)))
 
 
-(defmethod unload :before ((this texture) &key)
+(defmethod unload ((this texture) &key)
   "Unloads the texture. Also cancels gc finalization."
   (trivial-garbage:cancel-finalization this)
   (remhash (key this) *uncollected*)
