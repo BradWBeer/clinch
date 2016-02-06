@@ -85,7 +85,7 @@
    #:with-context-for-texture
 
    #:frame-buffer #:unbind
-   #:clear-color #:attribute #:init #:clean-up #:enable #:disable #:blend-func #:window-width #:window-height #:*parent*
+   #:clear-color #:attribute #:uniform #:init #:clean-up #:enable #:disable #:blend-func #:window-width #:window-height #:*parent*
 
    ))
 

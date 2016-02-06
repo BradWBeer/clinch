@@ -61,28 +61,28 @@ out vec4 fragColor;
   (setf *quad-mesh*
 	(make-instance 'clinch:entity
 		       :indexes (make-instance 'clinch:index-buffer :data '(0 1 2 0 2 3))
-		       :values   `((:attribute "v" ,(make-instance 'clinch:buffer 
-								   :Stride 3
-								   :data (map 'list (lambda (x)
-										      (coerce x 'single-float))
-									      '( -1   1 0
-										-1  -1 0
-										1  -1 0
-										1   1 0))))
-				   (:attribute "tc1" ,(make-instance 'clinch:buffer 
-								    :Stride 2
-								    :data (map 'list (lambda (x)
-										       (coerce x 'single-float))
-									       '(0.0   1.0
-										 0.0   0.0
-										 1.0   0.0
-										 1.0   1.0))))
-				   (:uniform "M" :model)
-				   (:uniform "P" :projection)
-				   (:uniform "ambientTexture" :int)
-				   (:uniform "ambientLight"   (.2 .2 .2))
-				   (:uniform "lightIntensity" (.8 .8 .8))
-				   (:uniform "lightDirection" (0.5772705 0.5772705 0.5772705)))))
+		       :attributes   `(("v" . ,(make-instance 'clinch:buffer 
+							      :Stride 3
+							      :data (map 'list (lambda (x)
+										 (coerce x 'single-float))
+									 '( -1   1 0
+									   -1  -1 0
+									   1  -1 0
+									   1   1 0))))
+				       ("tc1" . ,(make-instance 'clinch:buffer 
+								:Stride 2
+								:data (map 'list (lambda (x)
+										   (coerce x 'single-float))
+									   '(0.0   1.0
+									     0.0   0.0
+									     1.0   0.0
+									     1.0   1.0)))))
+		       :uniforms `(("M" . :model)
+				   ("P" . :projection)
+				   ("ambientTexture" . :int)
+				   ("ambientLight" . (.2 .2 .2))
+				   ("lightIntensity" . (.8 .8 .8))
+				   ("lightDirection" . (0.5772705 0.5772705 0.5772705)))))
   
   (make-simple-texture-shader)
   (setf *texture*
@@ -94,8 +94,7 @@ out vec4 fragColor;
 		       
   
   (setf (clinch:shader-program *quad-mesh*) *simple-texture-shader*)
-  (setf (clinch:render-value *quad-mesh* "ambientTexture") (lambda () *texture*))
-  (setf (clinch:render-value *quad-mesh* "ambientTexture") (lambda () *texture*))
+  (setf (clinch:uniform *quad-mesh* "ambientTexture") (lambda () *texture*))
   (setf *node* (make-instance 'clinch:node :children (list *quad-mesh*)))
   (clinch:translate *node* (clinch:v! 0 0 -2)))
 

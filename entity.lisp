@@ -48,7 +48,7 @@
 
 (defmethod attribute ((this entity) name)
   "Returns an attribute by name. Should work with numbers and strings."
-  (assoc name (attributes this) :test #'equal))
+  (cdr (assoc name (attributes this) :test #'equal)))
 
 (defmethod (setf attribute) (new-value (this entity) name)
   "Sets an attribute's value. If the name doesn't exist, it's added. If the new value is nil, the entry is deleted."
@@ -64,7 +64,7 @@
 
 (defmethod uniform ((this entity) name)
   "Returns a uniform by name. Should work with numbers and strings."
-  (assoc name (uniforms this) :test #'equal))
+  (cdr (assoc name (uniforms this) :test #'equal)))
 
 (defmethod (setf uniform) (new-value (this entity) name)
   "Sets a uniform's value. If the name doesn't exist, it's added. If the new value is nil, the entry is deleted."
@@ -151,41 +151,42 @@
 				shader-program)))
 	(use-shader-program current-shader-program)
 	
+	;; first attach attributes...
+	(loop for (name . value) in (attributes this)
+	   do (progn
+		(when (typep value 'function)
+		  (setf value (funcall value)))
+		(cond ((typep value 'buffer)
+		       (bind-buffer-to-attribute-array value current-shader-program name))
+		      (t (if (atom value)
+			     (bind-static-values-to-attribute current-shader-program name value)
+			     (bind-static-values-to-attribute current-shader-program name value))))))
+
 	(loop
 	   with tex-unit = 0
-	   for (atr-or-uni name value) in (render-values this)
-	   if (typep value 'function) do (setf value (funcall value))
-	   collect (progn
-		     (cond ((and (eql atr-or-uni :uniform)
-				 (typep value 'texture)) (prog1 (bind-sampler value current-shader-program name tex-unit) (incf tex-unit)))
-			   ((eql atr-or-uni :uniform)
-			    
-			    (attach-uniform current-shader-program name (cond ((eql value :projection) projection)
-								      ((eql value :Model)      (or parent (m4:identity)))
-								      ((eql value :model-1) (typecase parent
-											      (node (inverse parent))
-											      (array (m4:affine-inverse parent))
-											      (t (m4:identity))))
-								      ((eql value :projection-1) (m4:affine-inverse projection))
-								      ((eql value :normal) (typecase parent
-											     (node
-											      (m4:to-mat3 
-											       (m4:transpose
-												(m4:affine-inverse (transform parent)))))
-											     (array (m4:to-mat3 
-												     (m4:transpose
-												      (m4:affine-inverse parent))))
-											     (t (m4:identity))))
-								      (t value))))
-			   
-			   ((and (eql atr-or-uni :attribute)
-				 (typep value 'buffer)) 
-			    (bind-buffer-to-attribute-array value current-shader-program name))
-			   ((eql atr-or-uni :attribute) (if (atom value)
-							    (bind-static-values-to-attribute current-shader-program name value)
-							    (bind-static-values-to-attribute current-shader-program name value)))))))))
-
-  
+	   for (name . value) in (uniforms this)
+	   do (progn
+		(when (typep value 'function)
+		  (setf value (funcall value)))
+		(cond ((typep value 'texture) (prog1 (bind-sampler value current-shader-program name tex-unit) (incf tex-unit)))
+		      (t (attach-uniform current-shader-program name (cond ((eql value :projection) projection)
+									   ((eql value :Model)      (or parent (m4:identity)))
+									   ((eql value :model-1) (typecase parent
+												   (node (inverse parent))
+												   (array (m4:affine-inverse parent))
+												   (t (m4:identity))))
+									   ((eql value :projection-1) (m4:affine-inverse projection))
+									   ((eql value :normal) (typecase parent
+												  (node
+												   (m4:to-mat3 
+												    (m4:transpose
+												     (m4:affine-inverse (transform parent)))))
+												  (array (m4:to-mat3 
+													  (m4:transpose
+													   (m4:affine-inverse parent))))
+												  (t (m4:identity))))
+									   (t value))))))))))
+	
   (draw-with-index-buffer (indexes this)))
 
 (defmethod update ((this entity) &key parent matrix force)
