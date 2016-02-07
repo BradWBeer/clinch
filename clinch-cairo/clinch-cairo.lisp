@@ -30,20 +30,25 @@
        width-var:    The local variable name for the surface's width.
        height-var:   The local variable name for the surface's height.
        bits-var:     The local variable name for the texture's raw cffi data."
+  
+  (let ((m-texture (gensym))
+	(m-pbo (gensym)))
+    `(let ((,m-texture ,texture)
+	   (,m-pbo ,pbo))
 
-  `(clinch:with-mapped-buffer (,bits-var ,pbo ,rw)
-     (let* ((,width-var  (clinch:width  ,texture))
-	    (,height-var (clinch:height ,texture))
-	    (,surface-var (cairo:create-image-surface-for-data ,bits-var
-							       ,cairo-format
-							       ,width-var
-							       ,height-var
-							       (* ,width-var (stride ,texture)))))
-       (unwind-protect 
-	    (progn ,@body)
-	 (progn
-	   (pushg ,texture ,pbo)
-	   (cairo:destroy ,surface-var))))))
+       (clinch:with-mapped-buffer (,bits-var ,m-pbo ,rw)
+	 (let* ((,width-var  (clinch:width  ,m-texture))
+		(,height-var (clinch:height ,m-texture))
+		(,surface-var (cairo:create-image-surface-for-data ,bits-var
+								   ,cairo-format
+								   ,width-var
+								   ,height-var
+								   (* ,width-var (stride ,m-texture)))))
+	   (unwind-protect 
+		(progn ,@body)
+	     (progn
+	       (pushg ,texture ,m-pbo)
+	       (cairo:destroy ,surface-var))))))))
 
 
 (defmacro with-context-for-texture ((texture &key (rw :write-only)
@@ -68,9 +73,9 @@
 			      :width-var    ,width-var
 			      :height-var   ,height-var)
      (let ((,context-var (cairo:create-context ,surface-var)))
-	 (unwind-protect
-	      (progn ,@body))
-	 (cairo:destroy ,context-var))))
+       (unwind-protect
+	    (progn ,@body))
+       (cairo:destroy ,context-var))))
 
 
 (defmethod create-texture-from-png (path)
