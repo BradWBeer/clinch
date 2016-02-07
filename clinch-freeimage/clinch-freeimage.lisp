@@ -19,15 +19,21 @@
 
 
 
-(defmethod load-texture-from-file ((this texture) path &key)
+(defmethod load-texture-from-file ((this texture) path &key resize)
+  
   (freeimage:with-loaded-32bit-map (path
-   				    :width     (width this)
-   				    :height    (height this)
+   				    :width     (unless resize (width this))
+   				    :height    (unless resize (height this))
    				    :bitvar    src
    				    :widthvar  w
    				    :heightvar h)
-
-    (! (data-from-pointer this src))))
+    
+    
+    (!
+      (when resize
+       (setf (slot-value this 'width) w
+	     (slot-value this 'height) h))
+      (data-from-pointer this src))))
 
 
 ;; (defmethod load-pbo-from-file ((this pixel-buffer) path &key)

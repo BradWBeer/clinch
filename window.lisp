@@ -309,7 +309,7 @@ working while cepl runs"
       (bordeaux-threads:make-thread
        (lambda ()
 	 (_init :asynchronous asynchronous
-		:init-controllers nil
+		:init-controllers init-controllers
 		:width width 
 		:height height 
 		:title title 
@@ -331,7 +331,7 @@ working while cepl runs"
 	     (cons (cons '*standard-input* *standard-input*)
 		   bordeaux-threads:*default-special-bindings*)))
       (_init :asynchronous asynchronous
-	     :init-controllers nil
+	     :init-controllers init-controllers
 	     :width width 
 	     :height height 
 	     :title title 
