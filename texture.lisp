@@ -99,7 +99,7 @@
     tex-id)))
 		  
 
-(defmethod load-from-pointer ((this texture) pointer)
+(defmethod data-from-pointer ((this texture) pointer)
   (bind this)
   (gl:tex-image-2d :texture-2d 0
 		   (internal-format this)

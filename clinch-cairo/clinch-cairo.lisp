@@ -15,7 +15,7 @@
   (cairo:restore context))
 
 
-(defmacro with-surface-for-texture ((texture &key (rw :write-only)
+(defmacro with-surface-for-texture ((texture pbo &key (rw :write-only)
 					     (cairo-format :argb32)
 					     (surface-var 'cairo::*surface*)
 					     (width-var   (gensym))
@@ -31,7 +31,7 @@
        height-var:   The local variable name for the surface's height.
        bits-var:     The local variable name for the texture's raw cffi data."
 
-  `(clinch:with-mapped-buffer (,bits-var ,texture ,rw)
+  `(clinch:with-mapped-buffer (,bits-var ,pbo ,rw)
      (let* ((,width-var  (clinch:width  ,texture))
 	    (,height-var (clinch:height ,texture))
 	    (,surface-var (cairo:create-image-surface-for-data ,bits-var
@@ -41,7 +41,9 @@
 							       (* ,width-var (stride ,texture)))))
        (unwind-protect 
 	    (progn ,@body)
-	 (cairo:destroy ,surface-var)))))
+	 (progn
+	   (pushg ,texture ,pbo)
+	   (cairo:destroy ,surface-var))))))
 
 
 (defmacro with-context-for-texture ((texture &key (rw :write-only)
@@ -78,4 +80,4 @@
 	  (w (cairo:image-surface-get-width surf))
 	  (h (cairo:image-surface-get-height surf)))
       
-      (make-instance 'clinch:texture :width w :height h :stride 4 :count (* w h) :data bits :qtype :unsigned-char :target :pixel-unpack-buffer))))
+      (make-instance 'clinch:texture :width w :height h :stride 4 :count (* w h) :data bits :qtype :unsigned-char))))

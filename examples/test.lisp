@@ -1,6 +1,7 @@
 (ql:quickload :clinch)
 (ql:quickload :clinch-pango)
 (ql:quickload :clinch-freeimage)
+(ql:quickload :clinch-cairo)
 
 (defparameter *quad-mesh*  nil)
 (defparameter *texture-shader* nil)
@@ -86,7 +87,7 @@ out vec4 fragColor;
   
   (make-simple-texture-shader)
   (setf *texture*
-	(clinch::create-texture-from-file
+	(clinch::create-texture-from-png
 	 (concatenate 'string 
 		      (directory-namestring
 		       (asdf:system-relative-pathname :clinch "clinch.asd"))
