@@ -285,7 +285,8 @@ working while cepl runs"
 
 
 (defun init (&key
-	       (asynchronous t) 
+	       (asynchronous t)
+	       (init-controllers t)
 	       (width 800)
 	       (height 600)
 	       (title "Clank")
@@ -308,6 +309,7 @@ working while cepl runs"
       (bordeaux-threads:make-thread
        (lambda ()
 	 (_init :asynchronous asynchronous
+		:init-controllers nil
 		:width width 
 		:height height 
 		:title title 
@@ -329,6 +331,7 @@ working while cepl runs"
 	     (cons (cons '*standard-input* *standard-input*)
 		   bordeaux-threads:*default-special-bindings*)))
       (_init :asynchronous asynchronous
+	     :init-controllers nil
 	     :width width 
 	     :height height 
 	     :title title 
@@ -346,7 +349,8 @@ working while cepl runs"
 	     :resizable resizable)))
 
 (defun _init (&key
-		(asynchronous t) 
+		(asynchronous t)
+		(init-controllers t)
 		(width 800)
 		(height 600)
 		(title "Clank")
@@ -382,7 +386,7 @@ working while cepl runs"
 			sdl2-ffi:+sdl-minor-version+
 			sdl2-ffi:+sdl-patchlevel+)
 		(finish-output)
-		(init-controllers)
+		(when init-controllers (init-controllers))
 
 		(sdl2:with-window (win :w width :h height :title title
 				       :flags `(:shown :opengl :resizable
@@ -430,6 +434,6 @@ working while cepl runs"
       (setf *running* nil
 	    *inited* nil)
 
-    (uninit-controllers) 
+      (uninit-controllers) 
     (sdl2:push-event :quit)))
 

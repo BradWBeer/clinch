@@ -14,8 +14,7 @@
 		   :height h
 		   :stride 4
 		   :count  (* w h)
-		   :qtype  :unsigned-char
-		   :target :pixel-unpack-buffer)))
+		   :qtype  :unsigned-char)))
 
 
 
@@ -27,13 +26,19 @@
    				    :bitvar    src
    				    :widthvar  w
    				    :heightvar h)
-    
-    (bind this)
-    (%gl:Buffer-Data (target this)
-		     (* (get-size this) (cffi:foreign-type-size (qtype this)))
-		     src
-		     (usage this))
-    (setf (loaded? this) t)))
+
+    (! (data-from-pointer this src))))
+
+
+;; (defmethod load-pbo-from-file ((this pixel-buffer) path &key)
+;;   (freeimage:with-loaded-32bit-map (path
+;;    				    :width     (width this)
+;;    				    :height    (height this)
+;;    				    :bitvar    src
+;;    				    :widthvar  w
+;;    				    :heightvar h)
+
+;;     (data-from-pointer this src)))
 
 
 (defun load-animation (path)

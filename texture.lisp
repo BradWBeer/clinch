@@ -1,7 +1,7 @@
 ;;;; texture.lisp
 ;;;; Please see the licence.txt for the CLinch 
 
-(in-package #:clinch)
+(in-package #:clinch)  
 
 (defclass texture ()
   ((tex-id
@@ -36,18 +36,15 @@
     :reader Vertex-Count
     :initform nil
     :initarg :count)
-   (target
-    :reader target
-    :initform :pixel-unpack-buffer
-    :initarg :target)
    (key :initform (gensym "texture")
 	:reader key))
-    (:documentation "Creates and keeps track of a texture object and its buffer (shared memory with gpu, sort of)."))
+    (:documentation "Creates and keeps track of a texture object. Can be used with a pixelbuffer to speed things up."))
  
 
 
-(defmethod initialize-instance ((this texture)
+(defmethod initialize-instance :after ((this texture)
 				       &key
+					 (PBO nil)
 					 (wrap-s :repeat)
 					 (wrap-t :repeat)
 					 (mag-filter :linear)
@@ -61,7 +58,6 @@
       id:     OpenGL buffer id
       vcount: vertex count (or number of tuples if not using vertexes)
       stride: The number of values in each pixel.
-      target: OpenGL buffer target. If you use this, think about subclassing. For more info lookup glBindBuffer().
       usage:  Tells OpenGL how often you wish to access the buffer. 
       loaded: Has data been put into the buffer. Buffers without data is just future storage, just be sure to set it before you use it.
       format: The OpenGL Format of the Color Data. blue-green-red-alpha is default and prefered for simplicity.
@@ -72,7 +68,6 @@
   (with-slots ((tex-id tex-id)
 	       (w width)
 	       (h height)
-	       (this-target target)
 	       (dtype type)
 	       (eformat data-format)
 	       (iformat internal-format)) this
@@ -98,20 +93,23 @@
     (when texture-compare-mode (gl:Tex-Parameter :TEXTURE-2D :TEXTURE-COMPARE-MODE texture-compare-mode))
     (when texture-compare-function (gl:Tex-Parameter :TEXTURE-2D :TEXTURE-COMPARE-func texture-compare-function))
 
-    ;;(gl:bind-buffer (target this) 0)
-    ;; (gl:bind-buffer (target this) (if (loaded? this)
-    ;; 				      (id this) 
-    ;; 				      0))
-    ;; (gl:tex-image-2d :texture-2d 0 iformat w h 0 eformat
-    ;; 		     (cffi-type->gl-type dtype)
-    ;; 		     (cffi:null-pointer))
-    (gl:tex-image-2d :texture-2d 0 iformat w h 0 eformat
-		     (cffi-type->gl-type dtype)
-		     data)
-
-
+    (if PBO 
+	(pushg this pbo)
+	(data-from-pointer this data))
     tex-id)))
-    
+		  
+
+(defmethod load-from-pointer ((this texture) pointer)
+  (bind this)
+  (gl:tex-image-2d :texture-2d 0
+		   (internal-format this)
+		   (width this)
+		   (height this)
+		   0
+		   (data-format this)
+		   (cffi-type->gl-type (qtype this))
+		   pointer))
+
     
 (defmethod get-size ((this texture) &key)
   "Calculates the number of VALUES (stride * vcount) or (stride * width * height) this buffer contains."
@@ -119,50 +117,64 @@
      (if (and (vertex-count this) (not (zerop (vertex-count this))))
 	 (vertex-count this)
 	 (* (width this) (height this)))))
-     
 
+(defmethod size-in-bytes ((this texture))
+  "Calculates how many bytes this buffer consists of."
+  (* 
+   (get-size this)
+   (cffi:foreign-type-size (slot-value this 'type))))
 
 (defmethod bind ((this texture) &key )
   "Wrapper around glBindBuffer. Puts the texture into play."
-  ;;(gl:bind-buffer (target this) (id this))
   (gl:bind-texture :texture-2d (tex-id this)))
 
 (defmethod unbind ((this texture) &key )
-  ;;(gl:bind-buffer (target this) 0)
   (gl:bind-texture :texture-2d 0))
 
+(defmethod pushg ((this texture) (pbo pixel-buffer) &key)
+  (! 
+    (bind pbo)
+    (bind this)
+    (gl:Tex-Image-2D :texture-2d 0 (internal-format this)  (width this) (height this) 0 :bgra (cffi-type->gl-type (qtype this)) (cffi:null-pointer))
+    
+    (unbind this)
+    (unbind pbo)))
 
-(defmethod map-buffer ((this texture) &optional (access :READ-WRITE))
-  "Returns a pointer to the texture data. YOU MUST CALL UNMAP-BUFFER AFTER YOU ARE DONE!
-   Access options are: :Read-Only, :Write-Only, and :READ-WRITE. NOTE: Using :read-write is slower than the others. If you can, use them instead."
-  (bind this)
-  (gl:map-buffer (target this) access))
-
-(defmethod unmap-buffer ((this texture))
-  "Release the pointer given by map-buffer. NOTE: THIS TAKES THE BUFFER OBJECT, NOT THE POINTER! ALSO, DON'T TRY TO RELASE THE POINTER."
-  (gl:unmap-buffer (target this))
-  (gl:bind-texture  :texture-2d (tex-id this))
-  (gl:Tex-Image-2D :texture-2d 0 (internal-format this)  (width this) (height this) 0 :bgra (cffi-type->gl-type (qtype this)) (cffi:null-pointer))
+(defmethod make-pbo-for-texture ((this texture) &key (usage :static-draw) (target :pixel-unpack-buffer))
+  (!
+    (make-instance 'pixel-buffer
+		   :count (vertex-count this)
+		   :qtype (qtype this)
+		   :stride (stride this)
+		   :usage usage
+		   :target target)))
   
-  (gl:bind-texture :texture-2d 0)
-  (gl:bind-buffer (target this) 0))
+(defmethod pullg ((tex texture) &key)
+  (let ((arr (cffi:make-shareable-byte-vector (size-in-bytes tex))))
+    (cffi:with-pointer-to-vector-data (p arr)
+      (!
+	(bind tex)
+	(%gl:get-tex-image :texture-2d
+			   0 
+			 (data-format tex)
+			 (clinch::cffi-type->gl-type  (qtype tex))
+			 p))
+      arr)))
 
-(defmethod map-buffer-asynchronous ((this texture) &optional (access :READ-WRITE) (start 0) (end (size-in-bytes this)))
-  "Returns a pointer to the texture data. YOU MUST CALL UNMAP-BUFFER AFTER YOU ARE DONE!
-   Access options are: :Read-Only, :Write-Only, and :READ-WRITE. NOTE: Using :read-write is slower than the others. If you can, use them instead."
-  (sdl2:in-main-thread ()
-  (bind this)
-  (gl:map-buffer (target this) access)))
-
-(defmethod unmap-buffer-asynchronous ((this texture))
-  "Release the pointer given by map-buffer. NOTE: THIS TAKES THE BUFFER OBJECT, NOT THE POINTER! ALSO, DON'T TRY TO RELASE THE POINTER."
-  (sdl2:in-main-thread ()
-  (gl:unmap-buffer (target this))
-  (gl:bind-texture  :texture-2d (tex-id this))
-  (gl:Tex-Image-2D :texture-2d 0 (internal-format this)  (width this) (height this) 0 :bgra (cffi-type->gl-type (qtype this)) (cffi:null-pointer))
-  
-  (gl:bind-texture :texture-2d 0)))
-  ;(gl:bind-buffer (target this) 0)))
+(defmethod pushg ((tex texture) (data array) &key)
+  (cffi:with-pointer-to-vector-data (p data)
+    (! 
+      (bind tex)
+      (gl:tex-image-2d :texture-2d
+		       0
+		       (clinch::internal-format tex)
+		       (width tex)
+		       (height tex)
+		       0 
+		       (data-format tex)
+		       (clinch::cffi-type->gl-type (qtype tex))
+		       p)))
+  data)
 
 
 (defmethod bind-sampler ((this texture) shader-program name tex-unit)
@@ -180,9 +192,9 @@
     (gl:delete-textures (list (tex-id this)))))
 
 
-(defmacro with-mapped-texture ((name buffer &optional (access :READ-WRITE)) &body body)
-  "Convenience macro for mapping and unmapping the texture data.
-Name is the symbol name to use for the buffer pointer.
-Just a passthrough to with-mapped-buffer, but I keep forgetting to use with-mapped-buffer."
-  `(with-mapped-buffer (,name ,buffer ,access)
-     ,body))
+;; (defmacro with-mapped-texture ((name buffer &optional (access :READ-WRITE)) &body body)
+;;   "Convenience macro for mapping and unmapping the texture data.
+;; Name is the symbol name to use for the buffer pointer.
+;; Just a passthrough to with-mapped-buffer, but I keep forgetting to use with-mapped-buffer."
+;;   `(with-mapped-buffer (,name ,buffer ,access)
+;;      ,body))

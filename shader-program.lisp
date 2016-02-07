@@ -187,7 +187,7 @@
 		    (cons type location))
 	   else do (format t "could not find uniform ~A!~%" name))))))
 
-(defmethod pullg ((this shader-program))
+(defmethod pullg ((this shader-program) &key)
   (!
     (append
      (loop for i in (gl:get-attached-shaders (program this))

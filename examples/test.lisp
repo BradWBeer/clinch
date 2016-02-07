@@ -127,7 +127,7 @@ out vec4 fragColor;
   (format t "win=~A mouse=~A x=~A y=~A ts=~A~%" win mouse x y ts)
   (clinch:translate *node* (clinch:v! 0 0 (/ y 1))))
 
-(clinch:init :asynchronous t)
+(clinch:init :asynchronous t :init-controllers nil)
 
 (let ((vs t))
   (defun toggle-vsync ()

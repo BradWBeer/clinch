@@ -20,7 +20,7 @@
    (usage
     :accessor usage
     :initform :static-draw
-    :initarg usage)
+    :initarg :usage)
    (stride
     :reader Stride
     :initform 3
@@ -113,6 +113,15 @@
 	 (setf loaded? nil))))))
 
 
+(defmethod data-from-pointer ((this buffer) pointer)
+  (bind this)
+  (%gl:Buffer-Data (target this)
+		   (size-in-bytes this)
+		   pointer
+		   (usage this))
+  (unbind this))
+
+
 (defmethod bind ((this buffer) &key )
   "Wrapper around glBindBuffer. Binds this buffer for use."
   (gl:bind-buffer (target this) (id this)))
@@ -180,7 +189,6 @@
       
       (gl:disable-vertex-attrib-array id))))
 
-
 (defmethod draw-with-index-buffer ((this buffer))
   "Use this buffer as an index array and draw somthing."
 
@@ -188,7 +196,6 @@
   (%gl:draw-elements :triangles (Vertex-Count this)
 		     (qtype this)
 		     (cffi:null-pointer)))
-
 
 (defmethod map-buffer ((this buffer) &optional (access :READ-WRITE))
   "Returns a pointer to the buffer data. YOU MUST CALL UNMAP-BUFFER AFTER YOU ARE DONE!
@@ -201,23 +208,6 @@
   (gl:unmap-buffer (target this))
   (gl:bind-buffer (target this) 0))
 
-;; (defmethod map-buffer-asynchronous ((this buffer) &optional (access :READ-WRITE) (start 0) (end (size-in-bytes this)))
-;;   "Returns a pointer to the buffer data. YOU MUST CALL UNMAP-BUFFER AFTER YOU ARE DONE!
-;;    Access options are: :Read-Only, :Write-Only, and :READ-WRITE. NOTE: Using :read-write is slower than the others. If you can, use them instead."
-
-;;   (sdl2:in-main-thread ()
-;;     (gl:bind-buffer (target this) (id this)) ))
-;;     ;(gl:buffer-sub-data (target this) 0 :offsetstart end)))
-
-
-;; (defmethod unmap-buffer-asynchronous ((this buffer))
-;;   "Release the pointer given by map-buffer. NOTE: THIS TAKES THE BUFFER OBJECT, NOT THE POINTER! ALSO, DON'T TRY TO RELASE THE POINTER."
-
-;;   (sdl2:in-main-thread ()
-;;     (gl:unmap-buffer (target this))
-;;     (gl:bind-buffer (target this) 0)))
-
-
 (defmethod unload ((this buffer) &key)
   "Release buffer resources."
   (trivial-garbage:cancel-finalization this)
@@ -228,20 +218,35 @@
 (defmacro with-mapped-buffer ((name buffer &optional (access :READ-WRITE)) &body body)
   "Convenience macro for mapping and unmapping the buffer data.
    Name is the symbol name to use for the buffer pointer."
-  `(let ((,name (if sdl2::*main-thread*
-		    (map-buffer ,buffer ,access)
-		    (map-buffer-asynchronous ,buffer ,access))))
-     (unwind-protect
-	  (progn ,@body)
-       (if sdl2::*main-thread* 
-	   (clinch::unmap-buffer ,buffer)
-	   (clinch::unmap-buffer-asynchronous ,buffer)))))
+  `(!
+     (let ((,name (clinch::map-buffer ,buffer ,access)))
+       (unwind-protect
+	    (progn ,@body)
+	 (clinch::unmap-buffer ,buffer)))))
 
-(defmethod pull-g-raw ((this buffer))
+(defmethod pullg ((this buffer) &key offset size)
   "Returns the buffer's data."
-  (with-mapped-buffer (ptr this :read-only)
-    (loop for i from 0 to (1- (clinch:vertex-count this))
-       collect (cffi:mem-aref ptr (clinch:qtype this) i))))
+  (let* ((full-length (size-in-bytes this))
+	 (arr (cffi:make-shareable-byte-vector (or size full-length))))
+    (cffi:with-pointer-to-vector-data (p arr)
+      (!
+	(bind this)
+	(%gl:get-buffer-sub-data (target this)
+				 (or offset 0)
+				 (or size full-length)
+				 p)))
+    arr))
+
+(defmethod pushg ((this buffer) (data array) &key)
+  (cffi:with-pointer-to-vector-data (p data)
+    (! 
+      (bind this)
+      (%gl:Buffer-Data (target this)
+		       (size-in-bytes this)
+		       p
+		       (usage this))
+      (setf (loaded? this) t)))
+  data)
 
 (defmethod triangle-intersection? ((this buffer) start dir &key)
   "Returns distance u, v coordinates and index of the closest triangle (if any) touched by the given the ray origin and direction and the name of the vertex buffer attribute."
