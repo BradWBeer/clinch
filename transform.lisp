@@ -31,7 +31,7 @@
 ;;; Do I still need this? !!!
 (defun make-orthogonal-transform (width height near far)
   "Create a raw CFFI orthogonal matrix."
-  (make-matrix (/ 2 width) 0.0 0.0 0.0
+  (rtg-math:m! (/ 2 width) 0.0 0.0 0.0
 	       0.0 (/ 2 height) 0.0 0.0
 	       0.0 0.0 (/ (- far near)) (/ (- near) (- far near)) 
 	       0.0 0.0 0.0 1.0))

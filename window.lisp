@@ -301,7 +301,7 @@ working while cepl runs"
 	       (buffer-size 0)
 	       (double-buffer t)
 	       (hidden nil)
-	       (resizable :resizable))
+	       (resizable t))
   "Creates Clinch's window in it's own thread. 
  Use ! (wait and return a value from main thread) or 
  Use !! (return immediately with a nil."
@@ -365,7 +365,7 @@ working while cepl runs"
 		(buffer-size 0)
 		(double-buffer t)
 		(hidden nil)
-		(resizable :resizable))
+		(resizable t))
 
   (unless *running* 
     (let ((local-stdout *standard-output*)
