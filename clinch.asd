@@ -6,7 +6,7 @@
   :description "Describe CLinch here"
   :author "Brad Beer (WarWeasle)"
   :license "MIT"
-  :version "0.1"
+  :version "0.5"
   :depends-on (#:cl-opengl
 	       #:trivial-garbage
 	       #:bordeaux-threads
