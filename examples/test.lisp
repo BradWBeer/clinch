@@ -58,7 +58,7 @@ out vec4 fragColor;
 				       ("v" :float)
 				       ))))))
 
-(defun init ()
+(defun init-test ()
   (setf *quad-mesh*
 	(make-instance 'clinch:entity
 		       :indexes (make-instance 'clinch:index-buffer :data '(0 1 2 0 2 3))
@@ -102,9 +102,19 @@ out vec4 fragColor;
 
 ;; Next runs one time before the next on-idle.
 (clinch:defevent clinch:*next* ()
-  (init)
-  (setf *viewport* (make-instance 'clinch:viewport))
-  (gl:clear-color 0 0 1 0))
+
+  ;; Enable a few opengl features. 
+  (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d :cull-face)
+
+  ;; Set the blending mode. 
+  (%gl:blend-func :src-alpha :one-minus-src-alpha)
+  (gl:polygon-mode :front-and-back :fill)
+
+  (gl:clear-color 0 0 1 0)
+
+  (init-test)
+  (setf *viewport* (make-instance 'clinch:viewport)))
+
 
 (clinch:defevent clinch:*on-idle* ()
   (clinch:rotate *node*

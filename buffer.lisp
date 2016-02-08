@@ -200,13 +200,15 @@
 (defmethod map-buffer ((this buffer) &optional (access :READ-WRITE))
   "Returns a pointer to the buffer data. YOU MUST CALL UNMAP-BUFFER AFTER YOU ARE DONE!
    Access options are: :Read-Only, :Write-Only, and :READ-WRITE. NOTE: Using :read-write is slower than the others. If you can, use them instead."
-  (gl:bind-buffer (target this) (id this))
-  (gl:map-buffer (target this) access))
+  (!
+    (gl:bind-buffer (target this) (id this))
+    (gl:map-buffer (target this) access)))
 
 (defmethod unmap-buffer ((this buffer))
   "Release the pointer given by map-buffer. NOTE: THIS TAKES THE BUFFER OBJECT, NOT THE POINTER! ALSO, DON'T TRY TO RELASE THE POINTER."
-  (gl:unmap-buffer (target this))
-  (gl:bind-buffer (target this) 0))
+  (!
+    (gl:unmap-buffer (target this))
+    (gl:bind-buffer (target this) 0)))
 
 (defmethod unload ((this buffer) &key)
   "Release buffer resources."
@@ -224,10 +226,15 @@
 	    (progn ,@body)
 	 (clinch::unmap-buffer ,buffer)))))
 
+(defmethod make-shareable-array ((this buffer) &key size)
+  (case (qtype this)
+    (:float (make-array (or size (get-size this)) :element-type 'single-float))
+    (t (cffi:make-shareable-byte-vector (or size (size-in-bytes this))))))
+
 (defmethod pullg ((this buffer) &key offset size)
   "Returns the buffer's data."
   (let* ((full-length (size-in-bytes this))
-	 (arr (cffi:make-shareable-byte-vector (or size full-length))))
+	 (arr (make-shareable-array this :size size)))
     (cffi:with-pointer-to-vector-data (p arr)
       (!
 	(bind this)

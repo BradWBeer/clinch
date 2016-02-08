@@ -191,7 +191,7 @@
   (sdl2:in-main-thread ()
     (gl:delete-textures (list (tex-id this)))))
 
-
+;; This needs to check if there is a pbo, and if not create one...For now, I'll just have to use a pushg.
 ;; (defmacro with-mapped-texture ((name buffer &optional (access :READ-WRITE)) &body body)
 ;;   "Convenience macro for mapping and unmapping the texture data.
 ;; Name is the symbol name to use for the buffer pointer.

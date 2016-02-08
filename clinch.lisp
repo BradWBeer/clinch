@@ -113,3 +113,23 @@
 	;; it failed the test. leave it alone.
 	(t tree)))
 
+
+;; (defun make-local-path (file)
+;;   (concatenate 'string 
+;; 	       (directory-namestring
+;; 		(asdf:system-relative-pathname :clinch "clinch.asd"))
+;; 	       file))
+
+;; (defun eval-from-file (file)
+;;   (eval
+;;    (read-from-string
+;;     (alexandria:read-file-into-string
+;;      (make-local-path file)))))
+
+;; (defun make-standard-shader (name)
+;;   (eval-from-file 
+;;    (concatenate 'string 
+;; 		"assets/shaders/"
+;; 		name
+;; 		".lisp")))
+
