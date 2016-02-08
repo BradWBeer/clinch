@@ -3,7 +3,7 @@
 
 (asdf:defsystem #:clinch
   :serial t
-  :description "Describe CLinch here"
+  :description "An OpenGL Game Engine."
   :author "Brad Beer (WarWeasle)"
   :license "MIT"
   :version "0.5"
