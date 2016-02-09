@@ -6,8 +6,4 @@
 (defclass pixel-buffer (buffer)
   ((target :initform :pixel-unpack-buffer))
   (:documentation "Creates a buffer for reading/writing to "))
-
-
-
-
 	   

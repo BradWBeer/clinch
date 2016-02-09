@@ -191,10 +191,12 @@
   (sdl2:in-main-thread ()
     (gl:delete-textures (list (tex-id this)))))
 
-;; This needs to check if there is a pbo, and if not create one...For now, I'll just have to use a pushg.
-;; (defmacro with-mapped-texture ((name buffer &optional (access :READ-WRITE)) &body body)
-;;   "Convenience macro for mapping and unmapping the texture data.
-;; Name is the symbol name to use for the buffer pointer.
-;; Just a passthrough to with-mapped-buffer, but I keep forgetting to use with-mapped-buffer."
-;;   `(with-mapped-buffer (,name ,buffer ,access)
-;;      ,body))
+;; Creates a temporary PBO for a texture, be sure to map/unmap if you need to access the data
+(defmacro with-temporary-pbo ((var texture &key (usage :static-draw) (target :pixel-unpack-buffer)) &body body)
+  (let ((tex (gensym)))
+    `(let* ((,tex ,texture)
+	    (,var (make-pbo-for-texture ,tex :usage ,usage :target ,target)))
+       (unwind-protect 
+	    (progn ,@body)
+	 (progn
+	   (unload ,var))))))

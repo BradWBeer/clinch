@@ -36,22 +36,29 @@
     `(let ((,m-texture ,texture)
 	   (,m-pbo ,pbo))
 
-       (clinch:with-mapped-buffer (,bits-var ,m-pbo ,rw)
-	 (let* ((,width-var  (clinch:width  ,m-texture))
+       ;;(clinch:with-mapped-buffer (,bits-var ,m-pbo ,rw) ;; this no longer works since I need to unmap the buffer before I pu...owh...
+
+	 (let* ((,bits-var (map-buffer ,m-pbo ,rw))
+		(,width-var  (clinch:width  ,m-texture))
 		(,height-var (clinch:height ,m-texture))
 		(,surface-var (cairo:create-image-surface-for-data ,bits-var
 								   ,cairo-format
 								   ,width-var
 								   ,height-var
 								   (* ,width-var (stride ,m-texture)))))
-	   (unwind-protect 
-		(progn ,@body)
-	     (progn
-	       (pushg ,texture ,m-pbo)
-	       (cairo:destroy ,surface-var))))))))
+	   (if (or (not ,bits-var)
+		   (cffi:null-pointer-p ,bits-var))
+	       (error "Could not map the PBO for cairo!")
+	       (unwind-protect 
+		    (progn ,@body)
+		 (progn
+		   (cairo:destroy ,surface-var)
+		   (unmap-buffer ,m-pbo)
+		   (pushg ,texture ,m-pbo))))))))
 
 
-(defmacro with-context-for-texture ((texture &key (rw :write-only)
+
+(defmacro with-context-for-texture ((texture pbo &key (rw :write-only)
 					     (cairo-format :argb32)
 					     (surface-var 'cairo::*surface*)
 					     (context-var 'cairo::*context*)
@@ -66,7 +73,7 @@
        width-var:    The local variable name for the surface's width.
        height-var:   The local variable name for the surface's height.
        bits-var:     The local variable name for the texture's raw cffi data."
-  `(with-surface-for-texture (,texture
+  `(with-surface-for-texture (,texture ,pbo
 			      :rw ,rw
 			      :cairo-format ,cairo-format
 			      :surface-var  ,surface-var
