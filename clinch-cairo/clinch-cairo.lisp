@@ -14,7 +14,7 @@
   (cairo:paint context)
   (cairo:restore context))
 
-
+;; working, but put need to group the calls which require the main thread for speed.
 (defmacro with-surface-for-texture ((texture &optional pbo &key (rw :write-only)
 					     (cairo-format :argb32)
 					     (surface-var 'cairo::*surface*)
