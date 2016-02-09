@@ -8,26 +8,6 @@
 	      (coerce b 'single-float)
 	      (coerce c 'single-float)))
 
-(defun make-identity-matrix3 ()
-  (make-array 9 :element-type 'single-float :initial-contents '(1.0 0.0 0.0
-								0.0 1.0 0.0
-								0.0 0.0 1.0)))
-
-(defun make-matrix3 (&rest vals)
-  (if (> (length vals) 9)
-      (error "make-matrix takes up to 9 values!")
-      
-      (let ((ret (make-array 9 :element-type 'single-float :initial-element 0.0)))
-	(dotimes (i (length vals))
-	  (setf (aref ret i) (nth i vals)))
-	ret)))
-
-(defun convert-matrix4-to-matrix3 (m4)
-  (let ((ret (make-array 9 :element-type 'single-float :initial-element 0.0)))
-    (dotimes (i 9)
-      (setf (aref ret i) (aref m4 i)))
-    ret))
-
 (defun ray-triangle-intersect? (origin ray-dir v0 v1 v2)
   (declare (ignore v2))
   (let ((epsilon 1.0e-6))

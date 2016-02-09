@@ -117,7 +117,7 @@ void main() {
   (setf viewport (make-instance 'clinch:viewport))
   (glfw:set-window-size-callback #'window-size-callback)
 
-  (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d :cull-face)
+  (gl:enable :blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d :cull-face)
   (%gl:blend-func :src-alpha :one-minus-src-alpha)
 
   (setf node (make-instance 'clinch:node))

@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass node ()
+(defclass node (element refcount)
   ((transform
     :accessor transform
     :initform  (sb-cga:identity-matrix)
@@ -14,18 +14,18 @@
    (enabled
     :accessor enabled
     :initform t
-    :initarg :enabled)
-   (children :accessor children
-	     :initform nil
-	     :initarg  :children))
+    :initarg :enabled))
   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and not required."))
 
 (defmethod initialize-instance :after ((this node) &key parent)
-  )
-  
-;; (defmethod print-object ((this node) s)
-;;   "Print function for node."
-;;   (format s "#<NODE children: ~A ~%~A>" (length (children this)) (transform this)))
+
+  (loop for i in (children this)
+       do (when (typep i 'refcount)
+	    (ref i))))
+
+(defmethod print-object ((this node) s)
+  "Print function for node."
+  (format s "#<NODE children: ~A ~%~A>" (length (children this)) (transform this)))
 
 (defmethod changed? ((this node))
   "Has this node changed and not updated?"
@@ -41,6 +41,9 @@
   (with-accessors ((children children)) this
     (unless (member child children)
       
+      (when (typep child 'refcount)
+	(ref child))      
+
       (setf children
 	    (cons child children)))))
 
@@ -49,7 +52,10 @@
   (with-accessors ((children children)) this
     
     (when (member child children)
-     
+
+      (when (typep child 'refcount)
+	(unref child))
+      
       (setf children
 	    (remove child children)))))
 
@@ -68,23 +74,38 @@
   
   (current-transform this))
 
-(defmethod render ((this node) &key parent projection)
+(defmethod render ((this node) &key parent)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (enabled this)
+    (when (once this)
+      (funcall (once this) this)
+      (setf (once this) nil))
+
+    (when (before-render this)
+      (let ((*parent* this))
+	(funcall (before-render this) this)))
 
     (when (changed? this)
       (update this :parent parent))
     
+    (gl:matrix-mode :modelview)
+    
+    (load-matrix this)
+    
     (loop for i in (children this)
-       do (render i :parent this :projection projection))))
+       do (render i :parent this))
 
-(defmethod render ((this list) &key parent projection)
+    (when (after-render this)
+      (let ((*parent* this))
+	(funcall (after-render this) this)))))
+
+(defmethod render ((this list) &key parent matrix)
   "Render a list of rendables."
   (when (enabled this)
     (load-matrix this)
     
     (loop for i in this
-       do (render i :parent parent :projection projection))))
+       do (render i :parent parent :matrix matrix))))
 
 
 (defmethod (setf transform)  ((other-node array) (this node))
@@ -167,7 +188,10 @@
 
 (defmethod unload ((this node) &key)
   "Release node resources."
-  (setf (enabled this) nil))
+  (setf (enabled this) nil)
+  (loop for i in (children this)
+       do (when (typep i 'refcount)
+	    (unref i))))
 
 (defmacro node (&body args)
 

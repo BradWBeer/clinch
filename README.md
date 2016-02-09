@@ -1,27 +1,22 @@
 # CLinch
 
+## [CLinch now has tutorials](https://github.com/BradWBeer/CLinch/wiki/CLinch-Tutorials)##
+
+## Warning: Much of this has changed. So has the purpose and scope of CLinch. Please stand by as I modify CLinch and then backfill the documention.
 
 ## Overview
 
-CLinch is a simple, yet powerful 3d game engine for Lisp. It's features include 2d and 3d graphics, simple texture and shader integration and 
+CLinch is a simple, yet powerful 3d graphics engine for Lisp. In true Lisp fashion, it is more a build-your-own-engine hobby kit rather than striving to be a full graphics panacea. Much of the design is based on Horde3D. Although Horde3D is a very good design, it has limitations which it attempts to solve by adding domain specific languages. Items such as shaders, entities and, most importantly, the pipeline are specified using an XML language. Lisp, by being self-compiling seems like a better fit than requiring (yet) another language.
 
-Eventually CLinch will become a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp, 3D, shaders, 2d vector graphics, richtext support, 3d physics and much more.
+Eventually I hope CLinch becomes a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp and 3D. See my [Qix](https://github.com/BradWBeer/Qix) project for more information. 
 
 ### CLinch Extensions:
-
-* A suite of modern 3d and 2d tools through OpenGL
-
-* Access to commercial grade windowing, controller, force-feedback, sound, music and more thorough SDL2
-
-* 3d physics with joints and motors with the ODE physics engine
-
-* Ability to live code through with Lisp.
-
-* Texture loading and saving with FreeImage
 
 * Integration with 2D vector graphics with Cairo
 
 * Integration with fonts and text positioning with Pango
+
+* File loading and saving with FreeImage
 
 * 3D asset importing using ClassImp (Coming Soon!)
 
@@ -47,7 +42,7 @@ CLinch should not depend on any one library. Currently it only supports OpenGL, 
 
 ## Architecture
 
-Although CLinch can be used as a complete engine, most parts of CLinch are independent. You can use objects by themselves as best suits your application. For example, you can use a buffer object by itself. This also helps with testing by isolating the various parts of CLinch. The following is in hierarchical order based on the default configuration. This is to explain it as clearly as possible, not to indicate a necessary design. 
+Although CLinch can be used as a complete graphics engine, most parts of CLinch are independent. You can use objects by themselves as best suits your application. For example, you can use a buffer object by itself. This also helps with testing by isolating the various parts of CLinch. The following is in hierarchical order based on the default configuration. This is to explain it as clearly as possible, not to indicate a necessary design. 
 
 ### Transforms
 
@@ -63,7 +58,7 @@ Buffers abstract the shared data on the graphics card. They can carry almost any
 
 ### Textures
 
-Textures abstract the 2D textures and allow easy access to their raw data. Textures can be loaded from files, drawn on with vector graphics or used as render targets. They use Pixel Buffer Object to make reading and writing faster.
+A subclass of Buffer, textures abstract the 2D textures and allow easy access to their raw data. Textures have all the functionality of buffers but also have width, height and data format. Since it is a subclass of Buffer, use map/unmap or with-mapped-BUFFER.
 
 ### Shaders
 
@@ -76,3 +71,9 @@ Entities are the rendered items. They bring together the shader, buffers, textur
 ### Viewports
 
 An application can have several viewports. As CLinch does not force any particular windowing implementation, it can not have a window class. Once your window is set up, however, you can use the viewport handle for drawing an area on screen. The most common children the cameras, which will be rendered in order unless then are not enabled.
+
+### Pipelines
+
+A pipeline is a series of commands which create the scene with every call. Generally they clear the screen, render the root node and sort items into the proper sequence. Unlike Horde3D, any set of Lisp can be used. Usually there is only one pipeline per viewport or application.
+
+

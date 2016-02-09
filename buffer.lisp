@@ -8,7 +8,7 @@
     (:unsigned-char :unsigned-byte)
     (otherwise type)))
 
-(defclass buffer ()
+(defclass buffer (refcount)
   ((id
     :reader id
     :initform nil
@@ -58,18 +58,14 @@
 	       (stride  stride)
 	       (usage   usage)
 	       (loaded? loaded))  this
-    (sdl2:in-main-thread ()
+
     ;; if they didn't give a vcount, see if we can derive one...
     (when (and (not vcount) (length data))
       (setf vcount (/ (length data) stride)))
     
     (unless id
       (setf id (car (gl:gen-buffers 1))))
-
-    (trivial-garbage:cancel-finalization this)
-    (trivial-garbage:finalize this 
-			      (let ((id-value (id)))
-				(lambda () (sdl2:in-main-thread () (gl:delete-buffers (list id-value))))))
+    
     (gl:bind-buffer target id)
 
     (cond
@@ -102,15 +98,13 @@
 			(size-in-bytes this)
 			(cffi:null-pointer)
 			usage)
-       (setf loaded? nil))))))
+       (setf loaded? nil)))))
 
 
 (defmethod bind ((this buffer) &key )
   "Wrapper around glBindBuffer. Puts the buffer into play."
   (gl:bind-buffer (target this) (id this)))
 
-(defmethod unbind ((this buffer) &key)
-  (gl:bind-buffer (target this) 0))
 
 (defmethod get-size ((this buffer) &key)
   "Calculates the number of VALUES (stride + vcount) this buffer contains."
@@ -136,15 +130,6 @@
   (gl:Enable-Client-State :NORMAL-ARRAY)
   (gl:bind-buffer (target this) (id this))
   (%gl:normal-pointer (qtype this) 0 (cffi:null-pointer)))
-
-
-(defmethod unbind-vertex-array ()
-  "Stop using the vertex array"
-  (gl:disable-Client-State :VERTEX-ARRAY))
-
-(defmethod unbind-normal-array ()
-  "Stop using the normal array"
-  (gl:Disable-Client-State :NORMAL-ARRAY))
 
 
 (defmethod bind-buffer-to-attribute-array ((this buffer) (shader shader) name)
@@ -180,40 +165,17 @@
   (gl:unmap-buffer (target this))
   (gl:bind-buffer (target this) 0))
 
-(defmethod map-buffer-asynchronous ((this buffer) &optional (access :READ-WRITE) (start 0) (end (size-in-bytes this)))
-  "Returns a pointer to the buffer data. YOU MUST CALL UNMAP-BUFFER AFTER YOU ARE DONE!
-   Access options are: :Read-Only, :Write-Only, and :READ-WRITE. NOTE: Using :read-write is slower than the others. If you can, use them instead."
-
-  (sdl2:in-main-thread ()
-		       (gl:bind-buffer (target this) (id this))
-		       (gl:buffer-sub-data (target this) start end)))
-
-
-(defmethod unmap-buffer-asynchronous ((this buffer))
-  "Release the pointer given by map-buffer. NOTE: THIS TAKES THE BUFFER OBJECT, NOT THE POINTER! ALSO, DON'T TRY TO RELASE THE POINTER."
-
-  (sdl2:in-main-thread ()
-		       (gl:unmap-buffer (target this))
-		       (gl:bind-buffer (target this) 0)))
-
-
 (defmethod unload ((this buffer) &key)
   "Release buffer resources."
-  (trivial-garbage:cancel-finalization this)
-  (sdl2:in-main-thread () (gl:delete-buffers (list (id this))))
-  (setf (slot-value this 'id) nil))
+  (gl:delete-buffers (list (id this))))
 
 (defmacro with-mapped-buffer ((name buffer &optional (access :READ-WRITE)) &body body)
   "Convenience macro for mapping and unmapping the buffer data.
    Name is the symbol name to use for the buffer pointer."
-  `(let ((,name (if sdl2::*main-thread*
-		    (map-buffer ,buffer ,access)
-		    (map-buffer-asynchronous ,buffer ,access))))
+  `(let ((,name (clinch::map-buffer ,buffer ,access)))
      (unwind-protect
 	  (progn ,@body)
-       (if sdl2::*main-thread* 
-	   (clinch::unmap-buffer ,buffer)
-	   (clinch::unmap-buffer-asynchronous ,buffer)))))
+       (clinch::unmap-buffer ,buffer))))
 
 (defmethod get-buffer-data ((this buffer))
   (clinch:with-mapped-buffer (ptr this :read-only)

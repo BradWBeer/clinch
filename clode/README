@@ -1,0 +1,1 @@
+Build ODE using the build_ode.sh script then install using "sudo make install".
