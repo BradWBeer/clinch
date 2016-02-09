@@ -15,7 +15,7 @@
   (cairo:restore context))
 
 
-(defmacro with-surface-for-texture ((texture pbo &key (rw :write-only)
+(defmacro with-surface-for-texture ((texture &optional pbo &key (rw :write-only)
 					     (cairo-format :argb32)
 					     (surface-var 'cairo::*surface*)
 					     (width-var   (gensym))
@@ -32,33 +32,39 @@
        bits-var:     The local variable name for the texture's raw cffi data."
   
   (let ((m-texture (gensym))
-	(m-pbo (gensym)))
-    `(let ((,m-texture ,texture)
-	   (,m-pbo ,pbo))
+	(m-pbo (gensym))
+	(m-tmp-pbo? (gensym)))
+    `(let* ((,m-texture ,texture)
+	    (,m-tmp-pbo? nil)
+	    (,m-pbo (or ,pbo
+			(let ((tmp (make-pbo-for-texture ,m-texture)))
+			  (when (not tmp)
+			    (error "Could not map the PBO for cairo!"))
+			  (setf ,m-tmp-pbo? t)
+			  tmp)))
+	    (,bits-var (map-buffer ,m-pbo ,rw))
+	    (,width-var  (clinch:width  ,m-texture))
+	    (,height-var (clinch:height ,m-texture))
+	    (,surface-var (cairo:create-image-surface-for-data ,bits-var
+							       ,cairo-format
+							       ,width-var
+							       ,height-var
+							       (* ,width-var (stride ,m-texture)))))
 
-       ;;(clinch:with-mapped-buffer (,bits-var ,m-pbo ,rw) ;; this no longer works since I need to unmap the buffer before I pu...owh...
-
-	 (let* ((,bits-var (map-buffer ,m-pbo ,rw))
-		(,width-var  (clinch:width  ,m-texture))
-		(,height-var (clinch:height ,m-texture))
-		(,surface-var (cairo:create-image-surface-for-data ,bits-var
-								   ,cairo-format
-								   ,width-var
-								   ,height-var
-								   (* ,width-var (stride ,m-texture)))))
-	   (if (or (not ,bits-var)
-		   (cffi:null-pointer-p ,bits-var))
-	       (error "Could not map the PBO for cairo!")
-	       (unwind-protect 
-		    (progn ,@body)
-		 (progn
-		   (cairo:destroy ,surface-var)
-		   (unmap-buffer ,m-pbo)
-		   (pushg ,texture ,m-pbo))))))))
+       (if (or (not ,bits-var)
+	       (cffi:null-pointer-p ,bits-var))
+	   (error "Could not map the PBO for cairo!")
+	   (unwind-protect 
+		(progn ,@body)
+	     (progn
+	       (cairo:destroy ,surface-var)
+	       (unmap-buffer ,m-pbo)
+	       (pushg ,texture ,m-pbo)
+	       (when ,m-tmp-pbo? (unload ,m-pbo))))))))
 
 
 
-(defmacro with-context-for-texture ((texture pbo &key (rw :write-only)
+(defmacro with-context-for-texture ((texture &optional pbo &key (rw :write-only)
 					     (cairo-format :argb32)
 					     (surface-var 'cairo::*surface*)
 					     (context-var 'cairo::*context*)
