@@ -48,8 +48,8 @@ out vec4 fragColor;
 	  
 	  (make-instance 'clinch:shader-program
 			 :name "Shader01"
-			 :vertex-shader-text vert-source
-			 :fragment-shader-text frag-source
+			 :vertex-shader vert-source
+			 :fragment-shader frag-source
 			 :uniforms '(("P" :matrix)
 				     ("M" :matrix)
 				     ("ambientTexture" :int))

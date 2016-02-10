@@ -20,13 +20,16 @@
 	:reader key))
   (:documentation "Base class for all individual shaders."))
 
-(defclass vertex-shader (shader) ()
+(defclass vertex-shader (shader)
+  ((shader-type :initform :vertex-shader))
   (:documentation "Vertex Shader Class."))
 
-(defclass fragment-shader (shader) ()
+(defclass fragment-shader (shader)
+  ((shader-type :initform :fragment-shader))
   (:documentation "Fragment Shader Class."))
 
-(defclass geometry-shader (shader) ()
+(defclass geometry-shader (shader)
+  ((shader-type :initform :geometry-shader))
   (:documentation "Geometry Shader Class."))
 
 
