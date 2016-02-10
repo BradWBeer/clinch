@@ -184,7 +184,7 @@
 												  (array (m4:to-mat3 
 													  (m4:transpose
 													   (m4:affine-inverse parent))))
-												  (t (m4:identity))))
+												  (t (m3:identity))))
 									   (t value))))))))))
 	
   (draw-with-index-buffer (indexes this)))
