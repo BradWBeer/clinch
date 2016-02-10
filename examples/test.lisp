@@ -8,7 +8,6 @@
 (defparameter *texture* nil)
 (defparameter *node* nil)
 (defparameter *projection* nil)
-(defparameter *viewport* nil)
 
 (defparameter *simple-texture-shader* nil)
 
@@ -112,8 +111,8 @@ out vec4 fragColor;
 
   (gl:clear-color 0 0 1 0)
 
-  (init-test)
-  (setf *viewport* (make-instance 'clinch:viewport)))
+  (init-test))
+
 
 
 (clinch:defevent clinch:*on-idle* ()
@@ -128,11 +127,9 @@ out vec4 fragColor;
     
 (clinch:defevent clinch:*on-window-resized* (win width height ts)
   (format t "Resized: ~A ~A~%" width height)
-  (clinch::quick-set *viewport* 0 0 width height)
   
   (setf *projection* (clinch::make-perspective-transform (clinch:degrees->radians 45)
-							 (/ width height) .1 1000))
-  (clinch:render *viewport*))
+							 (/ width height) .1 1000)))
 
 (clinch:defevent clinch:*on-mouse-wheel-move* (win mouse x y ts)
   (format t "win=~A mouse=~A x=~A y=~A ts=~A~%" win mouse x y ts)

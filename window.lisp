@@ -10,6 +10,9 @@
 (defparameter *inited* nil)
 (defparameter *running* nil)
 
+(defparameter *fbo* nil)
+(defparameter *viewport* nil)
+
 (defmacro defevent (event args &body body)
   "Creates and updates an event handler."
   `(setf ,event (lambda ,args
@@ -178,8 +181,11 @@ working while cepl runs"
 (defun main-loop (win gl-context w h &optional asynchronous)
   ;;(declare (optimize (speed 3)))
 
+  (setf *viewport* (make-instance 'viewport :x 0 :y 0 :width w :height h))
+			  
   (fire *next*)
   (setf *next* nil)
+
   (fire *on-window-size-changed* win w h nil)
   (fire *on-window-resized* win w h nil)
 
@@ -249,8 +255,12 @@ working while cepl runs"
      (:event raw-event :window-id win :data1 d1 :data2 d2 :timestamp ts)
      (let ((event (autowrap:enum-key 'sdl2-ffi:sdl-window-event-id raw-event)))
        (cond
-	 ((eql event :size-changed) (fire *on-window-size-changed* win d1 d2 ts))
-	 ((eql event :resized) (fire *on-window-resized* win d1 d2 ts))
+	 ((eql event :size-changed)
+	  (quick-set *viewport* 0 0 d1 d2)
+	  (fire *on-window-size-changed* win d1 d2 ts))
+	 ((eql event :resized)
+	  (quick-set *viewport* 0 0 d1 d2)
+	  (fire *on-window-resized* win d1 d2 ts))
 	 ((eql event :hidden) (fire *on-window-hidden* win ts))
 	 ((eql event :exposed) (fire *on-window-exposed* win ts))
 	 ((eql event :moved) (fire *on-window-moved* win d1 d2 ts))

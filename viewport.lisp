@@ -14,40 +14,27 @@
     :accessor y)
    (width
     :initform 0
-    :initarg :width)
+    :initarg :width
+    :accessor width)
    (height
     :initform 0
-    :initarg :height)
+    :initarg :height
+    :accessor height)
    (clear-color
     :accessor clear-color
     :initform nil
-    :initarg  :clear-color)
-   (enables
-    :accessor enables
-    :initarg  :enables
-    :initform '(:blend :depth-test :line-smooth :point-smooth :polygon-smooth :texture-2d :cull-face :scissor-test))
-   (disables
-    :accessor disables
-    :initarg  :disables
-    :initform nil)
-   (blend-fun
-    :accessor blend-func
-    :initarg  :blend-func
-    :initform '(:src-alpha :one-minus-src-alpha))
-   (projection-transform
-    :accessor projection-transform
-    :initform nil
-    :initarg  :projection-transform)
-   (camera-node
-    :accessor camera-node
-    :initform nil
-    :initarg  :camera-node))
-  (:documentation "Creates a viewport. Maybe it can use a camera?"))
+    :initarg  :clear-color))
+  (:documentation "Creates a viewport."))
 
 
 (defmethod initialize-instance :after ((this viewport) &key)
   "Creates a new viewport."
-  )
+  (with-accessors ((x x)
+		   (y y)
+		   (width width)
+		   (height height)) this
+    (when (and x y width height)
+      (render this))))
 
 
 (defmethod resize ((this viewport) x y w h)
@@ -57,7 +44,7 @@
 	(width this) w
 	(height this) h)
 
-  (gl:viewport x y w h))
+  (render this))
 
 (defmethod width ((this viewport))
   "Get viewport width."
@@ -89,7 +76,6 @@
       
       (when (clear-color this)
 	(destructuring-bind (&optional (r 0) (g 0) (b 0) (a 1)) (clear-color this)
-	  (gl:scissor x y w h)
 	  (gl:clear-color r g b a))))))
     
 (defmethod quick-set ((this viewport) x y w h)
@@ -97,23 +83,15 @@
   (setf (x this) x
 	(y this) y
 	(width this) w
-	(height this) h))
+	(height this) h)
+  (render this))
 
-;; (defmethod print-object ((this viewport) s)
-
-;;   (format s "(viewport ")
-;;   (when (name     this)     (format s ":name ~S " (name this)))
-;;   (when (id       this)      (format s ":id ~S "   (id this)))
-;;   (when (x        this)      (format s ":x ~S "   (x this)))
-;;   (when (y        this)      (format s ":y ~S "   (y this)))
-;;   (when (slot-value this 'width)         (format s ":width ~S "   (width this)))
-;;   (when (slot-value this 'height)      (format s ":height ~S "   (height this)))
-;;   (when (slot-value this 'clear-color)      (format s ":clear-color '~S "   (clear-color this)))
-;;   ;; (when (clinch:transform   this)      (format s ":transform ~S "   (clinch:transform this)))
-;;   ;;(when (camera   this)      (format s ":camera ~S "   (camera this)))
-  
-;;   ;; (when (children this) (format s "~{~%~S~}" (children this)))
-;;   ;; (format s ")")
-
-;;   )
+(defmacro with-viewport ((vp) &body body)
+  (let ((old (gensym)))
+    `(let ((,old *viewport*)
+	   (*viewport* ,vp))
+       (render *viewport*)
+       (unwind-protect
+	    (progn ,@body)
+	 (render ,old)))))
 
