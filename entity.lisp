@@ -91,16 +91,6 @@
      if (equal key (second i))
      do (return x)))
 
-(defun assoc-on-second (item lst) 
-  (or (when (equal item (cadar lst))
-	(car lst))
-      (assoc-on-second item (cdr lst))))
-
-(defmethod render-value ((this entity) name)
-  "Retuns the value of the render attribute or uniform."
-  (third 
-   (assoc-on-second name (clinch::render-values this))))
-
 (defmethod (setf render-value) (new-value (this entity) name)
   "Sets the value of a single render attribute or uniform."
   (let ((ret
