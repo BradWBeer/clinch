@@ -229,8 +229,7 @@
 							((typep value 'node) (transform
 									      value))
 							(t (error "Unknown Type in attach-uniform!")))))))))
-	  
-	  
+	  	  
 	  (if (listp value)
 	      (apply f id value)
 	      (apply f id (list value))))))))
