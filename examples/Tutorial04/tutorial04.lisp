@@ -33,7 +33,7 @@ uniform   mat4 P;
 uniform   mat3 N;
 uniform   vec3 ambientLight;
 uniform   vec3 lightDirection;
-uniform   vec3 lightIntensity;
+uniform  vec3 lightIntensity;
 
 in  vec3 v;
 in  vec3 n;
@@ -54,9 +54,12 @@ void main() {
        (fragment-shader-source
 	"
 #version 330
+
 in vec4 fragmentColor;
+out vec4 fragColor;
+
 void main() {
-            gl_FragColor = fragmentColor;
+            fragColor = fragmentColor;
         }"))
 
 

@@ -84,7 +84,7 @@
    #:with-surface-for-texture
    #:with-context-for-texture
 
-   #:frame-buffer #:unbind
+   #:frame-buffer #:unbind #:depth-buffer #:make-depth-texture #:color-attachment #:make-color-texture #:with-fbo
    #:clear-color #:attribute #:uniform #:init #:clean-up #:enable #:disable #:window-width #:window-height #:*parent*
 
    ))

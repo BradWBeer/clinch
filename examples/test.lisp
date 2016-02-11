@@ -77,13 +77,13 @@ out vec4 fragColor;
 									     0.0   0.0
 									     1.0   0.0
 									     1.0   1.0)))))
-		       :uniforms `("M" :model
-				       "P" :projection
-				       "ambientTexture" :int
-				       "ambientLight" (.2 .2 .2)
-				       "lightIntensity" (.8 .8 .8)
-				       "lightDirection" (0.5772705 0.5772705 0.5772705))))
-  
+		       :uniforms `(("M" . :model)
+				   ("P" . :projection)
+				   ("ambientTexture" . :int)
+				   ("ambientLight" . (.2 .2 .2))
+				   ("lightIntensity" . (.8 .8 .8))
+				   ("lightDirection" . (0.5772705 0.5772705 0.5772705)))))
+
   (make-simple-texture-shader)
   (setf *texture*
 	(clinch::create-texture-from-png
