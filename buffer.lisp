@@ -43,7 +43,7 @@
 
 (defmethod initialize-instance :after ((this buffer) &key data)
   "Sets up a buffer instance.
-      type:   cffi type NOTE: use :unsigned-int if you are creating an index buffer.
+      type:   cffi type NOTE: Use the index buffer for indices.
       id:     OpenGL buffer id
       vcount: vertex count (or number of tuples if not using vertexes)
       stride: The number of items in each vertex (or each tuple.) NOTE: use 1 if you are creating an index buffer. 
@@ -188,14 +188,6 @@
       (remhash id *current-shader-attributes*)
       
       (gl:disable-vertex-attrib-array id))))
-
-(defmethod draw-with-index-buffer ((this buffer))
-  "Use this buffer as an index array and draw somthing."
-
-  (gl:bind-buffer (target this) (id this))
-  (%gl:draw-elements :triangles (Vertex-Count this)
-		     (qtype this)
-		     (cffi:null-pointer)))
 
 (defmethod map-buffer ((this buffer) &optional (access :READ-WRITE))
   "Returns a pointer to the buffer data. YOU MUST CALL UNMAP-BUFFER AFTER YOU ARE DONE!

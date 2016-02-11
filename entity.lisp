@@ -12,6 +12,9 @@
     :initform nil
     :initarg :indexes
     :reader indexes)
+   (mode :initform :triangles
+	 :initarg :mode
+	 :reader mode)
    (render-values
     :initform nil
     :initarg :values
@@ -176,8 +179,9 @@
 													   (m4:affine-inverse parent))))
 												  (t (m3:identity))))
 									   (t value))))))))))
-	
-  (draw-with-index-buffer (indexes this)))
+  (if (indexes this)
+      (draw-with-index-buffer (indexes this) :mode (mode this))
+      (gl:draw-arrays (mode this) 0 (find-first-vertex-length this))))
 
 (defmethod update ((this entity) &key parent matrix force)
   )

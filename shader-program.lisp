@@ -54,6 +54,26 @@
   (when (and (program program) (id shader))
     (gl:detach-shader (program program) (id shader))))
 
+(defmethod build-shader-program ((this null) &key 
+					       vertex-shader
+					       fragment-shader
+					       geometry-shader
+					       attributes
+					       uniforms
+					       defines
+					       undefs
+					       delete-shaders)
+  (make-instance 'shader-program 
+		 :vertex-shader vertex-shader
+		 :fragment-shader fragment-shader
+		 :geometry-shader geometry-shader
+		 :attributes attributes
+		 :uniforms uniforms
+		 :defines defines
+		 :undefs undefs
+		 :delete-shaders delete-shaders))
+
+
 (defmethod build-shader-program ((this shader-program) &key
 							 vertex-shader
 							 fragment-shader

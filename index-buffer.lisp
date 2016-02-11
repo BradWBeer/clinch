@@ -36,3 +36,11 @@
 	:reader key))
   (:documentation "Creates and keeps track of GPU buffer object (shared memory with gpu)."))
 
+
+(defmethod draw-with-index-buffer ((this index-buffer) &key (mode :triangles))
+  "Use this buffer as an index array and draw somthing."
+
+  (gl:bind-buffer (target this) (id this))
+  (%gl:draw-elements mode (Vertex-Count this)
+		     (qtype this)
+		     (cffi:null-pointer)))
