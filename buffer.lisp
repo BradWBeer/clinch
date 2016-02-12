@@ -69,7 +69,7 @@
 	(setf id (car (gl:gen-buffers 1))))
 
       (trivial-garbage:cancel-finalization this)
-      (setf (gethash (key this) *uncollected*) this)
+      (add-uncollected this)
       
       (trivial-garbage:finalize this
 				(let ((id-value id)
@@ -205,8 +205,10 @@
 (defmethod unload ((this buffer) &key)
   "Release buffer resources."
   (trivial-garbage:cancel-finalization this)
-  (remhash (key this) *uncollected*)
-  (sdl2:in-main-thread () (gl:delete-buffers (list (id this))))
+  (remove-uncollected this)
+  (!
+    (when (slot-value this 'id)
+      (gl:delete-buffers (list (id this)))))
   (setf (slot-value this 'id) nil))
 
 (defmacro with-mapped-buffer ((name buffer &optional (access :READ-WRITE)) &body body)

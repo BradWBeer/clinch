@@ -41,7 +41,10 @@
 			:uniforms uniforms
 			:defines defines
 			:undefs undefs
-			:delete-shaders delete-shaders))
+			:delete-shaders delete-shaders)
+
+  (add-uncollected this))
+  
 
 
 (defmethod attach-shader ((program shader-program) (shader shader))
@@ -148,14 +151,15 @@
       (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
 
       (trivial-garbage:cancel-finalization this)
-      (setf (gethash (key this) *uncollected*) this)
+      (add-uncollected this)
       (trivial-garbage:finalize this
 				(let ((program-val program)
 				      (key (key this)))
 				  
 				  (lambda ()
 				    (remhash key *uncollected*)
-				    (sdl2:in-main-thread (:background t) 
+				    (!!
+				      (unload-all-dependants key)
 				      (gl:delete-program program-val)))))
 
       (when attributes
@@ -295,7 +299,9 @@
   (with-slots ((program program)) this
     
     (trivial-garbage:cancel-finalization this)
-    (remhash (key this) *uncollected*)
+    (remove-uncollected this)
+
+    (unload-all-dependants (key this))
 
     (when program
 

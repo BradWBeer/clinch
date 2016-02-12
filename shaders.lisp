@@ -39,7 +39,7 @@
     (shader-compile this :code code :defs defs :undefs undefs)
 
     (trivial-garbage:cancel-finalization this)
-    (setf (gethash (key this) *uncollected*) this)
+    (add-uncollected this)
     (trivial-garbage:finalize
      this
      (let ((val id)
@@ -91,9 +91,10 @@
   (with-slots ((id id))
     
     (trivial-garbage:cancel-finalization this)
-    (remhash (key this) *uncollected*)
-
-    (gl:delete-shader id)
+    (remove-uncollected this)
+    
+    (when id
+      (gl:delete-shader id))
 
     (setf id nil
 	  (slot-value this 'uniforms) nil

@@ -42,7 +42,7 @@
 
 
       (trivial-garbage:cancel-finalization this)
-      (setf (gethash (key this) *uncollected*) this)
+      (add-uncollected this)
       
       (trivial-garbage:finalize this
 				(let ((id-value id)
@@ -50,7 +50,8 @@
 
 				  (lambda ()
 				    (remhash key *uncollected*)
-				    (sdl2:in-main-thread (:background t) 
+				    (!!
+				      (unload-all-dependants key)
 				      (gl:delete-framebuffers (list id-value))))))
       (when color-attachments
 	(if (listp color-attachments)
@@ -73,17 +74,20 @@
 								 (depth-texture-mode :intensity)
 								 (texture-compare-mode :compare-r-to-texture)
 								 (texture-compare-function :lequal))
-  (setf (depth-buffer this)
-	(make-instance 'clinch:texture 
-		       :width width 
-		       :height height
-		       :internal-format internal-format
-		       :format format  
-		       :qtype qtype
-		       :stride stride
-		       :depth-texture-mode depth-texture-mode
-		       :texture-compare-mode texture-compare-mode
-		       :texture-compare-function texture-compare-function)))  
+  (let ((ret
+	 (setf (depth-buffer this)
+	       (make-instance 'clinch:texture 
+			      :width width 
+			      :height height
+			      :internal-format internal-format
+			      :format format  
+			      :qtype qtype
+			      :stride stride
+			      :depth-texture-mode depth-texture-mode
+			      :texture-compare-mode texture-compare-mode
+			      :texture-compare-function texture-compare-function))))
+    (add-dependent this ret)
+    ret))
 								
 
 (defmethod (setf depth-buffer) ((db texture) (this frame-buffer))
@@ -143,6 +147,7 @@
 			    :texture-compare-function texture-compare-function)))
     
     (add-color-buffer this index tex)
+    (add-dependent this tex)
     tex)))
 
 (defmethod add-color-buffer ((this frame-buffer) index (tex texture))
@@ -178,9 +183,11 @@
 	       (stencil stencil)) this
 
     (trivial-garbage:cancel-finalization this)
-    (remhash (key this) *uncollected*)
-    (sdl2:in-main-thread ()
-      (gl:Delete-Framebuffers (list id))
+    (remove-uncollected this)
+    (!
+      (unload-all-dependants (key this))
+      (when id
+	(gl:Delete-Framebuffers (list id)))
       
       (setf id      nil
 	    color   nil

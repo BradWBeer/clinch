@@ -416,6 +416,10 @@ working while cepl runs"
 		  (sdl2:gl-set-attr :buffer-size buffer-size)
 		  (sdl2:gl-set-attr :doublebuffer (if double-buffer 1 0))
 
+		  (setf *uncollected*  (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
+		  (setf *dependents*  (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
+
+
 		  (sdl2:with-gl-context (gl-context win)
 
 		    (setf *window* win

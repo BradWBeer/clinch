@@ -9,13 +9,42 @@
 
 (defparameter *shaders->shader-programs* (make-hash-table))
 
-(defparameter *uncollected*  (trivial-garbage:make-weak-hash-table :weakness :value)
+(defparameter *uncollected* (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
   "Weak hash of loaded OpenGL objects.")
+
+(defparameter *dependents*  (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
+  "Weak hash of OpenGL objects waiting to be unloaded by another.")
+
+(defun add-uncollected (this)
+  "Adds item to list of loaded OpenGL objects."
+  (setf (gethash (key this) *uncollected*) this))
+
+(defun remove-uncollected (this)
+  "Removes item from list of loaded OpenGL objects. Does NOT call unload."
+  (remhash (key this) *uncollected*))
 
 (defun unload-all-uncollected ()
   "Unloads all loaded OpenGL objects."
   (loop for key being the hash-keys of *uncollected*
      do (unload (gethash key *uncollected*))))
+
+(defun add-dependent (this dependent)
+  (setf (gethash (key this) *dependents*)
+	(cons (key dependent)
+	      (gethash this *dependents*))))
+
+(defun remove-dependent (this dependent)
+  (setf (gethash this *dependents*)
+	(remove dependent
+		(gethash this *dependents*))))
+  
+(defun unload-all-dependants (this)
+  (map nil (lambda (key)
+	     (let ((val (gethash key *uncollected*)))
+	       (when val
+		 (unload val))))
+       (gethash this *dependents*))
+  (remhash this *dependents*))
 
 (defmacro ! (&body body)
   "Runs body in main thread for safe OpenGL calls. Waits for return value."

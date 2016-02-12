@@ -75,12 +75,11 @@
     (unless tex-id (setf tex-id (car (gl:gen-textures 1))))
 
     (trivial-garbage:cancel-finalization this)
-    (setf (gethash (key this) *uncollected*) this)
+    (add-uncollected this)
     (trivial-garbage:finalize this 
 			      (let ((tex-id-value tex-id)
 				    (key (key this)))
 				(lambda () (sdl2:in-main-thread (:background t)
-					     (remhash key *uncollected*)
 					     (gl:delete-textures (list tex-id-value))))))
     
     (gl:bind-texture :texture-2d (tex-id this))
@@ -187,9 +186,10 @@
 (defmethod unload ((this texture) &key)
   "Unloads the texture. Also cancels gc finalization."
   (trivial-garbage:cancel-finalization this)
-  (remhash (key this) *uncollected*)
-  (sdl2:in-main-thread ()
-    (gl:delete-textures (list (tex-id this)))))
+  (remove-uncollected this)
+  (!
+    (when (tex-id this)
+      (gl:delete-textures (list (tex-id this))))))
 
 ;; Creates a temporary PBO for a texture, be sure to map/unmap if you need to access the data
 (defmacro with-temporary-pbo ((var texture &key (usage :static-draw) (target :pixel-unpack-buffer)) &body body)
