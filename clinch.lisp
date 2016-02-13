@@ -28,10 +28,19 @@
   (loop for key being the hash-keys of *uncollected*
      do (unload (gethash key *uncollected*))))
 
+(defun unload-dependent (this dependent)
+  (let* ((deps (gethash (key this) *dependents*))
+	 (k (key dependent)))
+    (when (member k deps)
+      (unload dependent)
+      (setf (gethash (key this) *dependents*)
+	    (remove k (gethash (key this) *dependents*))))))
+
 (defun add-dependent (this dependent)
   (setf (gethash (key this) *dependents*)
 	(cons (key dependent)
-	      (gethash this *dependents*))))
+	      (gethash this *dependents*)))
+  dependent)
 
 (defun remove-dependent (this dependent)
   (setf (gethash this *dependents*)

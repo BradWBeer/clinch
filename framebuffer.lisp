@@ -67,13 +67,13 @@
     (unbind this)))
 
 (defmethod make-depth-texture ((this frame-buffer) width height &key
-								 (internal-format :depth-component32)
-								 (format :depth-component)
-								 (qtype  :float)
-								 (stride 1)
-								 (depth-texture-mode :intensity)
-								 (texture-compare-mode :compare-r-to-texture)
-								 (texture-compare-function :lequal))
+								  (internal-format :depth-component32)
+								  (format :depth-component)
+								  (qtype  :float)
+								  (stride 1)
+								  (depth-texture-mode :intensity)
+								  (texture-compare-mode :compare-r-to-texture)
+								  (texture-compare-function :lequal))
   (let ((ret
 	 (setf (depth-buffer this)
 	       (make-instance 'clinch:texture 
@@ -86,9 +86,13 @@
 			      :depth-texture-mode depth-texture-mode
 			      :texture-compare-mode texture-compare-mode
 			      :texture-compare-function texture-compare-function))))
+
+    (let ((attachment (depth-buffer this)))
+      (when attachment (unload-dependent this attachment)))
+    
     (add-dependent this ret)
     ret))
-								
+
 
 (defmethod (setf depth-buffer) ((db texture) (this frame-buffer))
   "Set the depth buffer to use."
@@ -119,36 +123,37 @@
 
 
 (defmethod make-color-texture ((this frame-buffer) index width height &key
-								  (PBO nil)
-								  (stride 4)
-								  (qtype :unsigned-char)
-								  (internal-format :rgba)
-								  (format :bgra)
-								  (wrap-s :repeat)
-								  (wrap-t :repeat)
-								  (mag-filter :linear)
-								  (min-filter :linear)
-								  texture-compare-mode
-								  texture-compare-function)
+									(PBO nil)
+									(stride 4)
+									(qtype :unsigned-char)
+									(internal-format :rgba)
+									(format :bgra)
+									(wrap-s :repeat)
+									(wrap-t :repeat)
+									(mag-filter :linear)
+									(min-filter :linear)
+									texture-compare-mode
+									texture-compare-function)
   (!
     (let ((tex (make-instance 'clinch:texture
-			    :PBO PBO
-			    :width width
-			    :height height
-			    :stride stride
-			    :qtype qtype
-			    :internal-format internal-format
-			    :format format
-			    :wrap-s wrap-s
-			    :wrap-t wrap-t
-			    :mag-filter mag-filter
-			    :min-filter min-filter
-			    :texture-compare-mode texture-compare-mode
-			    :texture-compare-function texture-compare-function)))
-    
-    (add-color-buffer this index tex)
-    (add-dependent this tex)
-    tex)))
+			      :PBO PBO
+			      :width width
+			      :height height
+			      :stride stride
+			      :qtype qtype
+			      :internal-format internal-format
+			      :format format
+			      :wrap-s wrap-s
+			      :wrap-t wrap-t
+			      :mag-filter mag-filter
+			      :min-filter min-filter
+			      :texture-compare-mode texture-compare-mode
+			      :texture-compare-function texture-compare-function)))
+      
+      
+      (add-color-buffer this index tex)
+      (add-dependent this tex)
+      tex)))
 
 (defmethod add-color-buffer ((this frame-buffer) index (tex texture))
   "Add a color buffer at position index."
@@ -197,7 +202,7 @@
 (defmacro with-fbo ((fbo) &body body)
   "Convenience macro for useing and resetting an FBO."
   (let ((old-fbo (gensym))
-	 (new-fbo (gensym)))
+	(new-fbo (gensym)))
     `(!
        (let* ((,old-fbo *FBO*)
 	      (,new-fbo ,fbo)

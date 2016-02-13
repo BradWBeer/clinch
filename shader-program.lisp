@@ -87,34 +87,38 @@
 							 undefs
 							 delete-shaders)
   (!
+    (unload-all-dependants (key this))
+    
     (with-slots ((program program)) this
       (let ((vs vertex-shader)
 	    (fs fragment-shader)
-	    (geo geometry-shader)
-	    (keep-vs? t)
-	    (keep-fs? t)
-	    (keep-geo? t))
+	    (geo geometry-shader))
+
+       (print vs)
+       (print fs)
 
       (typecase vs
 	(string
-	 (setf keep-vs? nil
-	       vs (make-instance 'vertex-shader :code vs :defs defines :undefs undefs)))
+	 (add-dependent this
+			(setf vs (make-instance 'vertex-shader :code vs :defs defines :undefs undefs))))
 	(shader t)
 	(t (if vs
 	       (error "Vertex shader is type ~A, which is not a string or a vertex shader." (type-of vs))
 	       (error "No vertex shader given."))))
 
       (typecase fs
-	(string (setf keep-fs? nil
-		      fs (make-instance 'fragment-shader :code fs :defs defines :undefs undefs)))
+	(string
+	 (add-dependent this
+			(setf fs (make-instance 'fragment-shader :code fs :defs defines :undefs undefs))))
 	(shader t)
 	(t (if fs
 	       (error "Fragment shader is type ~A, which is not a string or a vertex shader." (type-of fs))
 	       (error "No fragment shader given!"))))
 
       (typecase geo
-	(string (setf keep-geo? nil
-		      geo (make-instance 'vertex-shader :code geo :defs defines :undefs undefs)))
+	(string
+	 (add-dependent this
+			(setf geo (make-instance 'vertex-shader :code geo :defs defines :undefs undefs))))
 	(shader t)
 	(null t)
 	(t (error "Geometry shader is type ~A, which is not a string or a vertex shader." (type-of geo))))
@@ -138,14 +142,9 @@
 	(format t "DELETEING SHADERS!!!!~%")
 
 	(detach-shader this vs)
-	(unless keep-vs? (unload vs))
-      
 	(detach-shader this fs)
-	(unless keep-fs? (unload fs))
-      
 	(when geo
-	  (detach-shader this geo)
-	  (unless keep-geo? (unload geo))))
+	  (detach-shader this geo)))
 
       (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
       (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
