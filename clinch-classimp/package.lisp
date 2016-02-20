@@ -1,7 +1,6 @@
 (in-package #:clinch)
 
-(export 'load-mesh)
-(export '*simple-texture-shader*)
-(export '*simple-color-shader*)
-(export 'make-simple-texture-shader)
-(export 'make-simple-color-shader)
+(export 'get-generic-raw-texture-shader)
+(export 'get-generic-uniform-color-with-single-diffuse-light-shader)
+(export 'get-generic-vertex-color-with-diffuse-light-shader)
+(export 'get-generic-texture-with-single-diffuse-light-shader)
