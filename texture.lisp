@@ -92,9 +92,12 @@
     (when texture-compare-mode (gl:Tex-Parameter :TEXTURE-2D :TEXTURE-COMPARE-MODE texture-compare-mode))
     (when texture-compare-function (gl:Tex-Parameter :TEXTURE-2D :TEXTURE-COMPARE-func texture-compare-function))
 
-    (if PBO 
-	(pushg this pbo)
-	(data-from-pointer this data))
+    (cond (pbo (pushg this pbo))
+	  ((cffi:pointerp data) (data-from-pointer this data))
+	  ((listp data) (data-from-list this data))
+	  (t (data-from-pointer this data)))
+			  
+	   
     tex-id)))
 		  
 
@@ -109,6 +112,14 @@
 		   (cffi-type->gl-type (qtype this))
 		   pointer))
 
+(defmethod data-from-list ((this texture) lst)
+  (data-from-pointer this nil)
+
+  (let ((data (pullg this)))
+    (loop for x from 0 below (length lst)
+       for i in lst
+       do (setf (elt data x) i))
+    (pushg this data)))
     
 (defmethod get-size ((this texture) &key)
   "Calculates the number of VALUES (stride * vcount) or (stride * width * height) this buffer contains."

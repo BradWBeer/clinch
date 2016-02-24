@@ -3,6 +3,22 @@
 
 (in-package #:clinch)
 
+(defparameter *identity-texture* nil)
+
+(defparameter *identity-texture* nil)
+
+(defun get-identity-texture ()
+  (or *identity-texture*
+      (setf *identity-texture*
+	    (make-instance 'clinch:texture
+			   :data   '(255 255 255 255)
+			   :width  1
+			   :height 1
+			   :stride 4
+			   :count  1
+			   :qtype  :unsigned-char))))
+
+
 (defun load-mesh (path)
   (classimp:with-log-to-stdout ()
     (classimp:import-into-lisp 
@@ -81,6 +97,9 @@
 				 (:AI-TEXTURE-TYPE-DIFFUSE "diffuseTexture"))
 			       (gethash file textures-hash))))))
 
+(defun add-textures-to-all-materials (materials textures-hash)
+  (loop for m in materials
+     collect (add-textures-to-material m textures-hash)))
 
 (defun get-all-material-uniforms (materials textures-hash)
   (loop for m in materials 

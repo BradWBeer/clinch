@@ -94,9 +94,6 @@
 	    (fs fragment-shader)
 	    (geo geometry-shader))
 
-       (print vs)
-       (print fs)
-
       (typecase vs
 	(string
 	 (add-dependent this
