@@ -282,7 +282,7 @@
 	      (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))))
 
 (defmethod bind-static-values-to-attribute ((this shader-program) name &rest vals)
-  "It is possible to bind static information to an attribute. Your milage may vary."
+  "It is possible to bind static information to an attribute."
   (let ((id (cdr (get-attribute-id this name))))
     (when id 
       (gl:disable-vertex-attrib-array id)

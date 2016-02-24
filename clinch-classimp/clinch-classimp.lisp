@@ -5,8 +5,6 @@
 
 (defparameter *identity-texture* nil)
 
-(defparameter *identity-texture* nil)
-
 (defun get-identity-texture ()
   (or *identity-texture*
       (setf *identity-texture*
@@ -51,8 +49,7 @@
 
 (defun get-uniforms (material)
   (map 'list (lambda (x)
-	       (list 
-		:uniform
+	       (cons
 		(subseq (car x) 5)
 		(cdr x)))
        material))
