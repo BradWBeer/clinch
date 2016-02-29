@@ -151,9 +151,7 @@
 		  (setf value (funcall value)))
 		(cond ((typep value 'buffer)
 		       (bind-buffer-to-attribute-array value current-shader-program name))
-		      (t (if (atom value)
-			     (bind-static-values-to-attribute current-shader-program name value)
-			     (bind-static-values-to-attribute current-shader-program name value))))))
+		      (t (bind-static-values-to-attribute current-shader-program name value)))))
 
 	(loop
 	   with tex-unit = 0

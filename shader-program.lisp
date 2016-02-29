@@ -262,9 +262,14 @@
       ;;(unless (eq (gethash ret *current-shader-uniforms*) ret)
       (setf (gethash ret *current-shader-uniforms*) ret)
       (destructuring-bind (type . id) ret
-	
-	(gl::with-foreign-matrix (foreign-matrix matrix)
-	  (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))
+
+	(cffi:with-pointer-to-vector-data (foreign-matrix matrix)
+	  (case (floor (sqrt (length matrix)))
+	    (4 (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))
+	    (3 (%gl:uniform-matrix-3fv id 1 nil foreign-matrix))
+	    (2 (%gl:uniform-matrix-2fv id 1 nil foreign-matrix))))))))
+
+	    
 
 (defmethod attach-uniform ((this shader-program) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to the matrix of a node."
@@ -281,7 +286,7 @@
 	    (gl::with-foreign-matrix (foreign-matrix (transform matrix))
 	      (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))))
 
-(defmethod bind-static-values-to-attribute ((this shader-program) name &rest vals)
+(defmethod bind-static-values-to-attribute ((this shader-program) name vals)
   "It is possible to bind static information to an attribute."
   (let ((id (cdr (get-attribute-id this name))))
     (when id 
