@@ -89,29 +89,33 @@
 			     ("N" . :normal)
 			     ("t1" . ,(or texture (get-identity-texture)))
 			     ("ambientLight" . (.2 .2 .2))
-			     ("lightDirection" . (0.5772705 0.5772705 0.5772705))
+			     ("lightDirection" . (-0.5772705 0.5772705 -0.5772705))
 			     ("lightIntensity" . (.8 .8 .8)))))
 
 (defun import-mesh (path &optional (texture-hash (make-hash-table :test 'equal)))
   (let* ((scene (load-mesh path))
 	 (base-path (get-base-path path))
 	 (materials (process-materials (get-materials scene) texture-hash base-path))
-	 (meshes (classimp:meshes scene)))
-    (loop for x from 0 below (length meshes)
-	 collect (let* ((mesh (elt meshes x))
-			(material (nth (classimp:material-index mesh) materials)))
-		   ;;(values materials texture-hash)))
-		   (make-classimp-entity
-		    (make-index-buffer (classimp:faces mesh))
-		    (make-vector-buffer (classimp:vertices mesh))
-		    (make-vector-buffer (classimp:normals mesh))
-		    :texture (cdr (assoc "t1" material :test #'string-equal))
-		    :texture-coordinate-buffer (let ((tc (classimp:texture-coords mesh)))
-						 (when (> (length tc) 0)
-						   (make-texture-coord-buffer mesh 0)))
-		    :vertex-color-buffer (let ((tc (classimp:colors mesh)))
-					   (when (> (length tc) 0)
-					     (elt tc 0))))))))
+	 (meshes (classimp:meshes scene))
+
+	 (entities 
+	  (loop for x from 0 below (length meshes)
+	     collect (let* ((mesh (elt meshes x))
+			    (material (nth (classimp:material-index mesh) materials)))
+
+		       (make-classimp-entity
+			(make-index-buffer (classimp:faces mesh))
+			(make-vector-buffer (classimp:vertices mesh))
+			(make-vector-buffer (classimp:normals mesh))
+			:texture (cdr (assoc "t1" material :test #'string-equal))
+			:texture-coordinate-buffer (let ((tc (classimp:texture-coords mesh)))
+						     (when (> (length tc) 0)
+						       (make-texture-coord-buffer mesh 0)))
+			:vertex-color-buffer (let ((tc (classimp:colors mesh)))
+					       (when (> (length tc) 0)
+						 (elt tc 0))))))))
+
+    (translate-node-to-clinch (classimp:root-node scene) entities)))
 
 
 ;; (defun get-uniforms (scene texture-hash )
