@@ -206,3 +206,36 @@
 (defun make-texture-coord-buffer (mesh index)
   (clinch::make-vector-buffer (elt (classimp:texture-coords mesh) index)
 			      :stride (elt (classimp:components-per-texture-coord mesh) index)))
+
+
+(defun classimp-aarb (scene)
+	   (let ((min #(0 0 0))
+		 (max #(0 0 0)))
+	     (dolist (i (coerce (meshes scene) 'list))
+	       (map nil (lambda (x) 
+			  (setf min (map 'vector #'min min x))
+			  (setf max (map 'vector #'max max x)))
+		    (vertices i)))
+	     (values min max (map 'vector (lambda (&rest args)
+					    (/ (reduce #'+ args) (length args))) min max))))
+
+(defun classimp-center-and-scale (scene &key position scale-to)
+  (multiple-value-bind (min max center) (classimp-aarb scene)
+    (let* ((m (m4:translation (v:- (rtg-math:v! 0 0 0) center))))
+
+      (when scale-to
+	(let ((scale 
+	       (* scale-to
+		  (/ (apply #'max (map 'list  #'abs
+				       (coerce (v:- max min) 'list)))))))
+	  (setf m (m4:* (m4:scale (rtg-math:v! scale scale scale))
+			m))))
+      (when position
+	(setf m (m4:* (m4:translation position) m)))
+      
+      (dolist (i (coerce (meshes scene) 'list))
+	(let ((verts (vertices i)))
+	  (dotimes (x (length verts))
+	    (setf (elt verts x)
+		  (m4:*v3 m (elt verts x))))))))
+  scene)

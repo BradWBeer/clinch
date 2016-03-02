@@ -4,7 +4,10 @@
 (in-package #:clinch)
 
 (defclass node ()
-  ((trans :reader translation
+  ((name :accessor name
+	 :initform nil
+	 :initarg :name)
+   (trans :reader translation
 	  :initform (v! 0 0 0)
 	  :initarg  :translation)
    (rot :reader rotation
