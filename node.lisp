@@ -198,8 +198,8 @@
   "Scales a node. Takes a vector3."
   (if modify 
       (setf (scaling this) 
-	    (v:+ size (scaling this)))
-      (v:+ size (scaling this))))
+	    (v:* size (scaling this)))
+      (v:* size (scaling this))))
 
 (defmethod n* ((this node) (that node) &key new-node)
   "Multiplies a node? I'm not sure if this works." ;;!!!!

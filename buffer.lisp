@@ -168,17 +168,19 @@
 (defmethod bind-buffer-to-attribute-array ((this buffer) (shader shader-program) name)
   "Bind buffer to a shader attribute."
 
+  ;;(format t "buffer:~A shader: ~A name: ~A~%" this shader name)
+
   (let ((id (cdr (get-attribute-id shader name))))
     (when id
-      (unless (eq (gethash id *current-shader-attributes*) name)
-	(setf (gethash id *current-shader-attributes*) name)
+      ;; (unless (eq (gethash id *current-shader-attributes*) name)
+      ;; 	(setf (gethash id *current-shader-attributes*) name)
 
-	(gl:enable-vertex-attrib-array id)
-	(gl:bind-buffer (target this) (id this))
-	(gl:vertex-attrib-pointer id
-				  (stride this)
-				  (qtype this)
-				  0 0 (cffi:null-pointer))))))
+      (gl:enable-vertex-attrib-array id)
+      (gl:bind-buffer (target this) (id this))
+      (gl:vertex-attrib-pointer id
+				(stride this)
+				(qtype this)
+				0 0 (cffi:null-pointer)))))
 
 (defmethod unbind-buffer-attribute-array ((this buffer) (shader-program shader-program) name)
   "Bind buffer to a shader-program attribute."
