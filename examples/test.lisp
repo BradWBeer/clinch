@@ -2,12 +2,14 @@
 (ql:quickload :clinch-pango)
 (ql:quickload :clinch-freeimage)
 (ql:quickload :clinch-cairo)
+(ql:quickload :clinch-classimp)
 
 (defparameter *quad-mesh*  nil)
 (defparameter *texture-shader* nil)
 (defparameter *texture* nil)
 (defparameter *node* nil)
 (defparameter *projection* nil)
+(defparameter texhash (make-hash-table :test 'equal))
 
 (defparameter *simple-texture-shader* nil)
 
@@ -116,14 +118,23 @@ out vec4 fragColor;
 
 
 (clinch:defevent clinch:*on-idle* ()
-  (clinch:rotate *node*
-		 (q:from-fixed-angles 0 0
-				      (clinch:degrees->radians 2))) 
+
+  ;; (clinch:rotate *node*
+  ;; 		 (q:from-fixed-angles 0 0
+  ;; 				      (clinch:degrees->radians 2))) 
+
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (clinch:render *node* :projection *projection*))
 
 (clinch:defevent clinch:*on-mouse-move* (win mouse state x y xrel yrel ts)
-  (format t "x:~A y:~A mouse:~A state:~A~%" x y mouse state))
+  (format t "x:~A y:~A mouse:~A state:~A~%" x y mouse state)
+  (case state
+    (1 (clinch:rotate *node*
+		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0)))
+    
+    (2 (clinch:translate *node* (v! (/ xrel 2) (/ yrel -2) 0)))))
+
+
     
 (clinch:defevent clinch:*on-window-resized* (win width height ts)
   (format t "Resized: ~A ~A~%" width height)
@@ -132,10 +143,10 @@ out vec4 fragColor;
 							 (/ width height) .1 1000)))
 
 (clinch:defevent clinch:*on-mouse-wheel-move* (win mouse x y ts)
-  (format t "win=~A mouse=~A x=~A y=~A ts=~A~%" win mouse x y ts)
+  ;;(format t "win=~A mouse=~A x=~A y=~A ts=~A~%" win mouse x y ts)
   (clinch:translate *node* (clinch:v! 0 0 (/ y 1))))
 
-(clinch:init);; :asynchronous t :init-controllers nil)
+(clinch:init :asynchronous t :init-controllers nil)
 
 (let ((vs t))
   (defun toggle-vsync ()

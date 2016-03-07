@@ -58,11 +58,15 @@
      for x from 0 below (length mats)
      collect (get-material mats x)))
 
+(defun replace-slashes (str)
+  (map 'string (lambda (x)
+		 (if (char= #\\ x) #\/ x)) str))
+
 (defun process-material (material texture-hash base-path)
   (values
    (loop for i in material 
       collect (if (string-equal (first i) "file")
-		  (let* ((file (third (cadr i)))
+		  (let* ((file (replace-slashes (third (cadr i))))
 			 (tex (or (gethash file texture-hash)
 				  (setf (gethash file texture-hash)
 					(create-texture-from-file (concatenate 'string base-path file))))))
