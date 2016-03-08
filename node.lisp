@@ -102,13 +102,17 @@
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (enabled this)
 
+    ;; (if parent 
+    ;;   (print (type-of parent))
+    ;;   (print "NO PARENT!"))
+
     (let ((current-transform
-	   (cond ((and parent (typep parent 'node)) (m:* (transform this) (transform parent)))
-		 ((and parent (arrayp parent)) (m:* (transform this) parent))
+	   (cond ((typep parent 'node) (m:* (transform parent) (transform this)))
+		 (parent (m:*  parent (transform this)))
 		 (t (transform this)))))
-    
-    (loop for i in (children this)
-       do (render i :parent current-transform :projection projection)))))
+      ;;(print current-transform)
+      (loop for i in (children this)
+	 do (render i :parent current-transform :projection projection)))))
 
 (defmethod render ((this list) &key parent projection)
   "Render a list of rendables."

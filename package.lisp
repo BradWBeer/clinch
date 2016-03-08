@@ -17,6 +17,7 @@
    #:pullg #:pushg
    #:!RESET
    #:ROTATION
+   #:scaling
    #:SCALE
    #:TRANSLATION
    #:CHILDREN

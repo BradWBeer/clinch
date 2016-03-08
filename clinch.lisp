@@ -4,8 +4,8 @@
 (in-package #:clinch)
 
 ;; not currently using these
-(defparameter *current-shader-attributes* (trivial-garbage:make-weak-hash-table))
-(defparameter *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table))
+(defparameter *current-shader-attributes* (trivial-garbage:make-weak-hash-table :test 'eq))
+(defparameter *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table :test 'eq))
 
 (defparameter *shaders->shader-programs* (make-hash-table))
 

@@ -137,6 +137,7 @@
 
 (defmethod draw ((this entity) &key parent projection)
   "Draws the object. Should be removed and put into render.";; !!!!
+
   (with-accessors ((shader-program shader-program)) this
     (when shader-program 
       (let ((current-shader-program (if (typep shader-program 'function)
