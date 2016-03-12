@@ -219,3 +219,9 @@
   (m4:affine-inverse (transform this)))
 
 
+(defmethod traverse-node ((this node))
+  (loop for c in (children this)
+     when c
+     append (cond 
+	      ((typep c 'node) (traverse-node c))
+	      (t (list c)))))

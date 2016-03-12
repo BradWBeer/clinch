@@ -119,7 +119,7 @@ working while cepl runs"
 
 (defun ensure-cepl-compatible-setup ()
   (unless (>= (gl:major-version) 3)
-    (error "Cepl requires OpenGL 3.1 or higher. Found: ~a.~a"
+    (error "Clinch requires OpenGL 3.1 or higher. Found: ~a.~a"
 	   (gl:major-version) (gl:minor-version))))
 
 (defun set-default-gl-options ()
