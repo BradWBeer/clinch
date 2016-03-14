@@ -47,12 +47,12 @@ void main() {
      gl_Position = P * M * vec4(v, 1);
      v_tc1 = vec2(tc1.x, -tc1.y);
  }")
-	      
-	      ;; String for the Fragment Shader
-	      ;;   t1    is the texture sampler
-	      ;;   v_tc is the texture coordinates from the fragment shader
-	      (frag-source
-	       "
+		  
+		  ;; String for the Fragment Shader
+		  ;;   t1    is the texture sampler
+		  ;;   v_tc is the texture coordinates from the fragment shader
+		  (frag-source
+		   "
 #version 330
 uniform sampler2D ambientTexture;
 in vec2 v_tc1;
@@ -185,6 +185,4 @@ void main() {
 ;; Create the window and start the app.
 ;; controllers keep the window from restarting, 
 ;; so I removed them for now.
-(clinch:init :init-controllers nil)
-
-
+(clinch:init :init-controllers nil :title "Tutorial05")

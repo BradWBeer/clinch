@@ -299,7 +299,7 @@ working while cepl runs"
 	       (init-controllers t)
 	       (width 800)
 	       (height 600)
-	       (title "Clank")
+	       (title "Clinch Program")
 	       (fullscreen nil)
 	       (no-frame nil)
 	       (alpha-size 8)
