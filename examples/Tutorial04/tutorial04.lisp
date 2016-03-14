@@ -18,7 +18,7 @@
 (defparameter lightIntensity '(.8 .8 .8))
        
 ;; lightDirection The direction of the light source. An XYZ normal value.
-(defparameter lightDirection '(-0.5772705 -0.5772705 -0.5772705))
+(defparameter lightDirection '(0.5772705 -0.5772705 -0.5772705))
 
 (defparameter *cube-node* nil)
 
@@ -30,6 +30,7 @@
 #version 330
 
 uniform   mat4 P;
+uniform   mat4 M;
 uniform   mat3 N;
 uniform   vec3 ambientLight;
 uniform   vec3 lightDirection;
@@ -41,13 +42,20 @@ in  vec3 vertexColor;
 
 out vec4 fragmentColor;
 
-void main() {
-            gl_Position = P * vec4(v, 1);
+vec3 diffuse(vec3 normal, vec3 direction, vec3 intensity) {
+  
+  float power = max( (dot(direction, normal) * -1), 0);
+  return intensity * power; 
+}
 
-            float power = max(dot(-lightDirection,
-                                  normalize(N * n)),
-                              0);
-            fragmentColor = vec4(vertexColor * (ambientLight + (lightIntensity * power)), 1.0);
+void main() {
+            gl_Position = P * M * vec4(v, 1);
+
+            vec3 _n = normalize(N * n);
+            vec3 diffuse = diffuse(normalize(_n), lightDirection, lightIntensity);
+
+
+            fragmentColor = vec4(vertexColor * (ambientLight + diffuse), 1.0);
 }")
        
        
@@ -69,6 +77,7 @@ void main() {
 		   :vertex-shader vertex-shader-source
 		   :fragment-shader fragment-shader-source
 		   :uniforms '(("P" :matrix)                ;; Current projection matrix
+			       ("M" :matrix)                ;; Current model matrix
 			       ("N" :matrix)                ;; Current normal matrix
 			       ("ambientLight" :float)      ;; Ambient light
 			       ("lightIntensity" :float)    ;; Brightness
@@ -96,7 +105,7 @@ void main() {
   (gl:clear-color 0 0 0 0)
 
   ;; Enable a few opengl features. 
-  (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d :cull-face)
+  (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d)
 
   ;; Set the blending mode. 
   (%gl:blend-func :src-alpha :one-minus-src-alpha)
@@ -122,11 +131,11 @@ void main() {
 									    20 21 22 
 									    22 21 23))   
 		       :uniforms   `(("P" . :projection)                                 ;; Set the projection matrix (:projection is a special value, which uses 
-		                                                                         ;; the projection matrix passed to the entity. "P" is just the name I picked.
+				     ("M" . :model);; the projection matrix passed to the entity. "P" is just the name I picked.
 				     ("N" . :normal)                                       ;; Current normal matrix
-				     ("ambientLight" . (lambda () ambientLight))      ;; Ambient light
-				     ("lightIntensity" . (lambda () lightIntensity))    ;; Brightness
-				     ("lightDirection" . (lambda () lightDirection)))   ;; Direction
+				     ("ambientLight"  . ,(lambda () ambientLight))      ;; Ambient light
+				     ("lightIntensity" . ,(lambda () lightIntensity))    ;; Brightness
+				     ("lightDirection" . ,(lambda () lightDirection)))   ;; Direction
 
 
 		       :attributes   `(("v" . ,(make-instance 'clinch:buffer              ;; Set the vertex buffer, "v" is just the name I picked.
@@ -210,16 +219,36 @@ void main() {
 
   (setf *cube-node* (make-instance 'clinch:node :children (list *cube*) :translation (clinch:v! 0 0 -2)))
   )
+
+(clinch:defevent clinch:*on-mouse-move* (win mouse state x y xrel yrel ts)
+  ;;(format t "x:~A y:~A mouse:~A state:~A~%" x y mouse state)
+  (case state
+    (1 (clinch:rotate *cube-node*
+		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0)))
+    
+    (2 (clinch:translate *cube-node* (clinch:v! (/ xrel 2) (/ yrel -2) 0)))))
+
+(clinch:defevent clinch:*on-mouse-wheel-move* (win mouse x y ts)
+  ;;(format t "win=~A mouse=~A x=~A y=~A ts=~A~%" win mouse x y ts)
+  (clinch:translate *cube-node* (clinch:v! 0 0 (/ y 1))))
+
+
 ;; Create an on-idle envent handler.
 (clinch:defevent clinch:*on-idle* ()
   
   ;; clear the window
   (gl:clear :color-buffer-bit :depth-buffer-bit)
 
+  ;; rotate the cube's node.
+  ;; (clinch:rotate *cube-node*
+  ;; 		 (q:from-fixed-angles 0 0
+  ;; 				      (clinch:degrees->radians 2))) 
+
+
   ;; Render the triangle.
-  (clinch:render *cube* :parent (m4:identity) :projection *projection*))
+  (clinch:render *cube-node* :projection *projection*))
 
 ;; Start the window.
-(clinch:init)
+(clinch:init :init-controllers nil)
 
 
