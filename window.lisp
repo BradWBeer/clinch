@@ -419,7 +419,6 @@ working while cepl runs"
 		  (setf *uncollected*  (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
 		  (setf *dependents*  (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
 
-
 		  (sdl2:with-gl-context (gl-context win)
 
 		    (setf *window* win

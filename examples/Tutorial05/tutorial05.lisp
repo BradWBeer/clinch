@@ -1,17 +1,11 @@
-;; This is working file as I test features...please don't use. Use tutorial05 instead. 
-
 (ql:quickload :clinch)
-(ql:quickload :clinch-pango)
 (ql:quickload :clinch-freeimage)
-(ql:quickload :clinch-cairo)
-(ql:quickload :clinch-classimp)
 
 (defparameter *quad-mesh*  nil)
 (defparameter *texture-shader* nil)
 (defparameter *texture* nil)
 (defparameter *node* nil)
 (defparameter *projection* nil)
-(defparameter texhash (make-hash-table :test 'equal))
 
 (defparameter *simple-texture-shader* nil)
 
@@ -83,14 +77,14 @@ out vec4 fragColor;
 									     1.0   1.0)))))
 		       :uniforms `(("M" . :model)
 				   ("P" . :projection)
-				   ("ambientTexture" . :int)
+				   ("ambientTexture" . :place-holder)
 				   ("ambientLight" . (.2 .2 .2))
 				   ("lightIntensity" . (.8 .8 .8))
 				   ("lightDirection" . (0.5772705 0.5772705 0.5772705)))))
 
   (make-simple-texture-shader)
   (setf *texture*
-	(clinch::create-texture-from-png
+	(clinch::create-texture-from-file 
 	 (concatenate 'string 
 		      (directory-namestring
 		       (asdf:system-relative-pathname :clinch "clinch.asd"))
@@ -118,12 +112,7 @@ out vec4 fragColor;
   (init-test))
 
 
-
 (clinch:defevent clinch:*on-idle* ()
-
-  ;; (clinch:rotate *node*
-  ;; 		 (q:from-fixed-angles 0 0
-  ;; 				      (clinch:degrees->radians 2))) 
 
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (clinch:render *node* :projection *projection*))
@@ -148,11 +137,6 @@ out vec4 fragColor;
   ;;(format t "win=~A mouse=~A x=~A y=~A ts=~A~%" win mouse x y ts)
   (clinch:translate *node* (clinch:v! 0 0 (/ y 1))))
 
-(clinch:init :asynchronous t :init-controllers nil)
+(clinch:init :init-controllers nil)
 
-(let ((vs t))
-  (defun toggle-vsync ()
-    (clinch:! (if (setf vs (not vs))
-		  (sdl2:gl-set-swap-interval 1)
-		  (sdl2:gl-set-swap-interval 0)))))
 

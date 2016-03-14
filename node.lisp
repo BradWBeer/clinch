@@ -110,8 +110,15 @@
 	   (cond ((typep parent 'node) (m:* (transform parent) (transform this)))
 		 (parent (m:*  parent (transform this)))
 		 (t (transform this)))))
-      ;;(print current-transform)
+      
+      ;; for animation this needs to update the nodes first. Then render.
+      ;; This will get better when I move to an aspect oriented system.
       (loop for i in (children this)
+	 unless (typep i 'entity)
+	 do (render i :parent current-transform :projection projection))
+      ;; Now render...
+      (loop for i in (children this)
+	 if (typep i 'entity)
 	 do (render i :parent current-transform :projection projection)))))
 
 (defmethod render ((this list) &key parent projection)
@@ -126,6 +133,8 @@
 	 do (progn 
 	      (when (arrayp i) (setf current-transform (m:* i current-transform)))
 	      (render i :parent current-transform :projection projection))))))
+
+;;!!!!!!! TODO: Add render for function type. Might be useful for animation and more.
 
 (defmethod (setf translation) (trans (this node))
   "Sets the translation vector."
