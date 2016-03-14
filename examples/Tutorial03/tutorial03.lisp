@@ -105,6 +105,6 @@ out vec4 fragColor;
   (clinch:render *triangle* :projection *projection*))
 
 ;; Start the window.
-(clinch:init)
+(clinch:init :init-controllers nil)
 
 
