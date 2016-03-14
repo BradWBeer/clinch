@@ -335,7 +335,7 @@ working while cepl runs"
 		:double-buffer double-buffer
 		:hidden hidden 
 		:resizable resizable))
-       :name "Main Clank Thread"
+       :name "Main Clinch Thread"
        :initial-bindings
        (cons (cons '*standard-output* *standard-output* )
 	     (cons (cons '*standard-input* *standard-input*)
@@ -363,7 +363,7 @@ working while cepl runs"
 		(init-controllers t)
 		(width 800)
 		(height 600)
-		(title "Clank")
+		(title "Clinch")
 		(fullscreen nil)
 		(no-frame nil)
 		(alpha-size 8)
