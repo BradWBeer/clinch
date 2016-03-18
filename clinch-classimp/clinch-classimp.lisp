@@ -25,6 +25,7 @@
 
 (defun translate-node-to-clinch (node entities) 
   (make-instance 'node 
+		 :name (classimp:name node)
 		 :matrix (classimp:transform node)
 		 :children (append 
 			    (map 'list

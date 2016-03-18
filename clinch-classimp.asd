@@ -7,5 +7,6 @@
 			:components
 			((:file "package")
 			 (:file "clinch-classimp")
-			 (:file "shaders")))))
+			 (:file "shaders")
+			 (:file "animation")))))
 			       
