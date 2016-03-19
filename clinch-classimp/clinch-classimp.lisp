@@ -23,19 +23,25 @@
      :processing-flags '(:ai-Process-Triangulate :ai-Process-Join-Identical-Vertices :ai-Process-Sort-By-P-Type))))
 
 
-(defun translate-node-to-clinch (node entities) 
-  (make-instance 'node 
-		 :name (classimp:name node)
-		 :matrix (classimp:transform node)
-		 :children (append 
-			    (map 'list
-				 (lambda (x)
-				   (nth x entities))
-				 (coerce (classimp:meshes node) 'list))
-			    (reverse (map 'list 
-					  (lambda (x)
-					    (translate-node-to-clinch x entities))
-					  (classimp:children node))))))
+(defun translate-node-to-clinch (node entities &optional (hash (make-hash-table :test 'equal)))
+  (let* ((name (classimp:name node))
+	 (ret (make-instance 'node 
+			    :name name
+			    :matrix (classimp:transform node)
+			    :children (append 
+				       (map 'list
+					    (lambda (x)
+					      (nth x entities))
+					    (coerce (classimp:meshes node) 'list))
+				       (reverse (map 'list 
+						     (lambda (x)
+						       (translate-node-to-clinch x entities hash))
+						     (classimp:children node)))))))
+    (values (if name
+		(setf (gethash name hash) ret)
+		ret)
+	    hash)))
+    
 
 (defun get-base-path (file)
   (format nil "~{/~A~}/" 
@@ -120,7 +126,9 @@
 					       (when (> (length tc) 0)
 						 (elt tc 0))))))))
 
-    (translate-node-to-clinch (classimp:root-node scene) entities)))
+    (multiple-value-bind (ret node-hash)
+	(translate-node-to-clinch (classimp:root-node scene) entities)
+      ret)))
 
 
 ;; (defun get-uniforms (scene texture-hash )

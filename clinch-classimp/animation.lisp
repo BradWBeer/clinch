@@ -75,3 +75,13 @@
 	(q:slerp (car vecs) (cdr vecs) s2)
 	(car vecs))))
 
+
+(defun get-node-name-hash (node)
+  (let ((hash (make-hash-table :test 'equal)))
+    (labels ((rec (n)
+	       (setf (gethash (classimp:name n) hash) n)
+	       (map nil #'rec (classimp:children n))))
+      (rec node)
+      hash)))
+				   
+			    

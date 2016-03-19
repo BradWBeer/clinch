@@ -6,6 +6,10 @@
 (ql:quickload :clinch-cairo)
 (ql:quickload :clinch-classimp)
 
+
+(defparameter scene
+  (clinch:load-mesh "/home/warweasle/work/tools/assimp/test/models/X/Testwuson.X"))
+
 (defparameter *quad-mesh*  nil)
 (defparameter *texture-shader* nil)
 (defparameter *texture* nil)
@@ -134,7 +138,7 @@ out vec4 fragColor;
     (1 (clinch:rotate *node*
 		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0)))
     
-    (2 (clinch:translate *node* (clinch:v! (/ xrel 2) (/ yrel -2) 0)))))
+    (2 (clinch:translate *node* (clinch:v! (/ xrel 16) (/ yrel -16) 0)))))
 
 
     
