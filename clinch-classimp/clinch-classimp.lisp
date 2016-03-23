@@ -128,6 +128,7 @@
 
     (multiple-value-bind (ret node-hash)
 	(translate-node-to-clinch (classimp:root-node scene) entities)
+      (setf *node-hash* node-hash)
       ret)))
 
 

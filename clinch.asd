@@ -27,6 +27,7 @@
 	       (:file "entity")
 	       (:file "viewport")
 	       (:file "framebuffer")
+	       (:file "animation")
 	       (:file "window")
 	       (:file "shapes")))
 

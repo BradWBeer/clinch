@@ -3,24 +3,24 @@
 
 (in-package :clinch)
 
-(defmethod translate-weights ((bone classimp:bone))
-  (map 'list (lambda (x) (cons (classimp:id x) (classimp:weight x))) (classimp:weights bone)))
+;; (defmethod translate-weights ((bone classimp:bone))
+;;   (map 'list (lambda (x) (cons (classimp:id x) (classimp:weight x))) (classimp:weights bone)))
 
-(defmethod add-weights-to-hash-table ((bone classimp:bone) (hash hash-table))
-  (let ((bone bone))
-    (loop for (id . weight) in (translate-weights bone)
-          do (progn
+;; (defmethod add-weights-to-hash-table ((bone classimp:bone) (hash hash-table))
+;;   (let ((bone bone))
+;;     (loop for (id . weight) in (translate-weights bone)
+;;           do (progn
 
-	       (setf (gethash id hash)
-                     (cons (cons weight bone) (gethash id hash)))))))
+;; 	       (setf (gethash id hash)
+;;                      (cons (cons weight bone) (gethash id hash)))))))
 
-(defmethod get-mesh-weights ((mesh classimp:mesh) (hash hash-table))
-  (map nil (lambda (x) (add-weights-to-hash-table x hash))
-       (classimp:bones mesh))
-  (loop for i from 0 below (length (classimp:faces mesh))
-     collect (cons i (sort (gethash i hash)
-			   (lambda (x y)
-			     (> (car x) (car y)))))))
+;; (defmethod get-mesh-weights ((mesh classimp:mesh) (hash hash-table))
+;;   (map nil (lambda (x) (add-weights-to-hash-table x hash))
+;;        (classimp:bones mesh))
+;;   (loop for i from 0 below (length (classimp:faces mesh))
+;;      collect (cons i (sort (gethash i hash)
+;; 			   (lambda (x y)
+;; 			     (> (car x) (car y)))))))
 
 (labels ((between (start end value)
 	   (and (>= value start)
