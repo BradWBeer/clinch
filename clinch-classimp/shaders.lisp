@@ -4,19 +4,6 @@
 (in-package #:clinch)
 
 (defparameter *generic-single-diffuse-light-shader* nil)
-(defparameter *identity-texture* nil)
-
-(defun get-identity-texture ()
-  (if *identity-texture*
-      *identity-texture* 
-      (setf *identity-texture*
-	    (make-instance 'clinch:texture
-			   :data   '(255 255 255 255)
-			   :width  1
-			   :height 1
-			   :stride 4
-			   :count  1
-			   :qtype  :unsigned-char))))
 
 (defun get-generic-single-diffuse-light-shader ()
   (or *generic-single-diffuse-light-shader*

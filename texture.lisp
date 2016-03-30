@@ -1,7 +1,9 @@
 ;;;; texture.lisp
 ;;;; Please see the licence.txt for the CLinch 
 
-(in-package #:clinch)  
+(in-package #:clinch)
+
+(defparameter *identity-texture* nil)
 
 (defclass texture ()
   ((tex-id
@@ -211,3 +213,15 @@
 	    (progn ,@body)
 	 (progn
 	   (unload ,var))))))
+
+(defun get-identity-texture ()
+  (if *identity-texture*
+      *identity-texture* 
+      (setf *identity-texture*
+	    (make-instance 'clinch:texture
+			   :data   '(255 255 255 255)
+			   :width  1
+			   :height 1
+			   :stride 4
+			   :count  1
+			   :qtype  :unsigned-char))))

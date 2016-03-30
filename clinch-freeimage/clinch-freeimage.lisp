@@ -1,6 +1,5 @@
 (in-package #:clinch)
 
-
 (defun create-texture-from-file (path &key width height)
   (freeimage:with-loaded-32bit-map (path
    				    :width     width
@@ -16,8 +15,12 @@
 		   :count  (* w h)
 		   :qtype  :unsigned-char)))
 
-
-
+(defun create-entity-from-file (path &key width height (center :center))
+  (let ((texture (create-texture-from-file path :width width :height height)))
+    (make-quad (width texture)
+	       (height texture)
+	       :center center
+	       :texture texture)))
 
 (defmethod load-texture-from-file ((this texture) path &key resize)
   
@@ -27,8 +30,6 @@
    				    :bitvar    src
    				    :widthvar  w
    				    :heightvar h)
-    
-    
     (!
       (when resize
        (setf (slot-value this 'width) w
