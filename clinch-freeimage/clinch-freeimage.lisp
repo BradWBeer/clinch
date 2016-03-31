@@ -15,7 +15,7 @@
 		   :count  (* w h)
 		   :qtype  :unsigned-char)))
 
-(defun create-entity-from-file (path &key width height (center :center))
+(defun create-quad-for-image (path &key width height (center :center))
   (let ((texture (create-texture-from-file path :width width :height height)))
     (make-quad (width texture)
 	       (height texture)
