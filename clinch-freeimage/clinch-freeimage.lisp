@@ -15,12 +15,19 @@
 		   :count  (* w h)
 		   :qtype  :unsigned-char)))
 
-(defun create-quad-for-image (path &key width height (center :center))
+(defmethod create-quad-for-image ((path string) &key width height (center :center))
   (let ((texture (create-texture-from-file path :width width :height height)))
     (make-quad (width texture)
 	       (height texture)
 	       :center center
 	       :texture texture)))
+
+(defmethod create-quad-for-image ((texture texture) &key width height (center :center))
+  (make-quad (width texture)
+	     (height texture)
+	     :center center
+	     :texture texture))
+
 
 (defmethod load-texture-from-file ((this texture) path &key resize)
   
