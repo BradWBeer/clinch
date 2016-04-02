@@ -49,6 +49,7 @@
 ;;     (data-from-pointer this src)))
 
 
+;; notes!!!: Change the output to ((time . texture) ... with time in ms.
 (defun load-animation (path)
   (let* ((atype (freeimage::freeimage-getfiletype path 0))
 	 (multi-bitmap (freeimage::freeimage-openmultibitmap (cffi:foreign-enum-value 'freeimage::free-image-format atype) path 0 1 0 0))
@@ -62,11 +63,12 @@
 		      (bitmap (freeimage::freeimage-convertto32bits page)))
 		 (Freeimage::Freeimage-FlipVertical bitmap)
 
-		 (list (make-instance 'texture
-				      :data (freeimage::freeimage-getbits bitmap)
-				      :width (freeimage::freeimage-getwidth bitmap)
-				      :height (freeimage::freeimage-getheight bitmap))
-		       (incf total-time (/ time 1000)))))))
+		 (cons (incf total-time time)
+		       (! (make-instance 'texture
+					 :data (freeimage::freeimage-getbits bitmap)
+					 :width (freeimage::freeimage-getwidth bitmap)
+					 :height (freeimage::freeimage-getheight bitmap))))))))
+
 
 
 

@@ -8,8 +8,8 @@
 	     :initform nil
 	     :initarg :children)))
 
-(defgeneric cycle (animation))
-(defmethod cycle ((this animation))
+(defgeneric get-animation-time (animation))
+(defmethod get-animation-time ((this animation))
   (reduce (lambda (a b)
 	    (max (cycle a)
 		 (cycle b)))

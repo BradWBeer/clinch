@@ -94,6 +94,12 @@
 			     ("P" . :projection)
 			     ("t1" . ,(or texture (get-identity-texture))))))
 
+(defmethod make-quad-for-texture ((this texture) &key width height (center :center) shader-program)
+  (make-quad (or width (width this))
+	     (or height (height this))
+	     :center center
+	     :shader-program shader-program
+	     :texture this))
 
 ;; ;; returns indexes, vertexes, normals, and texcoords in values
 ;; (defun make-sphere (radius rings sectors)
