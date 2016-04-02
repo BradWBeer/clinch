@@ -99,3 +99,11 @@
 	  (h (cairo:image-surface-get-height surf)))
       
       (make-instance 'clinch:texture :width w :height h :stride 4 :count (* w h) :data bits :qtype :unsigned-char))))
+
+(defgeneric create-quad-for-png (tex-data &key center))
+(defmethod create-quad-for-png ((path string) &key (center :center))
+  (let ((texture (create-texture-from-png path)))
+    (make-quad (width texture)
+	       (height texture)
+	       :center center
+	       :texture texture)))

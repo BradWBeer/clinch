@@ -14,7 +14,14 @@
 	 (y) 
 	 (-x)
 	 (-y))
-    
+
+    (if (typep center 'SIMPLE-ARRAY)
+	(let ((x-offset (aref center 0))
+	      (y-offset (aref center 1)))
+	  (setf x  (+ x/2 x-offset)
+		-x (+ (- x/2) x-offset)
+		y  (+ y/2 y-offset)
+		-y (+ (- y/2) y-offset)))
     (case center
       (:center (setf x  x/2
 		     -x (- x/2)
@@ -52,7 +59,7 @@
       (:bottom-right (setf x 0.0
 			   -x (- width)
 			   y height
-			   -y 0.0)))
+			   -y 0.0))))
     
 
     (make-instance 'clinch:buffer 
