@@ -231,6 +231,7 @@
 (defmethod make-shareable-array ((this buffer) &key size)
   (case (qtype this)
     (:float (make-array (or size (get-size this)) :element-type 'single-float))
+    (:unsigned-int (make-array (or size (get-size this)) :element-type `(unsigned-byte ,(* (cffi:FOREIGN-TYPE-size :unsigned-int) 8))))
     (t (cffi:make-shareable-byte-vector (or size (size-in-bytes this))))))
 
 (defmethod pullg ((this buffer) &key offset size)

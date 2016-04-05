@@ -29,27 +29,9 @@
 	       :initform nil
 	       :initarg :run-length)))
 
-(defclass clock () ())
-
-(defgeneric play (this &key start-time length run-speed repeat))
-(defgeneric stop (this))
-(defgeneric pause (this))
-(defgeneric skip (this position))
-
-(defmethod play ((this clock) &key start-time length run-speed repeat)
-  )
-
-(defmethod stop ((this clock))
-  )
-
-(defmethod pause ((this clock))
-  )
-
-(defmethod skip ((this clock) position)
-  )
-
-
-
-
+(defgeneric play (&key start-time length run-speed repeat))
+(defgeneric stop (&key))
+(defgeneric pause (&key))
+(defgeneric skip (position &key))
 
 

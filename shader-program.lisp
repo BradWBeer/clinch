@@ -3,6 +3,8 @@
 
 (in-package #:clinch)
 
+(defparameter *generic-single-texture-shader* nil)
+
 (defclass shader-program ()
   ((name
     :reader name
@@ -44,11 +46,11 @@
 			:delete-shaders delete-shaders)
 
   (add-uncollected this))
-  
+
 
 
 (defmethod attach-shader ((program shader-program) (shader shader))
- 
+  
   (when (id shader)    
     (gl:attach-shader (program program) (id shader))))
 
@@ -87,103 +89,103 @@
 							 undefs
 							 delete-shaders)
   (!
-    (unload-all-dependants (key this))
-    
-    (with-slots ((program program)) this
-      (let ((vs vertex-shader)
-	    (fs fragment-shader)
-	    (geo geometry-shader))
+   (unload-all-dependants (key this))
+   
+   (with-slots ((program program)) this
+     (let ((vs vertex-shader)
+	   (fs fragment-shader)
+	   (geo geometry-shader))
 
-      (typecase vs
-	(string
-	 (add-dependent this
-			(setf vs (make-instance 'vertex-shader :code vs :defs defines :undefs undefs))))
-	(shader t)
-	(t (if vs
-	       (error "Vertex shader is type ~A, which is not a string or a vertex shader." (type-of vs))
-	       (error "No vertex shader given."))))
+       (typecase vs
+	 (string
+	  (add-dependent this
+			 (setf vs (make-instance 'vertex-shader :code vs :defs defines :undefs undefs))))
+	 (shader t)
+	 (t (if vs
+		(error "Vertex shader is type ~A, which is not a string or a vertex shader." (type-of vs))
+		(error "No vertex shader given."))))
 
-      (typecase fs
-	(string
-	 (add-dependent this
-			(setf fs (make-instance 'fragment-shader :code fs :defs defines :undefs undefs))))
-	(shader t)
-	(t (if fs
-	       (error "Fragment shader is type ~A, which is not a string or a vertex shader." (type-of fs))
-	       (error "No fragment shader given!"))))
+       (typecase fs
+	 (string
+	  (add-dependent this
+			 (setf fs (make-instance 'fragment-shader :code fs :defs defines :undefs undefs))))
+	 (shader t)
+	 (t (if fs
+		(error "Fragment shader is type ~A, which is not a string or a vertex shader." (type-of fs))
+		(error "No fragment shader given!"))))
 
-      (typecase geo
-	(string
-	 (add-dependent this
-			(setf geo (make-instance 'vertex-shader :code geo :defs defines :undefs undefs))))
-	(shader t)
-	(null t)
-	(t (error "Geometry shader is type ~A, which is not a string or a vertex shader." (type-of geo))))
+       (typecase geo
+	 (string
+	  (add-dependent this
+			 (setf geo (make-instance 'vertex-shader :code geo :defs defines :undefs undefs))))
+	 (shader t)
+	 (null t)
+	 (t (error "Geometry shader is type ~A, which is not a string or a vertex shader." (type-of geo))))
 
-      (unless program (setf program (gl:create-program)))
+       (unless program (setf program (gl:create-program)))
 
-      ;; You can attach the same shader to multiple different programs.
-      (attach-shader this vs)
-      (attach-shader this fs)
-      (when geo
-	(attach-shader program geo))
+       ;; You can attach the same shader to multiple different programs.
+       (attach-shader this vs)
+       (attach-shader this fs)
+       (when geo
+	 (attach-shader program geo))
 
 
-      ;; Don't forget to link the program after attaching the
-      ;; shaders. This step actually puts the attached shader together
-      ;; to form the program.
-      (gl:link-program program)
+       ;; Don't forget to link the program after attaching the
+       ;; shaders. This step actually puts the attached shader together
+       ;; to form the program.
+       (gl:link-program program)
 
-      (when delete-shaders 
+       (when delete-shaders 
 
-	(format t "DELETEING SHADERS!!!!~%")
+	 (format t "DELETEING SHADERS!!!!~%")
 
-	(detach-shader this vs)
-	(detach-shader this fs)
-	(when geo
-	  (detach-shader this geo)))
+	 (detach-shader this vs)
+	 (detach-shader this fs)
+	 (when geo
+	   (detach-shader this geo)))
 
-      (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
-      (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
+       (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
+       (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
 
-      (trivial-garbage:cancel-finalization this)
-      (add-uncollected this)
-      (trivial-garbage:finalize this
-				(let ((program-val program)
-				      (key (key this)))
-				  
-				  (lambda ()
-				    (remhash key *uncollected*)
-				    (!!
+       (trivial-garbage:cancel-finalization this)
+       (add-uncollected this)
+       (trivial-garbage:finalize this
+				 (let ((program-val program)
+				       (key (key this)))
+				   
+				   (lambda ()
+				     (remhash key *uncollected*)
+				     (!!
 				      (unload-all-dependants key)
 				      (gl:delete-program program-val)))))
 
-      (when attributes
-	(loop for (name type) in attributes
-	   for location = (gl:get-attrib-location program name)
-	   if (>= location 0)
-	   do (setf (gethash name (slot-value this 'attributes))
-		    (cons type location))
-	   else do (format t "could not find attribute ~A!~%" name)))
-      
+       (when attributes
+	 (loop for (name type) in attributes
+	    for location = (gl:get-attrib-location program name)
+	    if (>= location 0)
+	    do (setf (gethash name (slot-value this 'attributes))
+		     (cons type location))
+	    else do (format t "could not find attribute ~A!~%" name)))
+       
 
-      (when uniforms
-	(loop for (name type) in uniforms
-	   for location = (gl:Get-Uniform-Location program name)
-	   if (>= location 0)
-	   do (setf (gethash name (slot-value this 'uniforms))
-		    (cons type location))
-	   else do (format t "could not find uniform ~A!~%" name)))))))
+       (when uniforms
+	 (loop for (name type) in uniforms
+	    for location = (gl:Get-Uniform-Location program name)
+	    if (>= location 0)
+	    do (setf (gethash name (slot-value this 'uniforms))
+		     (cons type location))
+	    else do (format t "could not find uniform ~A!~%" name)))))))
 
 (defmethod pullg ((this shader-program) &key)
   (!
-    (append
-     (loop for i in (gl:get-attached-shaders (program this))
-	collect (list (cffi:foreign-enum-keyword '%gl::enum 
-						 (gl:get-shader i :shader-type))
-		      (gl:get-shader-source i)))
-     (list (list :uniforms (list-shader-uniforms this))
-	   (list :attributes (list-shader-attributes this))))))
+   (append
+    (loop for i in (gl:get-attached-shaders (program this))
+       collect (list (cffi:foreign-enum-keyword '%gl::enum 
+						(gl:get-shader i :shader-type))
+		     (gl:get-shader-source i)))
+    (list (list :uniforms (list-shader-uniforms this))
+	  (list :attributes (list-shader-attributes this))))))
 
 
 
@@ -249,7 +251,7 @@
 							((typep value 'node) (transform
 									      value))
 							(t (error "Unknown Type in attach-uniform!")))))))))
-	  	  
+	  
 	  (if (listp value)
 	      (apply f id value)
 	      (apply f id (list value))))))))
@@ -269,7 +271,7 @@
 	    (3 (%gl:uniform-matrix-3fv id 1 nil foreign-matrix))
 	    (2 (%gl:uniform-matrix-2fv id 1 nil foreign-matrix))))))))
 
-	    
+
 
 (defmethod attach-uniform ((this shader-program) (uniform string) (matrix node))
   "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to the matrix of a node."
@@ -338,3 +340,23 @@
   "Removes a shader-program uniform"
   (remhash key (slot-value this 'shader-program-uniform)))
 
+(defun get-generic-single-texture-shader ()
+  (or *generic-single-texture-shader*
+      (setf *generic-single-texture-shader*
+	    (make-instance 'clinch:shader-program
+			   :name "generic-single-texture-shader"
+			   :vertex-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-texture-shader.vert"))
+			   :fragment-shader (alexandria:read-file-into-string
+					     (concatenate 'string 
+							  (directory-namestring
+							   (asdf:system-relative-pathname :clinch "clinch.asd"))
+							  "shaders/generic-single-texture-shader.frag"))
+			   :uniforms '(("P" :matrix)
+				       ("M" :matrix)
+				       ("t1" :int))
+			   :attributes '(("tc1" :float)
+					 ("v" :float))))))
