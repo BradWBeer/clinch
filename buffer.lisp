@@ -122,9 +122,15 @@
   (unbind this))
 
 
-(defmethod bind ((this buffer) &key )
+(defmethod bind ((this buffer) &key index offset length)
   "Wrapper around glBindBuffer. Binds this buffer for use."
-  (gl:bind-buffer (target this) (id this)))
+  (if (or offset length)
+      (cl-opengl-bindings:bind-buffer-range  (target this) 
+					     (or index 0)
+					     (id this)
+					     (or offset 0)
+					     (or length (- (vertex-count this) (or offset 0))))
+      (gl:bind-buffer (target this) (id this))))
 
 (defmethod unbind ((this buffer) &key)
   "Wrapper around glBindBuffer with buffer 0, or no buffer."
@@ -142,17 +148,17 @@
    (cffi:foreign-type-size (slot-value this 'type))))
 
 
-(defmethod bind-buffer-to-vertex-array ((this buffer))
+(defmethod bind-buffer-to-vertex-array ((this buffer) &key index offset length)
   "Use buffer in shader for the vertex array: The built-in variable gl_Vertex."
   (gl:Enable-Client-State :VERTEX-ARRAY)
-  (gl:bind-buffer (target this) (id this))
+  (bind this :index index :offset offset :length length)
   (%gl:vertex-pointer (stride this) (qtype this) 0 (cffi:null-pointer)))
 
 
-(defmethod bind-buffer-to-normal-array ((this buffer))
+(defmethod bind-buffer-to-normal-array ((this buffer) &key index offset length)
   "Use buffer in shader for the vertex array: The built-in variable gl_Vertex."
   (gl:Enable-Client-State :NORMAL-ARRAY)
-  (gl:bind-buffer (target this) (id this))
+  (bind this :index index :offset offset :length length)
   (%gl:normal-pointer (qtype this) 0 (cffi:null-pointer)))
 
 
@@ -165,7 +171,7 @@
   (gl:Disable-Client-State :NORMAL-ARRAY))
 
 
-(defmethod bind-buffer-to-attribute-array ((this buffer) (shader shader-program) name)
+(defmethod bind-buffer-to-attribute-array ((this buffer) (shader shader-program) name &key index offset length)
   "Bind buffer to a shader attribute."
 
   ;;(format t "buffer:~A shader: ~A name: ~A~%" this shader name)
@@ -176,7 +182,7 @@
       ;; 	(setf (gethash id *current-shader-attributes*) name)
 
       (gl:enable-vertex-attrib-array id)
-      (gl:bind-buffer (target this) (id this))
+      (bind this :index index :offset offset :length length)
       (gl:vertex-attrib-pointer id
 				(stride this)
 				(qtype this)

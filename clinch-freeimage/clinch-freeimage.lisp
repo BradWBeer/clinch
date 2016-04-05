@@ -46,6 +46,47 @@
 
 ;;     (data-from-pointer this src)))
 
+(defmacro mix-buffer-colors (src dest)
+  (let ((src-name (gensym))
+	(dst-name (gensym))
+	(alp-name (gensym)))
+    `(let* ((,dst-name ,dest)
+	    (,src-name ,src)
+	    (,alp-name (cffi:mem-aref ,src-name :uint8 3)))
+       (dotimes (i 4)
+	 (incf (cffi:mem-aref ,dst-name :uint8 i) 
+	       (* (cffi:mem-aref ,src-name :uint8 i) 
+		  ,alp-name))))))
+
+
+;; (defun load-fast-animation (path)
+;;   ;; load the multi-bitmap
+;;   (let* ((atype (freeimage::freeimage-getfiletype path 0))
+;; 	 (multi-bitmap (freeimage::freeimage-openmultibitmap (cffi:foreign-enum-value 'freeimage::free-image-format atype) path 0 1 0 0))
+;; 	 (page-count (Freeimage::Freeimage-GetPageCount multi-bitmap))
+;; 	 (total-time 0))
+;;     ;; get the first page. It will set the size of the texture.
+;;     (let* ((page (freeimage::freeimage-lockpage multi-bitmap i))
+;; 	   (width (freeimage::freeimage-getwidth page))
+;; 	   (height (freeimage::freeimage-getheight page))
+;; 	   (bitmap (freeimage::freeimage-convertto32bits page))
+;; 	   (time (cffi:with-foreign-object (data :pointer)
+;; 		   (freeimage::freeimage-getmetadata 
+;; 		    (cffi:foreign-enum-value 'freeimage::FREE-IMAGE-MDMODEL :FIMD-ANIMATION)  page "FrameTime" data)
+;; 		   (cffi:mem-aref (Freeimage::Freeimage-GetTagValue (cffi:mem-aref data :pointer)) :int32))))
+;;       (Freeimage::Freeimage-FlipVertical bitmap)
+;;       (let ((PBO)
+;; 	    (texture-1))
+;; 	(! (setf texture-1 (make-instance 'texture
+;; 					  :width (freeimage::freeimage-getwidth bitmap)
+;; 					  :height (freeimage::freeimage-getheight bitmap))
+
+;; 		 PBO (make-pbo-for-texture texture-1)))
+
+
+ 
+  
+
 
 (defun load-animation (path)
   (let* ((atype (freeimage::freeimage-getfiletype path 0))

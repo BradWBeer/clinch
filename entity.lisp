@@ -135,6 +135,25 @@
 
     (values bret iret)))
 
+(defun convert-non-buffer (value &key projection parent)
+  (cond ((eql value :projection) (or projection (m4:identity)))
+	((eql value :Model)      (or parent (m4:identity)))
+	((eql value :model-1) (typecase parent
+				(node (inverse parent))
+				(array (m4:affine-inverse parent))
+				(t (m4:identity))))
+	((eql value :projection-1) (m4:affine-inverse projection))
+	((eql value :normal) (typecase parent
+			       (node
+				(m4:to-mat3 
+				 (m4:transpose
+				  (m4:affine-inverse (transform parent)))))
+			       (array (m4:to-mat3 
+				       (m4:transpose
+					(m4:affine-inverse parent))))
+			       (t (m3:identity))))
+	(t value)))
+
 (defmethod draw ((this entity) &key parent projection)
   "Draws the object. Should be removed and put into render.";; !!!!
 
@@ -152,8 +171,10 @@
 		  (setf value (funcall value)))
 		(cond ((typep value 'buffer)
 		       (bind-buffer-to-attribute-array value current-shader-program name))
-		      (t (bind-static-values-to-attribute current-shader-program name value)))))
-
+		      (t (bind-static-values-to-attribute 
+			  current-shader-program 
+			  name 
+			  (convert-non-buffer value :projection projection :parent parent))))))
 	(loop
 	   with tex-unit = 0
 	   for (name . value) in (uniforms this)
@@ -161,23 +182,9 @@
 		(when (typep value 'function)
 		  (setf value (funcall value)))
 		(cond ((typep value 'texture) (prog1 (bind-sampler value current-shader-program name tex-unit) (incf tex-unit)))
-		      (t (attach-uniform current-shader-program name (cond ((eql value :projection) projection)
-									   ((eql value :Model)      (or parent (m4:identity)))
-									   ((eql value :model-1) (typecase parent
-												   (node (inverse parent))
-												   (array (m4:affine-inverse parent))
-												   (t (m4:identity))))
-									   ((eql value :projection-1) (m4:affine-inverse projection))
-									   ((eql value :normal) (typecase parent
-												  (node
-												   (m4:to-mat3 
-												    (m4:transpose
-												     (m4:affine-inverse (transform parent)))))
-												  (array (m4:to-mat3 
-													  (m4:transpose
-													   (m4:affine-inverse parent))))
-												  (t (m3:identity))))
-									   (t value))))))))))
+		      (t (attach-uniform current-shader-program name 
+					 (convert-non-buffer value :projection projection :parent parent)))))))))
+
   (if (indexes this)
       (draw-with-index-buffer (indexes this) :mode (mode this))
       (gl:draw-arrays (mode this) 0 (find-first-vertex-length this))))

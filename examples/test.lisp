@@ -122,12 +122,24 @@ out vec4 fragColor;
   (init-test))
 
 
+(defparameter *current-time* 0)
+(defparameter *delta-time* 1)
+
+(defparameter *animation-length* 1)
+(defparameter *animation* nil)
+(defparameter *animation-quad* nil)
 
 (clinch:defevent clinch:*on-idle* ()
 
   ;; (clinch:rotate *node*
   ;; 		 (q:from-fixed-angles 0 0
   ;; 				      (clinch:degrees->radians 2))) 
+  (let ((now (sdl2:get-ticks)))
+    (setf *delta-time* (- now *current-time*)
+	  *current-time* now))
+
+  ;; (when *animation* 
+  ;;   (setf (uniform aquad "t1") (get-current-frame a1 (mod *current-time* (get-animation-time a1))))
 
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (clinch:render *node* :projection *projection*))
@@ -159,4 +171,18 @@ out vec4 fragColor;
     (clinch:! (if (setf vs (not vs))
 		  (sdl2:gl-set-swap-interval 1)
 		  (sdl2:gl-set-swap-interval 0)))))
+
+;; (defun get-animation-time (lst) 
+;;   (caar (last lst)))
+	 
+;; (defun get-current-frame (animation time)
+;;   (loop for (end . tex) in animation
+;;      if (<= time end) 
+;;      do (return tex)
+;;      finally (return tex)))
+
+(defun make-animation-and-quad (path)
+  (let ((a (clinch::load-animation path)))
+    (values (make-instance 'clinch::texture-animation :textures a) 
+	    (clinch::make-quad-for-texture (cdar a)))))
 
