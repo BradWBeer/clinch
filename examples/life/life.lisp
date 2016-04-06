@@ -192,5 +192,5 @@
   (draw-texture *texture* *front-array*))
 
 ;; Start the applications
-(init :asynchronous t :init-controllers nil)
+(init :asynchronous t :init-controllers nil :title "Conway's Game of Life")
 

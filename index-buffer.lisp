@@ -44,3 +44,8 @@
   (%gl:draw-elements mode (Vertex-Count this)
 		     (qtype this)
 		     (cffi:null-pointer)))
+
+(defmethod draw-with-ranged-index-buffer ((this index-buffer) &key (start 0) (end (vertex-count this)) (mode :triangles))
+  (gl:bind-buffer (target this) (id this))
+  (cl-opengl-bindings:draw-range-elements mode start (vertex-count this) end (qtype this) (cffi:null-pointer)))
+  
