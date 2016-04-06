@@ -14,13 +14,14 @@
 		   :stride 4
 		   :qtype  :unsigned-char)))
 
-(defgeneric create-quad-for-image (tex-data &key width height center))
-(defmethod create-quad-for-image ((path string) &key width height (center :center))
+(defgeneric create-quad-for-image (tex-data &key width height center parent))
+(defmethod create-quad-for-image ((path string) &key width height (center :center) parent)
   (let ((texture (create-texture-from-file path :width width :height height)))
     (values (make-quad (width texture)
 		       (height texture)
 		       :center center
-		       :texture texture)
+		       :texture texture
+		       :parent parent)
 	    texture)))
 
 (defmethod load-texture-from-file ((this texture) path &key resize)
@@ -85,9 +86,6 @@
 
 ;; 		 PBO (make-pbo-for-texture texture-1)))
 
-
- 
-  
 
 
 ;; notes!!!: Change the output to ((time . texture) ... with time in ms.

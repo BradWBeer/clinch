@@ -12,13 +12,10 @@
     :initform nil
     :initarg :indexes
     :reader indexes)
-   (mode :initform :triangles
-	 :initarg :mode
-	 :reader mode)
-   (render-values
-    :initform nil
-    :initarg :values
-    :reader render-values)
+   (mode 
+    :initform :triangles
+    :initarg :mode
+    :reader mode)
    (uniforms 
     :initform nil
     :initarg :uniforms 
@@ -36,18 +33,22 @@
 
 (defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
   "Creates an entity.
-    :parent adds itself to the given parent. The entity doesn't keep track of its parent."
+    :parent adds itself to the given parent. The entity doesn't keep track of its parent.
+    :indexes sets the index buffer. Required.
+    :mode sets what kind of object (triangle, square, etc) will be drawn. Only triangles are tested.
+    :uniforms sets the uniform values as an alist.
+    :attributes sets the attribute values as an alist.
+    :shader-program sets the shader program.
+    :enabled sets if this entity will render."
   (when parent (add-child parent this)))
 
 (defmethod (setf shader-program) (new-value (this entity))
   "Sets the shader-program to use."
-  (sdl2:in-main-thread ()
-    (setf (slot-value this 'shader-program) new-value)))
+  (! (setf (slot-value this 'shader-program) new-value)))
 
 (defmethod (setf indexes) (new-value (this entity))
   "Sets the index array."
-  (sdl2:in-main-thread ()
-    (setf (slot-value this 'indexes) new-value)))
+  (! (setf (slot-value this 'indexes) new-value)))
 
 (defmethod attribute ((this entity) name)
   "Returns an attribute by name. Should work with numbers and strings."
@@ -81,60 +82,6 @@
 	      (setf uni (acons name new-value uni))))))
   new-value)
 
-(defmethod (setf render-values) (new-value (this entity))
-  "Sets all the render values. Be sure the use the correct format."
-  (sdl2:in-main-thread ()
-    (setf (slot-value this 'render-values) new-value)))
-		       
-(defun render-value-location (values key)
-  "Returns the 'location' of the key."
-  (loop
-     for i in values 
-     for x from 0
-     if (equal key (second i))
-     do (return x)))
-
-(defmethod (setf render-value) (new-value (this entity) name)
-  "Sets the value of a single render attribute or uniform."
-  (let ((ret
-	 (with-accessors ((lst render-values)) this
-	   (let ((loc (render-value-location lst name)))
-	     (if loc
-		 (sdl2:in-main-thread ()
-		   (setf (third (nth loc lst)) new-value)))))))
-    ret))
-
-(defmethod get-primitive ((this entity) name)
-  (let* ((buff      (get-render-value this name))
-	 (stride    (stride buff))
-	 (icount    (vertex-count (indexes this)))
-	 (itype     (qtype (indexes this)))
-	 (btype     (clinch:qtype buff))
-	 (iret      (make-array (/ icount 3)))
-	 (bret      (make-array (/ icount 3))))
-
-    (clinch:with-mapped-buffer (iptr (indexes this) :read-only)
-      (clinch:with-mapped-buffer (bptr buff :read-only)
-	
-	(dotimes (i (/ icount 3))
-	  (let ((iarr1 (make-array 3 :element-type 'integer))
-		(barr1 (make-array 3)))
-	    
-	    (dotimes (j 3)
-	      (setf (elt iarr1 j) (cffi:mem-aref iptr itype (+ (* i 3) j)))
-
-	      (let ((barr2 (make-array stride :element-type 'single-float)))
-		(dotimes (k stride)
-		  (setf (elt barr2 k)
-			(cffi:mem-aref bptr btype (+ k (* (elt iarr1 j) stride)))))
-
-		(setf (elt barr1 j) barr2)))
-	    
-	    (setf (elt iret i) iarr1)
-	    (setf (elt bret i) barr1)))))
-
-    (values bret iret)))
-
 (defun convert-non-buffer (value &key projection parent)
   (cond ((eql value :projection) (or projection (m4:identity)))
 	((eql value :Model)      (or parent (m4:identity)))
@@ -155,8 +102,7 @@
 	(t value)))
 
 (defmethod draw ((this entity) &key parent projection)
-  "Draws the object. Should be removed and put into render.";; !!!!
-
+  "Draws the object. Use render instead of this."
   (with-accessors ((shader-program shader-program)) this
     (when shader-program 
       (let ((current-shader-program (if (typep shader-program 'function)
@@ -185,12 +131,10 @@
 		      (t (attach-uniform current-shader-program name 
 					 (convert-non-buffer value :projection projection :parent parent)))))))))
 
-  (if (indexes this)
-      (draw-with-index-buffer (indexes this) :mode (mode this))
-      (gl:draw-arrays (mode this) 0 (find-first-vertex-length this))))
+      (draw-with-index-buffer (indexes this) :mode (mode this)))
 
 (defmethod update ((this entity) &key parent matrix force)
-  )
+  "Dummy method when updating nodes.")
 
 (defmethod render ((this entity) &key parent projection)
   "Renders the entity (mesh).
@@ -227,6 +171,5 @@
 	 finally (return (when dist (values dist u v point point-number)))))))
 
 (defmethod unload ((this entity) &key)
-  "Release entity resources. Actually, there are none. It should just clear out it's values." ;; !!!!
-  )
+  "Release entity resources.") ;;!!!! Actually, there are none. It should just clear out it's values.
 

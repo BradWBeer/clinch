@@ -74,6 +74,7 @@
 								  (depth-texture-mode :intensity)
 								  (texture-compare-mode :compare-r-to-texture)
 								  (texture-compare-function :lequal))
+  "Creates a depth texture for a framebuffer."
   (let ((ret
 	 (setf (depth-buffer this)
 	       (make-instance 'clinch:texture 
@@ -93,9 +94,8 @@
     (add-dependent this ret)
     ret))
 
-
 (defmethod (setf depth-buffer) ((db texture) (this frame-buffer))
-  "Set the depth buffer to use."
+  "Binds the depth buffer for use."
   (!
     (setf (slot-value this 'depth) db)
     (bind this)
@@ -134,6 +134,7 @@
 									(min-filter :linear)
 									texture-compare-mode
 									texture-compare-function)
+  "Creates and adds a color buffer for the frame buffer. "
   (!
     (let ((tex (make-instance 'clinch:texture
 			      :PBO PBO
@@ -174,6 +175,7 @@
 	 collect (print (+ color-attachment-0 num))))))
 
 (defmethod bind ((this null) &key)
+  "Binds the frame buffer for use."
   (! (gl:bind-framebuffer :draw-framebuffer 0)))
 
 (defmethod unbind ((this frame-buffer) &key )

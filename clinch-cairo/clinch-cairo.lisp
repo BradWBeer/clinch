@@ -8,6 +8,7 @@
 
 
 (defun clear-cairo-context (&optional (r 1) (g 1) (b 1) (a 1) (context cairo:*context*))
+  "Clearing a cairo context is tricky with transparency. This is a convenience function to clear the contex."
   (cairo:save context)
   (cairo:set-source-rgba r g b a context)
   (cairo:set-operator :source context)
@@ -92,7 +93,7 @@
 
 
 (defmethod create-texture-from-png (path)
-  ;; Load the png image into a texture buffer.
+  "Load the png image into a texture buffer."
   (cairo:with-png-surface (path surf)
     (let ((bits (cairo:image-surface-get-data surf :pointer-only t))
 	  (w (cairo:image-surface-get-width surf))
@@ -100,10 +101,12 @@
       
       (make-instance 'clinch:texture :width w :height h :stride 4 :data bits :qtype :unsigned-char))))
 
-(defgeneric create-quad-for-png (tex-data &key center))
-(defmethod create-quad-for-png ((path string) &key (center :center))
+(defgeneric create-quad-for-png (tex-data &key center parent))
+(defmethod create-quad-for-png ((path string) &key width height (center :center) parent)
+  "Creates a quad entity for a png file."
   (let ((texture (create-texture-from-png path)))
-    (make-quad (width texture)
-	       (height texture)
+    (make-quad (or width (width texture))
+	       (or height (height texture))
 	       :center center
-	       :texture texture)))
+	       :texture texture
+	       :parent parent)))

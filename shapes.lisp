@@ -83,9 +83,10 @@
 			      1.0   0.0
 			      1.0   1.0))))
 
-(defun make-quad (width height &key (center :center) (shader-program nil) texture)
-
+(defun make-quad (width height &key (center :center) shader-program texture parent)
+  "Creates a quad entity of width and height."
   (make-instance 'clinch:entity
+		 :parent parent
 		 :shader-program (or shader-program (get-generic-single-texture-shader))
 		 :indexes (make-quad-indices)
 		 :attributes `(("v" . ,(make-quad-vertexes width height :center center))
@@ -94,13 +95,32 @@
 			     ("P" . :projection)
 			     ("t1" . ,(or texture (get-identity-texture))))))
 
-(defmethod make-quad-for-texture ((this texture) &key width height (center :center) shader-program)
+(defmethod make-quad-for-texture ((this texture) &key width height (center :center) shader-program parent)
+  "Creates a quad for a texture which defaults to texture's width and height."
   (make-quad (or width (width this))
 	     (or height (height this))
 	     :center center
 	     :shader-program shader-program
-	     :texture this))
+	     :texture this
+	     :parent parent))
 
+(setf diamond '(#(0.0  1.0 0.0) #(-0.70710677 0.0 0.70710677) #(0.70710677 0.0 0.70710677)
+		#(0.0  1.0 0.0) #(0.9659259 0.0 0.25881892) #(0.25881892 0.0 -0.9659259)
+		#(0.0  1.0 0.0) #(-0.25881928 0.0 -0.9659258) #(-0.9659258 0.0 0.25881928)
+		#(0.0 -1.0 0.0) #(-0.70710677 0.0 0.70710677) #(0.70710677 0.0 0.70710677)
+		#(0.0 -1.0 0.0) #(0.9659259 0.0 0.25881892) #(0.25881892 0.0 -0.9659259)
+		#(0.0 -1.0 0.0) #(-0.25881928 0.0 -0.9659258) #(-0.9659258 0.0 0.25881928)))
+
+(let ((i '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)))
+  (make-array (length i) :initial-contents i))
+
+(defun subdivide (vectors indexes)
+  (let ((midpoint (midpoint vectors)))
+    (values (list (nth 0 vectors)
+		  (nth 1 vectors)
+		  (nth 2 vectors)
+		  midpoint)
+	    '((0 1 3) (1 2 3) (2 0 3)))))
 ;; ;; returns indexes, vertexes, normals, and texcoords in values
 ;; (defun make-sphere (radius rings sectors)
 

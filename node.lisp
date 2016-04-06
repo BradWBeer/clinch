@@ -46,7 +46,7 @@
 
 (defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix)
   "Creats a node with optional translation (vector3), rotation (quaterion) and translation (vector3). Can also use another node or matrix to set its values. If a node and another value is give, the other value is used starting with the matrix."
-  ;;; add decompose-transform here !!!
+  ;;; add decompose-transform here !!! 
   (setf (translation this) (or translation
 			       (and copy (copy-seq (translation copy)))
 			       (v! 0 0 0)))
@@ -69,6 +69,7 @@
   (setf (slot-value this 'transform) nil))
 
 (defmethod !0 ((this node))
+  "Shortcut to reset the node."
   (!reset this))
   
 (defmethod print-object ((this node) s)
@@ -104,11 +105,6 @@
 (defmethod render ((this node) &key parent projection)
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (enabled this)
-
-    ;; (if parent 
-    ;;   (print (type-of parent))
-    ;;   (print "NO PARENT!"))
-
     (let ((current-transform
 	   (cond ((typep parent 'node) (m:* (transform parent) (transform this)))
 		 (parent (m:*  parent (transform this)))

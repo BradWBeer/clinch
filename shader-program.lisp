@@ -178,6 +178,7 @@
 	    else do (format t "could not find uniform ~A!~%" name)))))))
 
 (defmethod pullg ((this shader-program) &key)
+  "Returns shader-program's available information such as shader source, uniforms and attributes."
   (!
    (append
     (loop for i in (gl:get-attached-shaders (program this))
@@ -188,16 +189,17 @@
 	  (list :attributes (list-shader-attributes this))))))
 
 
-
 (defmethod use-shader-program ((this shader-program) &key)
   "Start using the shader-program."
   (gl:use-program (program this)))
 
 (defmethod list-shader-uniforms ((this shader-program))
+  "List the shader-program's uniform arguments."
   (! (loop for i from 0 below (gl:get-program (program this) :active-uniforms) 
 	collect (cons i (multiple-value-list (gl:get-active-uniform (program this) i))))))
 
 (defmethod list-shader-attributes ((this shader-program))
+  "List the shader-program's attribute arguments."
   (! (loop for i from 0 below (gl:get-program (program this) :active-attributes) 
 	collect (cons i (multiple-value-list (gl:get-active-attrib (program this) i))))))
 
@@ -205,7 +207,6 @@
 ;; (defmethod list-shader-uniform-blocks ((this shader-program))
 ;;   (! (loop for i from 0 below (gl:get-program (program this) :active-uniform-blocks) 
 ;; 	collect (cons i (multiple-value-list (gl:get-active-uniform-block-name (program this) i))))))
-
 
 (defmethod get-uniform-id ((this shader-program) (id integer))
   "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
@@ -289,7 +290,7 @@
 	      (%gl:uniform-matrix-4fv id 1 nil foreign-matrix))))))))
 
 (defmethod bind-static-values-to-attribute ((this shader-program) name vals)
-  "It is possible to bind static information to an attribute."
+  "It is possible to bind static information to an attribute. That's what this does."
   (let ((id (cdr (get-attribute-id this name))))
     (when id 
       (gl:disable-vertex-attrib-array id)
@@ -341,6 +342,15 @@
   (remhash key (slot-value this 'shader-program-uniform)))
 
 (defun get-generic-single-texture-shader ()
+  "Creates/returns a shader-program which blits a texture to an entity.
+   Uniforms:
+    P: projection matrix
+    M: model-view matrix
+    t1: texture
+   Attributes:
+    v: Vertexes
+    tc1: texture coordinates"
+    
   (or *generic-single-texture-shader*
       (setf *generic-single-texture-shader*
 	    (make-instance 'clinch:shader-program

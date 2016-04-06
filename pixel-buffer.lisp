@@ -5,5 +5,5 @@
 
 (defclass pixel-buffer (buffer)
   ((target :initform :pixel-unpack-buffer))
-  (:documentation "Creates a buffer for reading/writing to "))
+  (:documentation "Creates a buffer for quickly reading and writing to textures. This is separate from the texture's data."))
 	   

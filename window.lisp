@@ -443,7 +443,6 @@ working while cepl runs"
 			  *generic-single-texture-shader* nil
 			  *identity-texture* nil))))))))))
 
-
 (defun uninit ()
   (with-main
       (setf *running* nil
