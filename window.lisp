@@ -439,7 +439,9 @@ working while cepl runs"
 		    (main-loop win gl-context width height asynchronous)
 		    (unload-all-uncollected)
 		    (setf *running* nil
-			  *inited* nil))))))))))
+			  *inited* nil
+			  *generic-single-texture-shader* nil
+			  *identity-texture* nil))))))))))
 
 
 (defun uninit ()

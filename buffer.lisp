@@ -60,6 +60,7 @@
 	       (stride  stride)
 	       (usage   usage)
 	       (loaded? loaded))  this
+
     (sdl2:in-main-thread ()
       ;; if they didn't give a vcount, see if we can derive one...
       (when (and (not vcount) (length data))
@@ -249,7 +250,7 @@
 
 (defmethod pushg ((this buffer) (data array) &key)
   (cffi:with-pointer-to-vector-data (p data)
-    (! 
+    (!
       (bind this)
       (%gl:Buffer-Data (target this)
 		       (size-in-bytes this)

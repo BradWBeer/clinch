@@ -34,10 +34,6 @@
     :reader Stride
     :initform 4
     :initarg :stride)
-   (Vertex-Count
-    :reader Vertex-Count
-    :initform nil
-    :initarg :count)
    (key :initform (gensym "texture")
 	:reader key))
     (:documentation "Creates and keeps track of a texture object. Can be used with a pixelbuffer to speed things up."))
@@ -58,7 +54,6 @@
     "Sets up a texture instance with gc finalizer. Do not depend on finalizers, release resources manually if you can.
       type:   cffi type NOTE: use :unsigned-int if you are creating an index buffer.
       id:     OpenGL buffer id
-      vcount: vertex count (or number of tuples if not using vertexes)
       stride: The number of values in each pixel.
       usage:  Tells OpenGL how often you wish to access the buffer. 
       loaded: Has data been put into the buffer. Buffers without data is just future storage, just be sure to set it before you use it.
@@ -126,9 +121,7 @@
 (defmethod get-size ((this texture) &key)
   "Calculates the number of VALUES (stride * vcount) or (stride * width * height) this buffer contains."
   (* (stride this)
-     (if (and (vertex-count this) (not (zerop (vertex-count this))))
-	 (vertex-count this)
-	 (* (width this) (height this)))))
+     (* (width this) (height this))))
 
 (defmethod size-in-bytes ((this texture))
   "Calculates how many bytes this buffer consists of."
@@ -155,7 +148,7 @@
 (defmethod make-pbo-for-texture ((this texture) &key (usage :static-draw) (target :pixel-unpack-buffer))
   (!
     (make-instance 'pixel-buffer
-		   :count (vertex-count this)
+		   :count (get-size this)
 		   :qtype (qtype this)
 		   :stride (stride this)
 		   :usage usage
@@ -176,6 +169,7 @@
 (defmethod pushg ((tex texture) (data array) &key)
   (cffi:with-pointer-to-vector-data (p data)
     (! 
+      (gl:bind-buffer :pixel-unpack-buffer 0)		      
       (bind tex)
       (gl:tex-image-2d :texture-2d
 		       0
@@ -223,5 +217,4 @@
 			   :width  1
 			   :height 1
 			   :stride 4
-			   :count  1
 			   :qtype  :unsigned-char))))
