@@ -12,16 +12,16 @@
 		   :width  w
 		   :height h
 		   :stride 4
-		   :count  (* w h)
 		   :qtype  :unsigned-char)))
 
 (defgeneric create-quad-for-image (tex-data &key width height center))
 (defmethod create-quad-for-image ((path string) &key width height (center :center))
   (let ((texture (create-texture-from-file path :width width :height height)))
-    (make-quad (width texture)
-	       (height texture)
-	       :center center
-	       :texture texture)))
+    (values (make-quad (width texture)
+		       (height texture)
+		       :center center
+		       :texture texture)
+	    texture)))
 
 (defmethod load-texture-from-file ((this texture) path &key resize)
   
