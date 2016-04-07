@@ -101,26 +101,7 @@
 			       (t (m3:identity))))
 	(t value)))
 
-(defun convert-non-buffer (value &key projection parent)
-  (cond ((eql value :projection) (or projection (m4:identity)))
-	((eql value :Model)      (or parent (m4:identity)))
-	((eql value :model-1) (typecase parent
-				(node (inverse parent))
-				(array (m4:affine-inverse parent))
-				(t (m4:identity))))
-	((eql value :projection-1) (m4:affine-inverse projection))
-	((eql value :normal) (typecase parent
-			       (node
-				(m4:to-mat3 
-				 (m4:transpose
-				  (m4:affine-inverse (transform parent)))))
-			       (array (m4:to-mat3 
-				       (m4:transpose
-					(m4:affine-inverse parent))))
-			       (t (m3:identity))))
-	(t value)))
-
-(defmethod draw ((this entity) &key parent projection)
+(defmethod draw ((this entity) &key parent (projection *projection*))
   "Draws the object. Use render instead of this."
   (with-accessors ((shader-program shader-program)) this
     (when shader-program 
@@ -155,7 +136,7 @@
 (defmethod update ((this entity) &key parent matrix force)
   "Dummy method when updating nodes.")
 
-(defmethod render ((this entity) &key parent projection)
+(defmethod render ((this entity) &key parent (projection *projection*))
   "Renders the entity (mesh).
     :parent Sets the parent for the :model"
   (when (enabled this)
@@ -189,6 +170,14 @@
 ;; 		    (setf point (elt index p))))))
 ;; 	 finally (return (when dist (values dist u v point point-number)))))))
 
-(defmethod unload ((this entity) &key)
-  "Release entity resources.") ;;!!!! Actually, there are none. It should just clear out it's values.
+(defmethod unload ((this entity) &key all)
+  "Release entity resources. If :all t, then the index buffer and all uniforms and attributes are unloaded."
+  (when all
+    (when (indexes this) (unload (indexes this)))
+    (loop for (n . v) in (uniforms this)
+       do (unload v))
+    (loop for (n . v) in (attributes this)
+       do (unload v))))
+  
+  
 

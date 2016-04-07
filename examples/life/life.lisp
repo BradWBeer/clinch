@@ -14,8 +14,8 @@
 (defparameter *front-array* nil)
 (defparameter *back-array*  nil)
 
-;; The projection to make the smallest dimension 1 one unit.
-(defparameter *ortho-projection* nil)
+;; The quad mesh's scaling buffer
+(defparameter *scaling* nil)
 
 ;; The "quad" or the two triangles to draw the texture on.
 (defparameter *quad* nil)
@@ -150,13 +150,11 @@
     ;; This call sets the "t1" uniform variable to the new texture.
     (setf (uniform *quad* "t1") *texture*)
     
-    ;; Update the projection matrix.
-    ;; This makes one dimension = 1 and the other >= 1
-    (setf *ortho-projection*
-	  (make-orthogonal-transform (/ width min)
-				     (/ height min) 0 1000)))
-  ;; Update the texture immediately 
-  (draw-texture *texture* *front-array*))
+    ;; Scale the 1x1 quad to fill the screen
+    (setf *scaling* (m4:scale (v! min min 1)))
+
+    ;; Update the texture immediately 
+    (draw-texture *texture* *front-array*)))
 
 ;; Keep a timer
 (let ((time 0))
@@ -183,8 +181,9 @@
     ;; Clear the screen 
     (gl:clear :color-buffer-bit :depth-buffer-bit)
     
-    ;; render the quad. 
-    (render *quad* :projection *ortho-projection*)))
+    ;; render the quad. Use the scaling matrix as the "parent" 
+    ;; to scale it to the proper size.
+    (render *quad* :parent *scaling*)))
 
 ;; On keyDown reset the board.
 (defevent *on-key-down* (win keysym state ts)

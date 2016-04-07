@@ -12,6 +12,7 @@
 
 (defparameter *fbo* nil)
 (defparameter *viewport* nil)
+(defparameter *projection* nil)
 
 (defmacro defevent (event args &body body)
   "Creates and updates an event handler."
@@ -179,9 +180,11 @@ working while cepl runs"
 	  (sdl2:game-controller-close controller))))
 
 (defun main-loop (win gl-context w h &optional asynchronous)
-  ;;(declare (optimize (speed 3)))
+  (declare (optimize (speed 3)))
 
   (setf *viewport* (make-instance 'viewport :x 0 :y 0 :width w :height h))
+  (setf *projection*
+	(make-orthogonal-transform w h 0 1000))
 			  
   (fire *next*)
   (setf *next* nil)
@@ -260,6 +263,8 @@ working while cepl runs"
 	  (fire *on-window-size-changed* win d1 d2 ts))
 	 ((eql event :resized)
 	  (quick-set *viewport* 0 0 d1 d2)
+	  (setf *projection*
+		(make-orthogonal-transform d1 d2 0 1000))
 	  (fire *on-window-resized* win d1 d2 ts))
 	 ((eql event :hidden) (fire *on-window-hidden* win ts))
 	 ((eql event :exposed) (fire *on-window-exposed* win ts))

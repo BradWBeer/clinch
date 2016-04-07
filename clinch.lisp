@@ -25,6 +25,9 @@
   `(sdl2:in-main-thread (:background t)
      ,@body))
 
+(defgeneric unload (this &key))
+(defmethod unload ((this t) &key))
+
 (defun add-uncollected (this)
   "Adds item to list of loaded OpenGL objects."
   (setf (gethash (key this) *uncollected*) this))

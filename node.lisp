@@ -102,7 +102,7 @@
       (setf children
 	    (remove child children)))))
 
-(defmethod render ((this node) &key parent projection)
+(defmethod render ((this node) &key parent (projection *projection*))
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (enabled this)
     (let ((current-transform
@@ -120,7 +120,7 @@
 	 if (typep i 'entity)
 	 do (render i :parent current-transform :projection projection)))))
 
-(defmethod render ((this list) &key parent projection)
+(defmethod render ((this list) &key parent (projection *projection*))
   "Render a list of rendables."
   (when (enabled this)
 
