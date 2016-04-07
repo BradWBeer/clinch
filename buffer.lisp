@@ -257,48 +257,48 @@
       (setf (loaded? this) t)))
   data)
 
-(defmethod triangle-intersection? ((index-buffer index-buffer) (vertex-buffer buffer) origin ray-dir &key)
-  "Returns distance u, v coordinates and index of the closest triangle (if any) touched by the given the ray origin and direction and the name of the vertex buffer attribute."
-  (let ((itype (cffi-type->gl-type (qtype index-buffer)))
-	(vtype (cffi-type->gl-type (qtype vertex-buffer))))
+;; (defmethod triangle-intersection? ((index-buffer index-buffer) (vertex-buffer buffer) origin ray-dir &key)
+;;   "Returns distance u, v coordinates and index of the closest triangle (if any) touched by the given the ray origin and direction and the name of the vertex buffer attribute."
+;;   (let ((itype (cffi-type->gl-type (qtype index-buffer)))
+;; 	(vtype (cffi-type->gl-type (qtype vertex-buffer))))
 
-  (labels ((get-vertex-from-index (indexes vertexes x)
-	     (v! (cffi:mem-aref vertexes 
-				vtype
-				(* 3 (cffi:mem-aref indexes itype x)))
-		 (cffi:mem-aref vertexes 
-				vtype
-				(+ 1 (* 3 (cffi:mem-aref indexes itype x))))
-		 (cffi:mem-aref vertexes 
-				vtype
-				(+ 2 (* 3 (cffi:mem-aref indexes itype x))))))
+;;   (labels ((get-vertex-from-index (indexes vertexes x)
+;; 	     (v! (cffi:mem-aref vertexes 
+;; 				vtype
+;; 				(* 3 (cffi:mem-aref indexes itype x)))
+;; 		 (cffi:mem-aref vertexes 
+;; 				vtype
+;; 				(+ 1 (* 3 (cffi:mem-aref indexes itype x))))
+;; 		 (cffi:mem-aref vertexes 
+;; 				vtype
+;; 				(+ 2 (* 3 (cffi:mem-aref indexes itype x))))))
 
-  (with-mapped-buffer (ibuffer index-buffer)
-    (with-mapped-buffer (vbuffer vertex-buffer)
+;;   (with-mapped-buffer (ibuffer index-buffer)
+;;     (with-mapped-buffer (vbuffer vertex-buffer)
 
-      (loop for i from 0 below (get-size index-buffer) by 3
-	   for triangle = (loop for j from i to (+ i 2)
-			       collect (get-vertex-from-index (ibuffer vbuffer j)))
-	   do (multiple-value-bind (new-distance new-u new-v)
-		  (ray-triangle-intersect origin ray-dir (aref triangle 0) (aref triangle 1) (aref triangle 2))
+;;       (loop for i from 0 below (get-size index-buffer) by 3
+;; 	   for triangle = (loop for j from i to (+ i 2)
+;; 			       collect (get-vertex-from-index (ibuffer vbuffer j)))
+;; 	   do (multiple-value-bind (new-distance new-u new-v)
+;; 		  (ray-triangle-intersect origin ray-dir (aref triangle 0) (aref triangle 1) (aref triangle 2))
 		
 
       
-      (labels ((rec (primitives i distance u v index)
-		 (multiple-value-bind (new-distance new-u new-v)
+;;       (labels ((rec (primitives i distance u v index)
+;; 		 (multiple-value-bind (new-distance new-u new-v)
 		     
-		 (ray-triangle-intersect? start dir (first (car primitives)) (second (car primitives)) (third (car primitives)))
-	       (when (and new-distance
-			  (or (null distance)
-			      (< new-distance distance)))
-		 (setf distance new-distance
-		       u new-u
-		       v new-v
-		       index i)))
-	     (if (cdr primitives)
-		 (rec (cdr primitives) (1+ i) distance u v index)
-		 (values distance u v index))))
-    (rec (get-primitive this vertex-name) 0 nil nil nil nil)))
+;; 		 (ray-triangle-intersect? start dir (first (car primitives)) (second (car primitives)) (third (car primitives)))
+;; 	       (when (and new-distance
+;; 			  (or (null distance)
+;; 			      (< new-distance distance)))
+;; 		 (setf distance new-distance
+;; 		       u new-u
+;; 		       v new-v
+;; 		       index i)))
+;; 	     (if (cdr primitives)
+;; 		 (rec (cdr primitives) (1+ i) distance u v index)
+;; 		 (values distance u v index))))
+;;     (rec (get-primitive this vertex-name) 0 nil nil nil nil)))
 
-(defmethod uv->texcoords ((this buffer) index u v)
-  )
+;; (defmethod uv->texcoords ((this buffer) index u v)
+;;   )
