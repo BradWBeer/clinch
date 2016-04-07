@@ -235,10 +235,10 @@
 (defmethod pullg ((this buffer) &key offset size)
   "Returns the buffer's data as a vector array."
   (let* ((full-length (size-in-bytes this))
-	 (arr (make-shareable-array this :size size)))
+	 (arr (make-shareable-array this :size length)))
     (cffi:with-pointer-to-vector-data (p arr)
       (!
-	(bind this)
+	(bind this :index index :offset offset :length length)
 	(%gl:get-buffer-sub-data (target this)
 				 (or offset 0)
 				 (or size full-length)
@@ -299,3 +299,6 @@
 		 (rec (cdr primitives) (1+ i) distance u v index)
 		 (values distance u v index))))
     (rec (get-primitive this vertex-name) 0 nil nil nil nil)))
+
+(defmethod uv->texcoords ((this buffer) index u v)
+  )

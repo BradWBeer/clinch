@@ -87,7 +87,6 @@
 ;; 		 PBO (make-pbo-for-texture texture-1)))
 
 
-
 ;; notes!!!: Change the output to ((time . texture) ... with time in ms.
 (defun load-animation (path)
   (let* ((atype (freeimage::freeimage-getfiletype path 0))
