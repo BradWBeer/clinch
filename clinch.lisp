@@ -162,3 +162,7 @@
   (map 'list (lambda (x) (/ x (length vectors)))
        (reduce #'v:+ vectors)))
 	 
+;; (defun apply-transform (arr matrix)
+;;   (loop for i from 0 below (length arr) by 3
+;;      collect (m4:*v3 matrix 
+;; 		     (subseq arr i (+ i 3)))))

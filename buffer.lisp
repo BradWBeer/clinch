@@ -232,13 +232,13 @@
     (:unsigned-int (make-array (or size (get-size this)) :element-type `(unsigned-byte ,(* (cffi:FOREIGN-TYPE-size :unsigned-int) 8))))
     (t (cffi:make-shareable-byte-vector (or size (size-in-bytes this))))))
 
-(defmethod pullg ((this buffer) &key offset size)
+(defmethod pullg ((this buffer) &key index offset size)
   "Returns the buffer's data as a vector array."
   (let* ((full-length (size-in-bytes this))
-	 (arr (make-shareable-array this :size length)))
+	 (arr (make-shareable-array this :size size)))
     (cffi:with-pointer-to-vector-data (p arr)
       (!
-	(bind this :index index :offset offset :length length)
+	(bind this :index index :offset offset :length size)
 	(%gl:get-buffer-sub-data (target this)
 				 (or offset 0)
 				 (or size full-length)
