@@ -210,7 +210,7 @@
 
 (defmethod get-uniform-id ((this shader-program) (id integer))
   "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
-  (when (and id (>= (cdr id) 0)) id))
+  (when (and id (>= id 0)) id))
 
 (defmethod get-uniform-id ((this shader-program) (uniform string))
   "Shaders pass information by using named values called Uniforms and Attributes. This gets the gl id of a uniform name."
@@ -221,7 +221,7 @@
 (defmethod get-attribute-id ((this shader-program) (id integer))
   "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
   (when (and id
-	     (>= (cdr id) 0))
+	     (>= id 0))
     id))
 
 (defmethod get-attribute-id ((this shader-program) (attribute string))
