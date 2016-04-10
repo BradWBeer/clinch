@@ -11,8 +11,8 @@
 (defgeneric get-animation-time (animation))
 (defmethod get-animation-time ((this animation))
   (reduce (lambda (a b)
-	    (max (cycle a)
-		 (cycle b)))
+	    (max (run-length a)
+		 (run-length b)))
 	  (children this)))
 
 (defclass animator () 
