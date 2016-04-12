@@ -29,9 +29,9 @@
    ;; shortcuts to set or perform node translation, rotation and scaling respectively.
    #:!t #:!r #:!s
 
-   ;; shortcuts to pullg and pushg respectively 
+   ;; shortcuts to pullg and pushg respectively (setf (!> obj) value) works too.
    #:!> #:!<
-   
+
    #:pullg #:pushg    
    #:reset #:reset-translation #:reset-rotation #:reset-scaling
    #:rotation
