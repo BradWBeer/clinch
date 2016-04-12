@@ -3,11 +3,50 @@
 
 (in-package #:clinch)
 
+(defclass vao ()
+  ((id
+    :reader id
+    :initform nil
+    :initarg :id)
+   (changed 
+    :reader changed?
+    :initform t)
+   (current-value 
+    :initform (make-hash-table :test 'equal))))
+
+(defmethod initalize-instance ((this vao))
+  (with-slots ((id id)) this
+    (unless id
+      (setf id (gl:gen-vertex-arrays 1)))))
+
+(defmethod unload ((this vao) &key)
+  "Release buffer resources."
+  (trivial-garbage:cancel-finalization this)
+  (remove-uncollected this)
+  (!
+   (when (slot-value this 'id)
+     (gl:delete-buffers (list (id this)))))
+  (setf (slot-value this 'id) nil))
+
+(defmethod bind ((this vao))
+  (with-slots ((id id)) this
+    (when id
+      (gl:bind-buffer :array-buffer id))))
+
+(defmethod unbind ((this vao))
+  (when (id this)
+    (gl:bind-buffer :array-buffer 0)))
+
+
 (defclass entity ()
   ((shader-program
     :initform nil
     :initarg :shader-program
     :reader shader-program)
+   (vao :initform nil
+	:reader vao?)
+   (changed :initform t
+	    :reader changed?)
    (indexes
     :initform nil
     :initarg :indexes
@@ -34,20 +73,23 @@
   (:documentation "Renders a mesh with a shader-program with attributes and uniforms."))
 
 
-(defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
+(defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil) (vao nil))
   "Creates an entity.
     :parent adds itself to the given parent. The entity doesn't keep track of its parent."
+  
   (when parent (add-child parent this)))
 
 (defmethod (setf shader-program) (new-value (this entity))
   "Sets the shader-program to use."
+  (setf (slot-value this 'changed) t)
   (sdl2:in-main-thread ()
-    (setf (slot-value this 'shader-program) new-value)))
+		       (setf (slot-value this 'shader-program) new-value)))
 
 (defmethod (setf indexes) (new-value (this entity))
   "Sets the index array."
+  (setf (slot-value this 'changed) t)
   (sdl2:in-main-thread ()
-    (setf (slot-value this 'indexes) new-value)))
+		       (setf (slot-value this 'indexes) new-value)))
 
 (defmethod attribute ((this entity) name)
   "Returns an attribute by name. Should work with numbers and strings."
@@ -55,6 +97,8 @@
 
 (defmethod (setf attribute) (new-value (this entity) name)
   "Sets an attribute's value. If the name doesn't exist, it's added. If the new value is nil, the entry is deleted."
+
+  (setf (slot-value this 'changed) t)
   (with-slots ((attr attributes)) this
 
     (if (null new-value)
@@ -80,29 +124,6 @@
 	      (setf (cdr item) new-value)
 	      (setf uni (acons name new-value uni))))))
   new-value)
-
-(defmethod (setf render-values) (new-value (this entity))
-  "Sets all the render values. Be sure the use the correct format."
-  (sdl2:in-main-thread ()
-    (setf (slot-value this 'render-values) new-value)))
-		       
-(defun render-value-location (values key)
-  "Returns the 'location' of the key."
-  (loop
-     for i in values 
-     for x from 0
-     if (equal key (second i))
-     do (return x)))
-
-(defmethod (setf render-value) (new-value (this entity) name)
-  "Sets the value of a single render attribute or uniform."
-  (let ((ret
-	 (with-accessors ((lst render-values)) this
-	   (let ((loc (render-value-location lst name)))
-	     (if loc
-		 (sdl2:in-main-thread ()
-		   (setf (third (nth loc lst)) new-value)))))))
-    ret))
 
 (defmethod get-primitive ((this entity) name)
   (let* ((buff      (get-render-value this name))
@@ -160,73 +181,84 @@
   (with-accessors ((shader-program shader-program)) this
     (when shader-program 
       (let ((current-shader-program (if (typep shader-program 'function)
-				(funcall shader-program)
-				shader-program)))
+					(funcall shader-program)
+					shader-program)))
 	(use-shader-program current-shader-program)
-	
-	;; first attach attributes...
-	(loop for (name . value) in (attributes this)
-	   do (progn
-		(when (typep value 'function)
-		  (setf value (funcall value)))
-		(cond ((typep value 'buffer)
-		       (bind-buffer-to-attribute-array value current-shader-program name))
-		      (t (bind-static-values-to-attribute 
-			  current-shader-program 
-			  name 
-			  (convert-non-buffer value :projection projection :parent parent))))))
-	(loop
-	   with tex-unit = 0
-	   for (name . value) in (uniforms this)
-	   do (progn
-		(when (typep value 'function)
-		  (setf value (funcall value)))
-		(cond ((typep value 'texture) (prog1 (bind-sampler value current-shader-program name tex-unit) (incf tex-unit)))
-		      (t (attach-uniform current-shader-program name 
-					 (convert-non-buffer value :projection projection :parent parent)))))))))
 
-  (if (indexes this)
-      (draw-with-index-buffer (indexes this) :mode (mode this))
-      (gl:draw-arrays (mode this) 0 (find-first-vertex-length this))))
+	;; check if we can use vao...
+	(with-slots ((vao vao)
+		     (changed changed)) this
+	  
+	  (when vao (bind-vao this))
+	  
+	  ;; first attach attributes...
+	  (unless (and vao (not changed))
+	   
+	    ;; changes are about to be updated...
+	    (setf changed nil)
+	    
+	    (loop for (name . value) in (attributes this)
+	       do (progn
+		    (when (typep value 'function)
+		      (setf value (funcall value)))
+		    (cond ((typep value 'buffer)
+			   (bind-buffer-to-attribute-array value current-shader-program name))
+			  (t (bind-static-values-to-attribute 
+			      current-shader-program 
+			      name 
+			      (convert-non-buffer value :projection projection :parent parent)))))))
+	  (loop
+	     with tex-unit = 0
+	     for (name . value) in (uniforms this)
+	     do (progn
+		  (when (typep value 'function)
+		    (setf value (funcall value)))
+		  (cond ((typep value 'texture) (prog1 (bind-sampler value current-shader-program name tex-unit) (incf tex-unit)))
+			(t (attach-uniform current-shader-program name 
+					   (convert-non-buffer value :projection projection :parent parent)))))))))
+    
+    (if (indexes this)
+	(draw-with-index-buffer (indexes this) :mode (mode this))
+	(gl:draw-arrays (mode this) 0 (find-first-vertex-length this))))
 
-(defmethod update ((this entity) &key parent matrix force)
-  )
+  (defmethod update ((this entity) &key parent matrix force)
+    )
 
-(defmethod render ((this entity) &key parent projection)
-  "Renders the entity (mesh).
+  (defmethod render ((this entity) &key parent projection)
+    "Renders the entity (mesh).
     :parent Sets the parent for the :model"
-  (when (enabled this)
-    (draw this :parent parent :projection projection)))
+    (when (enabled this)
+      (draw this :parent parent :projection projection)))
 
-(defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
+  (defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
 
-  (multiple-value-bind (points index) (clinch::get-primitive this primitive)
-    (let ((transformed-points (map 'list (lambda (x)
-					   (map 'list (lambda (p) 
-							(clinch:transform-point p transform)) x)) points)))
-      (loop
-	 with dist 
-	 with u 
-	 with v
-	 with point
-	 with point-number
-	 for p from 0 to (1- (length transformed-points))
-	 do (let ((pseq (elt transformed-points p)))
-	      (multiple-value-bind (new-dist new-u new-v)
-		  (clinch::ray-triangle-intersect? start end (elt pseq 0) (elt pseq 1) (elt pseq 2))
-		
-		(when (and new-dist
-			   (or (null dist)
-			       (> dist new-dist)))
-		  (setf dist         new-dist
-			u            new-u
-			v            new-v
-			point-number p)
-		  (when index
-		    (setf point (elt index p))))))
-	 finally (return (when dist (values dist u v point point-number)))))))
+    (multiple-value-bind (points index) (clinch::get-primitive this primitive)
+      (let ((transformed-points (map 'list (lambda (x)
+					     (map 'list (lambda (p) 
+							  (clinch:transform-point p transform)) x)) points)))
+	(loop
+	   with dist 
+	   with u 
+	   with v
+	   with point
+	   with point-number
+	   for p from 0 to (1- (length transformed-points))
+	   do (let ((pseq (elt transformed-points p)))
+		(multiple-value-bind (new-dist new-u new-v)
+		    (clinch::ray-triangle-intersect? start end (elt pseq 0) (elt pseq 1) (elt pseq 2))
+		  
+		  (when (and new-dist
+			     (or (null dist)
+				 (> dist new-dist)))
+		    (setf dist         new-dist
+			  u            new-u
+			  v            new-v
+			  point-number p)
+		    (when index
+		      (setf point (elt index p))))))
+	   finally (return (when dist (values dist u v point point-number)))))))
 
-(defmethod unload ((this entity) &key)
-  "Release entity resources. Actually, there are none. It should just clear out it's values." ;; !!!!
-  )
+  (defmethod unload ((this entity) &key)
+    "Release entity resources. Actually, there are none. It should just clear out it's values." ;; !!!!
+    )
 
