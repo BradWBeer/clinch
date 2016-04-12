@@ -3,8 +3,8 @@
 
 (in-package #:clinch)
 
-(defconstant v0 (v! 0 0 0))
-(defconstant vi (v! 1 1 1))
+(defparameter v0 (v! 0 0 0))
+(defparameter vi (v! 1 1 1))
 
 (defclass node ()
   ((name :accessor name
@@ -34,14 +34,14 @@
 	     :initarg  :children))
   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and is not required by Clinch."))
 
-(defgeneric reset (this))
-(defgeneric reset-translation (this))
-(defgeneric reset-rotation (this))
-(defgeneric reset-scaling (this))
-(clone-function reset !0)
-(clone-function reset-translation !t0)
-(clone-function reset-rotation !r0)
-(clone-function reset-scaling !s0)
+(defgeneric !reset (this))
+(defgeneric !reset-translation (this))
+(defgeneric !reset-rotation (this))
+(defgeneric !reset-scaling (this))
+(clone-function !reset !0)
+(clone-function !reset-translation !t0)
+(clone-function !reset-rotation !r0)
+(clone-function !reset-scaling !s0)
 
 (defgeneric (setf translation) (val this))
 (defgeneric (setf rotation) (val this))
@@ -73,7 +73,7 @@
 			 (and copy (copy-seq (scaling copy)))
 			 vi)))
 
-(defmethod reset ((this node))
+(defmethod !reset ((this node))
   "Resets the node."
   (setf (translation this) v0)
   (setf (rotation this)    (q:identity))
@@ -84,17 +84,17 @@
   (setf (slot-value this 's-matrix) nil)
   (setf (slot-value this 'transform) nil))
 
-(defmethod reset-translation ((this node))
+(defmethod !reset-translation ((this node))
   (setf (slot-value this 't-matrix) nil
-	(translation this) v0)))
+	(translation this) v0))
 
-(defmethod reset-rotation ((this node))
+(defmethod !reset-rotation ((this node))
   (setf (slot-value this 'r-matrix) nil
 	(rotation this) (q:identity)))
 
-(defmethod reset-scaling ((this node))
+(defmethod !reset-scaling ((this node))
   (setf (slot-value this 's-matrix) nil
-	(translation this) vi)))
+	(translation this) vi))
 
 
 (defmethod print-object ((this node) s)

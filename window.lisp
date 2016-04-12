@@ -4,15 +4,6 @@
 (in-package #:clinch)
 
 ;;;; window.lisp
-(defparameter *window* nil)
-(defparameter *context* nil)
-
-(defparameter *inited* nil)
-(defparameter *running* nil)
-
-(defparameter *fbo* nil)
-(defparameter *viewport* nil)
-(defparameter *projection* nil)
 
 (defmacro defevent (event args &body body)
   "Creates and updates an event handler."

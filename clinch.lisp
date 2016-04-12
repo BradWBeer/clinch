@@ -3,6 +3,18 @@
 
 (in-package #:clinch)
 
+;; global variables. Not exported. 
+(defparameter *window* nil)
+(defparameter *context* nil)
+
+(defparameter *inited* nil)
+(defparameter *running* nil)
+
+(defparameter *fbo* nil)
+(defparameter *viewport* nil)
+(defparameter *projection* nil)
+
+
 ;; not currently using these
 (defparameter *current-shader-attributes* (trivial-garbage:make-weak-hash-table :test 'eq))
 (defparameter *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table :test 'eq))

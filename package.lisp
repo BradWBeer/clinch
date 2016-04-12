@@ -33,7 +33,7 @@
    #:!> #:!<
 
    #:pullg #:pushg    
-   #:reset #:reset-translation #:reset-rotation #:reset-scaling
+   #:!reset #:!reset-translation #:!reset-rotation #:!reset-scaling
    #:rotation
    #:scaling
    #:scale

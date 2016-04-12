@@ -25,3 +25,13 @@
      do (return tex)
      finally (return tex)))
 
+
+(defmethod get-animation-time ((this list))
+  (caar (last this)))
+
+(defmethod get-current-frame ((this list) (time number))
+  (loop for (end . tex) in this
+     if (<= time end) 
+     do (return tex)
+     finally (return tex)))
+
