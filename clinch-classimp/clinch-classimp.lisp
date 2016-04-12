@@ -13,7 +13,6 @@
 			   :width  1
 			   :height 1
 			   :stride 4
-			   :count  1
 			   :qtype  :unsigned-char))))
 
 (defun load-mesh (path)
