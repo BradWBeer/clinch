@@ -11,55 +11,73 @@
    #:*controllers*
    #:*haptic*
 
+   ;; run in main (opengl) thread. Returns when done.
    #:!
-   #:!
+   
+   ;; run in main (opengl) thread but returns immediately.
+   #:!!
+   
+   ;; Make a vector from the arguments
    #:v!
-   #:pullg #:pushg
-   #:!RESET
-   #:ROTATION
+   
+   ;; shortcut to reset an object
+   #:!0
+   
+   ;; shortcuts to reset node translation, rotation and scaling respectively.
+   #:!t0 #:!r0 #:!s0  
+
+   ;; shortcuts to set or perform node translation, rotation and scaling respectively.
+   #:!t #:!r #:!s
+
+   ;; shortcuts to pullg and pushg respectively 
+   #:!> #:!<
+   
+   #:pullg #:pushg    
+   #:reset #:reset-translation #:reset-rotation #:reset-scaling
+   #:rotation
    #:scaling
-   #:SCALE
-   #:TRANSLATION
-   #:CHILDREN
-   #:TRANSFORM 
-   #:TRANSLATE 
-   #:ROTATE 
-   #:RESIZE 
-   #:N*
+   #:scale
+   #:translation
+   #:children
+   #:transform 
+   #:translate 
+   #:rotate 
+   #:resize 
+   #:n*
    #:decompose-transform
    
    #:init
    #:uninit
    #:*next*
-   #:*ON-WINDOW-SIZE-CHANGED*
-   #:*ON-WINDOW-RESIZED*
-   #:*ON-WINDOW-HIDDEN*
-   #:*ON-WINDOW-EXPOSED*
-   #:*ON-WINDOW-MOVED*
-   #:*ON-WINDOW-MINIMIZED*
-   #:*ON-WINDOW-MAXIMIZED*
-   #:*ON-WINDOW-RESTORED*
-   #:*ON-WINDOW-ENTER*
-   #:*ON-WINDOW-LEAVE*
-   #:*ON-WINDOW-FOCUS-GAINED*
-   #:*ON-WINDOW-FOCUS-LOST*
-   #:*ON-WINDOW-CLOSE*
-   #:*ON-KEY-DOWN*
-   #:*ON-KEY-UP*
-   #:*ON-MOUSE-MOVE*
-   #:*ON-MOUSE-DOWN*
-   #:*ON-MOUSE-UP*
-   #:*ON-MOUSE-CLICK*
-   #:*ON-MOUSE-DOUBLE-CLICK*
-   #:*ON-MOUSE-WHEEL-MOVE*
-   #:*ON-CONTROLLER-BUTTON-DOWN*
-   #:*ON-CONTROLLER-BUTTON-UP*
-   #:*ON-CONTROLLER-ADDED*
-   #:*ON-CONTROLLER-REMOVED*
-   #:*ON-CONTROLLER-REMAPPED*
-   #:*ON-CONTROLLER-AXIS-MOVE*
-   #:*ON-IDLE*
-   #:*ON-QUIT*
+   #:*on-window-size-changed*
+   #:*on-window-resized*
+   #:*on-window-hidden*
+   #:*on-window-exposed*
+   #:*on-window-moved*
+   #:*on-window-minimized*
+   #:*on-window-maximized*
+   #:*on-window-restored*
+   #:*on-window-enter*
+   #:*on-window-leave*
+   #:*on-window-focus-gained*
+   #:*on-window-focus-lost*
+   #:*on-window-close*
+   #:*on-key-down*
+   #:*on-key-up*
+   #:*on-mouse-move*
+   #:*on-mouse-down*
+   #:*on-mouse-up*
+   #:*on-mouse-click*
+   #:*on-mouse-double-click*
+   #:*on-mouse-wheel-move*
+   #:*on-controller-button-down*
+   #:*on-controller-button-up*
+   #:*on-controller-added*
+   #:*on-controller-removed*
+   #:*on-controller-remapped*
+   #:*on-controller-axis-move*
+   #:*on-idle*
+   #:*on-quit*
 
    #:unload-all-uncollected
    #:shader-program #:name #:get-generic-single-texture-shader #:program #:frag-shader #:vert-shader #:attributes #:uniforms #:use-shader-program #:get-uniform-id #:get-attribute-id #:attach-uniform #:unload #:bind-static-values-to-attribute

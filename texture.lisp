@@ -187,7 +187,6 @@
 		       p)))
   data)
 
-
 (defmethod bind-sampler ((this texture) shader-program name tex-unit)
   "Shader-Programs pass information by using named values called Uniforms. Textures are passed using Samplers. This sets a texture-unit to a sampler uniform" 
   (gl:active-texture (+ (cffi:foreign-enum-value '%gl:enum :texture0) tex-unit))

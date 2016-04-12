@@ -3,18 +3,21 @@
 
 (in-package #:clinch)
 
+(defconstant v0 (v! 0 0 0))
+(defconstant vi (v! 1 1 1))
+
 (defclass node ()
   ((name :accessor name
 	 :initform nil
 	 :initarg :name)
    (trans :reader translation
-	  :initform (v! 0 0 0)
+	  :initform v0
 	  :initarg  :translation)
    (rot :reader rotation
 	:initform (q:identity)
 	:initarg :rotation)
    (scale    :reader scaling
-	     :initform (v! 1 1 1)
+	     :initform vi
 	     :initarg  :scale)
    (t-matrix :initform nil)
    (r-matrix :initform nil)
@@ -31,10 +34,22 @@
 	     :initarg  :children))
   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and is not required by Clinch."))
 
-(defgeneric !reset (this))
+(defgeneric reset (this))
+(defgeneric reset-translation (this))
+(defgeneric reset-rotation (this))
+(defgeneric reset-scaling (this))
+(clone-function reset !0)
+(clone-function reset-translation !t0)
+(clone-function reset-rotation !r0)
+(clone-function reset-scaling !s0)
+
+(defgeneric (setf translation) (val this))
 (defgeneric (setf rotation) (val this))
 (defgeneric (setf scaling) (val this))
-(defgeneric (setf translation) (val this))
+(clone-function (setf translation) (setf !t))
+(clone-function (setf rotation) (setf !r))
+(clone-function (setf scaling) (setf !s))
+
 (defgeneric translation-matrix (this &key))
 (defgeneric rotation-matrix (this &key))
 (defgeneric scale-matrix (this &key))
@@ -42,6 +57,7 @@
 (defgeneric translate (this trans &key))
 (defgeneric rotate (this rot &key))
 (defgeneric scale (this scale &key))
+
 (defgeneric n* (this that &key))
 
 (defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix)
@@ -49,29 +65,38 @@
   ;;; add decompose-transform here !!! 
   (setf (translation this) (or translation
 			       (and copy (copy-seq (translation copy)))
-			       (v! 0 0 0)))
+			       v0))
   (setf (rotation this) (or rotation
 			    (and copy (copy-seq (rotation copy)))
-			    (v! 1 0 0 0)))
+			    (q:identity)))
   (setf (scaling this) (or scale
 			 (and copy (copy-seq (scaling copy)))
-			 (v! 1 1 1))))
+			 vi)))
 
-(defmethod !reset ((this node))
+(defmethod reset ((this node))
   "Resets the node."
-  (setf (translation this) (v! 0 0 0))
-  (setf (rotation this)    (v! 1 0 0 0))
-  (setf (scaling this)     (v! 1 1 1))
+  (setf (translation this) v0)
+  (setf (rotation this)    (q:identity))
+  (setf (scaling this)     vi)
   (setf (slot-value this 't-matrix) nil)
   (setf (slot-value this 'r-matrix) nil)
   (setf (slot-value this 's-matrix) nil)
   (setf (slot-value this 's-matrix) nil)
   (setf (slot-value this 'transform) nil))
 
-(defmethod !0 ((this node))
-  "Shortcut to reset the node."
-  (!reset this))
-  
+(defmethod reset-translation ((this node))
+  (setf (slot-value this 't-matrix) nil
+	(translation this) v0)))
+
+(defmethod reset-rotation ((this node))
+  (setf (slot-value this 'r-matrix) nil
+	(rotation this) (q:identity)))
+
+(defmethod reset-scaling ((this node))
+  (setf (slot-value this 's-matrix) nil
+	(translation this) vi)))
+
+
 (defmethod print-object ((this node) s)
   "Print function for node."
   (format s "#<NODE children: ~A ~%~A>" (length (children this)) (transform this)))
@@ -142,12 +167,13 @@
 	(progn
 	  (setf (slot-value this 't-matrix) nil
 		current trans)))))
-	
+
 (defmethod translation-matrix ((this node) &key)
   "Gets the translation matrix."
   (or (slot-value this 't-matrix)
       (setf (slot-value this 't-matrix)
 	    (m4:translation (translation this)))))
+
 
 (defmethod (setf rotation) (rot (this node))
   "Sets the rotation quaterion."
@@ -156,7 +182,7 @@
 	(progn
 	  (setf (slot-value this 'r-matrix) nil
 		current rot)))))
-	
+
 (defmethod rotation-matrix ((this node) &key)
   "Gets the rotation matrix."
   (or (slot-value this 'r-matrix)
@@ -171,7 +197,7 @@
 	(progn
 	  (setf (slot-value this 's-matrix) nil
 		current scale)))))
-	
+
 (defmethod scale-matrix ((this node) &key)
   "Gets the scaling matrix."
   (or (slot-value this 's-matrix)
@@ -199,6 +225,9 @@
 	    (q:* rot (rotation this)))
       (q:* rot (rotation this))))
 
+(defmacro !r (this w x y z)
+  `(scale ,this ,w ,x ,y, z))  
+
 (defmethod translate ((this node) trans &key (modify t))
   "Translate the node. Takes a vector3."
   (if modify 
@@ -206,12 +235,18 @@
 	    (v:+ trans (translation this)))
       (v:+ trans (translation this))))
 
+(defmacro !t (this x y z)
+  `(translate ,this ,x ,y, z))  
+
 (defmethod scale ((this node) size &key (modify t))
   "Scales a node. Takes a vector3."
   (if modify 
       (setf (scaling this) 
 	    (v:* size (scaling this)))
       (v:* size (scaling this))))
+
+(defmacro !s (this x y z)
+  `(scale ,this ,x ,y, z))  
 
 (defmethod n* ((this node) (that node) &key new-node)
   "Multiplies a node? I'm not sure if this works." ;;!!!!
@@ -225,7 +260,6 @@
 
 (defmethod inverse ((this node))
   (m4:affine-inverse (transform this)))
-
 
 (defmethod traverse-node ((this node))
   (loop for c in (children this)

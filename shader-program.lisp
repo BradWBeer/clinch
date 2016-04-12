@@ -188,7 +188,6 @@
     (list (list :uniforms (list-shader-uniforms this))
 	  (list :attributes (list-shader-attributes this))))))
 
-
 (defmethod use-shader-program ((this shader-program) &key)
   "Start using the shader-program."
   (gl:use-program (program this)))

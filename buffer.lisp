@@ -41,7 +41,11 @@
 	:reader key))
   (:documentation "Creates and keeps track of GPU buffer object (shared memory with gpu)."))
 
-
+(defgeneric pullg (this &key))
+(defgeneric pushg (this data &key))
+(clone-function pullg !>)
+(clone-function pushg !<)
+    
 (defmethod initialize-instance :after ((this buffer) &key data)
   "Sets up a buffer instance.
       type:   cffi type NOTE: Use the index buffer for indices.
@@ -256,6 +260,10 @@
 		       (usage this))
       (setf (loaded? this) t)))
   data)
+
+(defmethod (setf !>) ((data array) (this buffer))
+  (pushg this data))
+
 
 ;; (defmethod triangle-intersection? ((index-buffer index-buffer) (vertex-buffer buffer) origin ray-dir &key)
 ;;   "Returns distance u, v coordinates and index of the closest triangle (if any) touched by the given the ray origin and direction and the name of the vertex buffer attribute."

@@ -113,6 +113,9 @@
 		    (when (>= hit-distance 0.0)
 		      (values hit-distance u v))))))))))))
 
+(defmacro clone-function (old new)
+  `(setf (fdefinition ',new) (fdefinition ',old)))
+
 (defun split-keywords (lst &optional keys objects)
   (cond 
     ((or (null lst)
