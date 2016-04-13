@@ -134,9 +134,11 @@
   (gl:bind-texture :texture-2d (tex-id this)))
 
 (defmethod unbind ((this texture) &key )
+  "Unbinds the texture."
   (gl:bind-texture :texture-2d 0))
 
 (defmethod pushg ((this texture) (pbo pixel-buffer) &key)
+  "Sets the texture data from a pixel buffer."
   (! 
     (bind pbo)
     (bind this)
@@ -146,6 +148,7 @@
     (unbind pbo)))
 
 (defmethod make-pbo-for-texture ((this texture) &key (usage :static-draw) (target :pixel-unpack-buffer))
+  "Returns a compatible pixel buffer for a texture."
   (!
     (make-instance 'pixel-buffer
 		   :count (get-size this)
@@ -155,6 +158,7 @@
 		   :target target)))
   
 (defmethod pullg ((tex texture) &key)
+  "Gets the texture data as a vector array."
   (let ((arr (cffi:make-shareable-byte-vector (size-in-bytes tex))))
     (cffi:with-pointer-to-vector-data (p arr)
       (!
@@ -167,6 +171,7 @@
       arr)))
 
 (defmethod pushg ((tex texture) (data array) &key)
+  "Sets the texture data from a vector array."
   (cffi:with-pointer-to-vector-data (p data)
     (! 
       (gl:bind-buffer :pixel-unpack-buffer 0)		      
@@ -181,7 +186,6 @@
 		       (clinch::cffi-type->gl-type (qtype tex))
 		       p)))
   data)
-
 
 (defmethod bind-sampler ((this texture) shader-program name tex-unit)
   "Shader-Programs pass information by using named values called Uniforms. Textures are passed using Samplers. This sets a texture-unit to a sampler uniform" 
@@ -198,8 +202,8 @@
     (when (tex-id this)
       (gl:delete-textures (list (tex-id this))))))
 
-;; Creates a temporary PBO for a texture, be sure to map/unmap if you need to access the data
 (defmacro with-temporary-pbo ((var texture &key (usage :static-draw) (target :pixel-unpack-buffer)) &body body)
+  "Creates a temporary pixel buffer for a texture."
   (let ((tex (gensym)))
     `(let* ((,tex ,texture)
 	    (,var (make-pbo-for-texture ,tex :usage ,usage :target ,target)))
@@ -209,6 +213,8 @@
 	   (unload ,var))))))
 
 (defun get-identity-texture ()
+  "Creates/returns a 1x1 texture with the values (1.0, 1.0, 1.0, 1.0).
+   This is a nice placeholder when you don't want a custom shader."
   (if *identity-texture*
       *identity-texture* 
       (setf *identity-texture*

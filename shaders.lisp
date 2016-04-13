@@ -34,6 +34,7 @@
 
 
 (defmethod initialize-instance :after ((this shader) &key code defs undefs)
+  "Creates a shader."
   (with-slots ((id id) (key key)) this 
 
     (shader-compile this :code code :defs defs :undefs undefs)
@@ -74,14 +75,17 @@
       (error "Could not compile shader!"))))
 
 (defmethod create-shader ((this vertex-shader))
+  "Creates a vertex shader."
   (setf (slot-value this 'id)
 	(gl:create-shader :vertex-shader)))
 
 (defmethod create-shader ((this fragment-shader))
+  "Creates a fragment shader."
   (setf (slot-value this 'id)
 	(gl:create-shader :fragment-shader)))
 
 (defmethod create-shader ((this geometry-shader))
+  "Creates a geometry shader."
   (setf (slot-value this 'id)
 	(gl:create-shader :geometry-shader)))
   

@@ -63,22 +63,23 @@
 	       (* (elt m 7) (elt p 1))
 	       (* (elt m 11) (elt p 2))
 	       (elt m 15)))))
-    (make-vector (* w (+ (* (elt m 0) (elt p 0))
-			 (* (elt m 4) (elt p 1))
-			 (* (elt m 8) (elt p 2))
-			 (elt m 12)))
-		 (* w (+ (* (elt m 1) (elt p 0))
-			 (* (elt m 5) (elt p 1))
-			 (* (elt m 9) (elt p 2))
-			 (elt m 13)))
-		 (* w (+ (* (elt m 2) (elt p 0))
-			 (* (elt m 6) (elt p 1))
-			 (* (elt m 10) (elt p 2))
-			 (elt m 14))))))
+    (v! (* w (+ (* (elt m 0) (elt p 0))
+		(* (elt m 4) (elt p 1))
+		(* (elt m 8) (elt p 2))
+		(elt m 12)))
+	(* w (+ (* (elt m 1) (elt p 0))
+		(* (elt m 5) (elt p 1))
+		(* (elt m 9) (elt p 2))
+		(elt m 13)))
+	(* w (+ (* (elt m 2) (elt p 0))
+		(* (elt m 6) (elt p 1))
+		(* (elt m 10) (elt p 2))
+		(elt m 14))))))
 
 						     
 ;;; Do I still need this? !!!
 (defun unproject (x y width height inv-transform)
+  "Unproject from the screen to transform space."
   (let* ((new-x (1- (/ (* 2 x) width)))
 	 (new-y (- (1- (/ (* 2 y) height))))
 	 (start (clinch:transform-point (v! new-x new-y 0) inv-transform))
@@ -89,6 +90,7 @@
   
 ;;; Do I still need this? !!!
 (defun get-screen-direction (lens-1)
+  "Gets the direction from the middle of the screen."
   (let ((start-of-box (clinch:transform-point (v! 0 0 0)
 					lens-1))
 	(end-of-box   (clinch:transform-point (v! 0 0 1)

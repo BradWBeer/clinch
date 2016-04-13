@@ -13,7 +13,6 @@
 			   :width  1
 			   :height 1
 			   :stride 4
-			   :count  1
 			   :qtype  :unsigned-char))))
 
 (defun load-mesh (path)
@@ -86,9 +85,10 @@
      collect (process-material (get-uniforms i) texture-hash base-path)))
 
 
-(defun make-classimp-entity (index-buffer vertex-buffer normal-buffer &key texture texture-coordinate-buffer vertex-color-buffer)
+(defun make-classimp-entity (index-buffer vertex-buffer normal-buffer &key texture texture-coordinate-buffer vertex-color-buffer parent)
 									
   (make-instance 'clinch:entity
+		 :parent parent
 		 :shader-program (get-generic-single-diffuse-light-shader)
 		 :indexes index-buffer
 		 :attributes `(("v" . ,vertex-buffer)
@@ -103,7 +103,7 @@
 			     ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
 			     ("lightIntensity" . (.8 .8 .8)))))
 
-(defun import-mesh (path &optional (texture-hash (make-hash-table :test 'equal)))
+(defun import-mesh (path &key (texture-hash (make-hash-table :test 'equal)))
   (let* ((scene (load-mesh path))
 	 (base-path (get-base-path path))
 	 (materials (process-materials (get-materials scene) texture-hash base-path))
@@ -128,7 +128,7 @@
 
     (multiple-value-bind (ret node-hash)
 	(translate-node-to-clinch (classimp:root-node scene) entities)
-      (setf *node-hash* node-hash)
+      node-hash
       ret)))
 
 

@@ -3,6 +3,18 @@
 
 (in-package #:clinch)
 
+;; global variables. Not exported. 
+(defparameter *window* nil)
+(defparameter *context* nil)
+
+(defparameter *inited* nil)
+(defparameter *running* nil)
+
+(defparameter *fbo* nil)
+(defparameter *viewport* nil)
+(defparameter *projection* nil)
+
+
 ;; not currently using these
 (defparameter *current-shader-attributes* (trivial-garbage:make-weak-hash-table :test 'eq))
 (defparameter *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table :test 'eq))
@@ -14,6 +26,19 @@
 
 (defparameter *dependents*  (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
   "Weak hash of OpenGL objects waiting to be unloaded by another.")
+
+(defmacro ! (&body body)
+  "Runs body in main thread for safe OpenGL calls. Waits for return value."
+  `(sdl2:in-main-thread ()
+     ,@body))
+
+(defmacro !! (&body body)
+  "Runs body in main thread for safe OpenGL calls. Returns immediately."
+  `(sdl2:in-main-thread (:background t)
+     ,@body))
+
+(defgeneric unload (this &key))
+(defmethod unload ((this t) &key))
 
 (defun add-uncollected (this)
   "Adds item to list of loaded OpenGL objects."
@@ -28,6 +53,7 @@
   (loop for key being the hash-keys of *uncollected*
      do (unload (gethash key *uncollected*))))
 
+;; Internal dependance tracking functions
 (defun unload-dependent (this dependent)
   (let* ((deps (gethash (key this) *dependents*))
 	 (k (key dependent)))
@@ -55,17 +81,6 @@
        (gethash this *dependents*))
   (remhash this *dependents*))
 
-(defmacro ! (&body body)
-  "Runs body in main thread for safe OpenGL calls. Waits for return value."
-  `(sdl2:in-main-thread ()
-     ,@body))
-
-(defmacro !! (&body body)
-  "Runs body in main thread for safe OpenGL calls. Returns immediately."
-  `(sdl2:in-main-thread (:background t)
-     ,@body))
-
-
 (defun decompose-transform (m)
   "Decomposes a matrix into it's position vector3, rotation quaterion and scaling vector3.
    Useful for creating/updating the node object."
@@ -88,9 +103,9 @@
 (defun set-assoc-name (alist item value)
   (setf (car (assoc item alist)) value))
 
-
-
 (defun ray-triangle-intersect? (origin ray-dir v0 v1 v2)
+  "Given an origin, direction and a triangle returns if and where they intersect.
+   Presently does not cull backfacing triangles."
   (let ((epsilon 1.0e-6))
     (let ((edge1 (v3:- v1 v0))
 	  (edge2 (v3:- v2 v0)))
@@ -110,6 +125,8 @@
 		    (when (>= hit-distance 0.0)
 		      (values hit-distance u v))))))))))))
 
+(defmacro clone-function (old new)
+  `(setf (fdefinition ',new) (fdefinition ',old)))
 
 (defun split-keywords (lst &optional keys objects)
   (cond 
@@ -129,9 +146,8 @@
      (push (first lst) objects) 
      (split-keywords (cdr lst) keys objects))))
 
-
-
 (defun transform-tree (tester transformer tree)
+  "I think this is a tree walker which applies a function to a clinch node tree."
   (cond ((consp tree)
 	 ;; it's a cons. process the two subtrees.
 	 (destructuring-bind (left . right) tree
@@ -152,22 +168,16 @@
 	(t tree)))
 
 
-;; (defun make-local-path (file)
-;;   (concatenate 'string 
-;; 	       (directory-namestring
-;; 		(asdf:system-relative-pathname :clinch "clinch.asd"))
-;; 	       file))
+(defun separate (lst len)
+  (when lst
+    (cons (subseq lst 0 len)
+	  (separate (subseq lst len) len))))
 
-;; (defun eval-from-file (file)
-;;   (eval
-;;    (read-from-string
-;;     (alexandria:read-file-into-string
-;;      (make-local-path file)))))
-
-;; (defun make-standard-shader (name)
-;;   (eval-from-file 
-;;    (concatenate 'string 
-;; 		"assets/shaders/"
-;; 		name
-;; 		".lisp")))
-
+(defun midpoint (vectors)
+  (map 'list (lambda (x) (/ x (length vectors)))
+       (reduce #'v:+ vectors)))
+	 
+;; (defun apply-transform (arr matrix)
+;;   (loop for i from 0 below (length arr) by 3
+;;      collect (m4:*v3 matrix 
+;; 		     (subseq arr i (+ i 3)))))

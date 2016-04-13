@@ -36,9 +36,9 @@ CLinch should not depend on any one library. Currently it only supports OpenGL, 
 
 ** Architecture
 
-Although CLinch can be used as a complete graphics engine, most parts of CLinch are independent. You can use most objects by themselves as best suits your application. For example, you can use a buffer object by itself. This also helps with testing by isolating the various parts of CLinch. The following is in hierarchical order based on the default configuration. This is to explain it as clearly as possible, not to indicate a necessary design. 
+Although CLinch can be used as a complete graphics engine, most parts of CLinch are independent and customizable. You can use most objects as best suits your application. For example, you can use set buffer object's data directly instead of loading a mesh. This also helps with testing by isolating the various parts of CLinch. The following is in hierarchical order based on the default configuration. This is to explain it as clearly as possible, not to push a particular design. 
 
-Most objects have children method which tries to behavior intelligently based on their type. Most objects also have a render method which will render itself then its children.
+Most objects have children method which tries to behavior intelligently based on their type. Node objects also have a render method which will update themselves then its children.
 
 *** Transforms
 

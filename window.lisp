@@ -4,19 +4,13 @@
 (in-package #:clinch)
 
 ;;;; window.lisp
-(defparameter *window* nil)
-(defparameter *context* nil)
-
-(defparameter *inited* nil)
-(defparameter *running* nil)
-
-(defparameter *fbo* nil)
-(defparameter *viewport* nil)
 
 (defmacro defevent (event args &body body)
   "Creates and updates an event handler."
   `(setf ,event (lambda ,args
 		  ,@body)))
+
+;; *root* node is defined in node.lisp
 
 (defparameter *controllers* nil
   "An alist of discovered controllers. Format: (controller-id . sdl-controller-handle)")
@@ -83,7 +77,14 @@
   "Called when a controller's axis moves. Arguments (controller-id axis-id position timestamp)")
 
 (defparameter *on-idle* nil
-  "Called when there are no pending events. Take no arguments.")
+  "Called when there are no pending events. Take no arguments.
+   Default can be overridden.")
+
+(clinch:defevent clinch:*on-idle* ()
+
+  (gl:clear :color-buffer-bit :depth-buffer-bit)
+  (clinch:render *root* :projection *projection*))
+
 (defparameter *on-quit* nil
   "Called when clinch is about to exit. Take no arguments.")
 
@@ -179,9 +180,11 @@ working while cepl runs"
 	  (sdl2:game-controller-close controller))))
 
 (defun main-loop (win gl-context w h &optional asynchronous)
-  ;;(declare (optimize (speed 3)))
+  (declare (optimize (speed 3)))
 
   (setf *viewport* (make-instance 'viewport :x 0 :y 0 :width w :height h))
+  (setf *projection*
+	(make-orthogonal-transform w h 0 1000))
 			  
   (fire *next*)
   (setf *next* nil)
@@ -260,6 +263,8 @@ working while cepl runs"
 	  (fire *on-window-size-changed* win d1 d2 ts))
 	 ((eql event :resized)
 	  (quick-set *viewport* 0 0 d1 d2)
+	  (setf *projection*
+		(make-orthogonal-transform d1 d2 0 1000))
 	  (fire *on-window-resized* win d1 d2 ts))
 	 ((eql event :hidden) (fire *on-window-hidden* win ts))
 	 ((eql event :exposed) (fire *on-window-exposed* win ts))
@@ -436,13 +441,15 @@ working while cepl runs"
 		    (format t "Beginning main loop.~%")
 		    (finish-output)
 
+		    (setf *root* (make-instance 'node :translation (v! 0 0 -100)))
+
 		    (main-loop win gl-context width height asynchronous)
 		    (unload-all-uncollected)
-		    (setf *running* nil
+		    (setf *root* nil
+			  *running* nil
 			  *inited* nil
 			  *generic-single-texture-shader* nil
 			  *identity-texture* nil))))))))))
-
 
 (defun uninit ()
   (with-main

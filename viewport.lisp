@@ -87,6 +87,7 @@
   (render this))
 
 (defmacro with-viewport ((vp) &body body)
+  "A wrapper which sets and unsets a viewport."
   (let ((old (gensym)))
     `(let ((,old *viewport*)
 	   (*viewport* ,vp))

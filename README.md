@@ -7,23 +7,33 @@ Clinch is a simple, yet powerful 3d game engine for Lisp.
 
 Eventually Clinch will become a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp, 3D, shaders, 2d vector graphics, richtext support, 3d physics and much more.
 
-### Clinch Extensions:
+### Features
 
-* A suite of modern 3d and 2d tools through OpenGL
+* Live code in a multithreaded environment.
 
-* Access to commercial grade windowing, controller, force-feedback, sound, music and more thorough SDL2
+* Load plug-ins for more functionality.
 
-* 3d physics with joints and motors with the ODE physics engine
+* Modern OpenGL features such as shaders and GPU buffers.
 
-* Ability to live code with Lisp.
+* Commercial grade windowing, controller, force-feedback, sound, music and more thorough SDL2.
 
-* Texture loading and saving with FreeImage
+* C and other OpenGL objects on the fly.
 
-* Integration with 2D vector graphics with Cairo
+* Animate any object such as textures, transforms, etc.
 
-* Integration with fonts and text positioning with Pango
 
-* 3D asset importing using ClassImp (Coming Soon!)
+### Clinch Plug-ins:
+
+* 3d physics with joints and motors using the ODE physics engine.
+
+* Texture loading and saving with FreeImage.
+
+* Integration with 2D vector graphics with Cairo.
+
+* Integration with fonts and text positioning with Pango.
+
+* 3D asset importing using ClassImp. (animations coming soon!)
+
 
 ## Design Goals
 
@@ -33,11 +43,13 @@ Clinch should be as fast or faster than most script-based graphics engines and r
 
 ### Simple
 
-Clinch should be as simple as possible for someone familiar with 3D graphics programming to understand. I still remember how easy it was to write a single pixel to the screen in DOS and while I can't simplify to that degree (without losing modern power and flexibility), I can remove many of the most common difficulties. These include texture and vertex buffers, shader compiling and linking, shader variable passing, drawing text and 2D graphics, pipelines and 3D transformations. 
+Clinch should be as simple as possible for someone familiar with 3D graphics programming to understand. I still remember how easy it was to write a single pixel to the screen in DOS and while I can't simplify to that degree (without losing modern power and flexibility), I can remove many of the most common difficulties. These include texture and vertex buffers, shader compiling and linking, shader variable passing, drawing text and 2D graphics, 3D transformations, etc. 
 
 ### Intuitive
 
-Time spent looking for solutions is spent time, period. It ruins developer flow and can stop a project (especially a small one) indefinitely. Clinch should have few basic primitives which solve the general cases well and allow for easy replacements when necessary. It should be well documented and have a consistent interface. I will strive to keep abstraction leaks at a minimum. 
+Time spent looking for solutions is spent time, period. It ruins developer flow and can stop a project (especially a small one) indefinitely. Clinch should have few basic primitives which solve the general cases well and allow for easy replacements when necessary. It should be well documented and have a consistent interface. I will strive to keep abstraction leaks at a minimum.
+
+Clinch does not try to wrap other libraries inside the Clinch namespace. This keeps developers from "relearning" the same functionality.
 
 ### Flexible
 
@@ -49,28 +61,45 @@ Although Clinch can be used as a complete engine, most parts of Clinch are indep
 
 ### Transforms
 
-A transform is a 4x4 matrix which is used to hold and apply a C array of 16 floating values. CL-game-math is used as the default linear algebra library and its arrays may be passed to the shader. There are funcions for creating various projection matrices.
+A transform is a 4x4 matrix which is used to hold and apply a C array of 16 floating values. CL-game-math is used as the default linear algebra library and its arrays may be passed to the shader. There are funcions for creating various projection matrices. Math functions are supplied through the rtg-math package.
 
 ### Nodes
 
-Nodes are not usually the topmost objects in the hierarchy, however they are the most important. Nodes abstract 3D transform "chains" and hierarchy. Nodes encapulate transforms and can be scaled, rotated, and translated. They also may have children. Nodes are multiplied together in a hierarchy to create an effective transform which it stores in a hash by a list of all its parents. This allows a node to be reused in any way necessary. A node can be used in multiple places within a hierarchy (or tree) or even in several different ones. This is done by passing a list of parents to the update function. It will then append itself and call update on its children. In this way, the transforms are only calculated when they or their parent(s) have changed. 
+Nodes are usually the topmost objects in the hierarchy. Nodes abstract 3D transform "chains" and hierarchy. Nodes encapulate transforms and can be scaled, rotated, and translated. They also may have children. Nodes are multiplied together in a hierarchy to create the current transforms which is passes to its children. A node can be used in multiple places within a hierarchy (or tree) or even in several different ones. This is done by passing a list of parents to the update function. It will then append itself and call update on its children. In this way, the transform are only calculated when they or their parent(s) have changed. 
 
 ### Buffers
 
-Buffers abstract the shared data on the graphics card. They can carry almost any data to the graphics card in bulk including vertexes, normals, and texture coordinates. Buffers are usually sent to a shader using the entity object. A buffer's data can be accessed directly by using the map/unmap functions, or more simply using with-mapped-buffer.
+Buffers abstract the shared data on the graphics card. They can carry almost any data to the graphics card in bulk, including vertexes, normals, and texture coordinates. Buffers are usually sent to a shader through the entity object. A buffer's data can be accessed directly by using the map/unmap or pullg/pushg functions. 
 
 ### Textures
 
-Textures abstract the 2D textures and allow easy access to their raw data. Textures can be loaded from files, drawn on with vector graphics or used as render targets. They use Pixel Buffer Object to make reading and writing faster.
+Textures abstract the 2D textures and allow easy access to their raw data. Textures can be loaded from files, drawn on with vector graphics or used as render targets. A texture's data can be accessed directly by using the map/unmap or pullg/pushg functions. 
+
+### Pixel Buffers
+
+They use Pixel Buffer Object to make texture reading and writing faster. It's a separate buffer object which can send and/or receive data from a texture. It's a separate buffer so it can be used for several similar textures.
 
 ### Shaders
 
-Shaders are the compiled output from text-based vertex and fragment shaders. They require a name, vertex shader source code, fragment shader source code, a list of uniforms and a list of attributes. Vertices and index buffers need not be specified if you are not using them. 
+Shaders are the compiled output from text-based source code. Clinch supports vertex, fragment and geometry shaders.
+
+### Shader Programs
+
+Shader programs are complete, usable GPU programs. They take input and output to a texture (by default the screen). Shader-programs require a vertex and fragment shader and may also include a geometry shader. They require a list of uniform and attribute arguments.
 
 ### Entities
 
-Entities are the rendered items. They bring together the shader, buffers, textures, attributes and uniforms and transforms together into something which can be rendered on the screen. A shader and a (currently) an index buffer is required although they would be useless without at least one vertex buffer. Each member of the VALUES slot can be either an :attribute, :uniform or :vertices. 
+Entities are the rendered meshes. They bring together the shader-program, buffers, textures, attributes, uniforms and transforms together into something which can be rendered on the screen. A shader and an index buffer are required although they would be useless without at least one vertex buffer. 
 
 ### Viewports
 
-An application can have several viewports. As Clinch does not force any particular windowing implementation, it can not have a window class. Once your window is set up, however, you can use the viewport handle for drawing an area on screen. The most common children the cameras, which will be rendered in order unless then are not enabled.
+An application can have several viewports. As Clinch does not force any particular windowing implementation, it can not have a window class. Once your window is set up, however, you can use the viewport handle for drawing an area on screen.
+
+### Frame Buffer objects
+
+Frame buffer objects allows OpenGL to render to a texture or textures instead of a screen. The my also have a depth and/or stencle buffer.
+
+### Window
+
+Clinch creates the window for you to make things easier. By default it's launched in a separate thread.
+

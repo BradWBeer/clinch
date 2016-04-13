@@ -4,6 +4,7 @@
 (in-package #:clinch)
 
 (defun cffi-type->gl-type (type)
+  "Returns the buffer type as a cffi type."
   (case type
     (:unsigned-char :unsigned-byte)
     (otherwise type)))
@@ -40,7 +41,11 @@
 	:reader key))
   (:documentation "Creates and keeps track of GPU buffer object (shared memory with gpu)."))
 
-
+(defgeneric pullg (this &key))
+(defgeneric pushg (this data &key))
+(clone-function pullg !>)
+(clone-function pushg !<)
+    
 (defmethod initialize-instance :after ((this buffer) &key data)
   "Sets up a buffer instance.
       type:   cffi type NOTE: Use the index buffer for indices.
@@ -61,7 +66,7 @@
 	       (usage   usage)
 	       (loaded? loaded))  this
 
-    (sdl2:in-main-thread ()
+    (!
       ;; if they didn't give a vcount, see if we can derive one...
       (when (and (not vcount) (length data))
 	(setf vcount (/ (length data) stride)))
@@ -162,7 +167,6 @@
   (bind this :index index :offset offset :length length)
   (%gl:normal-pointer (qtype this) 0 (cffi:null-pointer)))
 
-
 (defmethod unbind-vertex-array ()
   "Stop using the vertex array"
   (gl:disable-Client-State :VERTEX-ARRAY))
@@ -171,11 +175,8 @@
   "Stop using the normal array"
   (gl:Disable-Client-State :NORMAL-ARRAY))
 
-
 (defmethod bind-buffer-to-attribute-array ((this buffer) (shader shader-program) name &key index offset length)
   "Bind buffer to a shader attribute."
-
-  ;;(format t "buffer:~A shader: ~A name: ~A~%" this shader name)
 
   (let ((id (cdr (get-attribute-id shader name))))
     (when id
@@ -235,13 +236,13 @@
     (:unsigned-int (make-array (or size (get-size this)) :element-type `(unsigned-byte ,(* (cffi:FOREIGN-TYPE-size :unsigned-int) 8))))
     (t (cffi:make-shareable-byte-vector (or size (size-in-bytes this))))))
 
-(defmethod pullg ((this buffer) &key offset size)
-  "Returns the buffer's data."
+(defmethod pullg ((this buffer) &key index offset size)
+  "Returns the buffer's data as a vector array."
   (let* ((full-length (size-in-bytes this))
 	 (arr (make-shareable-array this :size size)))
     (cffi:with-pointer-to-vector-data (p arr)
       (!
-	(bind this)
+	(bind this :index index :offset offset :length size)
 	(%gl:get-buffer-sub-data (target this)
 				 (or offset 0)
 				 (or size full-length)
@@ -249,6 +250,7 @@
     arr))
 
 (defmethod pushg ((this buffer) (data array) &key)
+  "Sets the buffer data from a vector array."
   (cffi:with-pointer-to-vector-data (p data)
     (!
       (bind this)
@@ -259,20 +261,52 @@
       (setf (loaded? this) t)))
   data)
 
-(defmethod triangle-intersection? ((this buffer) start dir &key)
-  "Returns distance u, v coordinates and index of the closest triangle (if any) touched by the given the ray origin and direction and the name of the vertex buffer attribute."
-  (labels ((rec (primitives i distance u v index)
-	     (multiple-value-bind (new-distance new-u new-v)
-		 
-		 (ray-triangle-intersect? start dir (first (car primitives)) (second (car primitives)) (third (car primitives)))
-	       (when (and new-distance
-			  (or (null distance)
-			      (< new-distance distance)))
-		 (setf distance new-distance
-		       u new-u
-		       v new-v
-		       index i)))
-	     (if (cdr primitives)
-		 (rec (cdr primitives) (1+ i) distance u v index)
-		 (values distance u v index))))
-    (rec (get-primitive this vertex-name) 0 nil nil nil nil)))
+(defmethod (setf !>) ((data array) (this buffer))
+  (pushg this data))
+
+
+;; (defmethod triangle-intersection? ((index-buffer index-buffer) (vertex-buffer buffer) origin ray-dir &key)
+;;   "Returns distance u, v coordinates and index of the closest triangle (if any) touched by the given the ray origin and direction and the name of the vertex buffer attribute."
+;;   (let ((itype (cffi-type->gl-type (qtype index-buffer)))
+;; 	(vtype (cffi-type->gl-type (qtype vertex-buffer))))
+
+;;   (labels ((get-vertex-from-index (indexes vertexes x)
+;; 	     (v! (cffi:mem-aref vertexes 
+;; 				vtype
+;; 				(* 3 (cffi:mem-aref indexes itype x)))
+;; 		 (cffi:mem-aref vertexes 
+;; 				vtype
+;; 				(+ 1 (* 3 (cffi:mem-aref indexes itype x))))
+;; 		 (cffi:mem-aref vertexes 
+;; 				vtype
+;; 				(+ 2 (* 3 (cffi:mem-aref indexes itype x))))))
+
+;;   (with-mapped-buffer (ibuffer index-buffer)
+;;     (with-mapped-buffer (vbuffer vertex-buffer)
+
+;;       (loop for i from 0 below (get-size index-buffer) by 3
+;; 	   for triangle = (loop for j from i to (+ i 2)
+;; 			       collect (get-vertex-from-index (ibuffer vbuffer j)))
+;; 	   do (multiple-value-bind (new-distance new-u new-v)
+;; 		  (ray-triangle-intersect origin ray-dir (aref triangle 0) (aref triangle 1) (aref triangle 2))
+		
+
+      
+;;       (labels ((rec (primitives i distance u v index)
+;; 		 (multiple-value-bind (new-distance new-u new-v)
+		     
+;; 		 (ray-triangle-intersect? start dir (first (car primitives)) (second (car primitives)) (third (car primitives)))
+;; 	       (when (and new-distance
+;; 			  (or (null distance)
+;; 			      (< new-distance distance)))
+;; 		 (setf distance new-distance
+;; 		       u new-u
+;; 		       v new-v
+;; 		       index i)))
+;; 	     (if (cdr primitives)
+;; 		 (rec (cdr primitives) (1+ i) distance u v index)
+;; 		 (values distance u v index))))
+;;     (rec (get-primitive this vertex-name) 0 nil nil nil nil)))
+
+;; (defmethod uv->texcoords ((this buffer) index u v)
+;;   )
