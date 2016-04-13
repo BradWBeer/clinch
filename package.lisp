@@ -48,6 +48,8 @@
    
    #:init
    #:uninit
+   #:*root*
+   #:*projection*
    #:*next*
    #:*on-window-size-changed*
    #:*on-window-resized*

@@ -83,7 +83,7 @@
 			      1.0   0.0
 			      1.0   1.0))))
 
-(defun make-quad (width height &key (center :center) shader-program texture parent)
+(defun make-quad (width height &key (center :center) shader-program texture (parent *root*))
   "Creates a quad entity of width and height."
   (make-instance 'clinch:entity
 		 :parent parent

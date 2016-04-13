@@ -10,6 +10,8 @@
   `(setf ,event (lambda ,args
 		  ,@body)))
 
+;; *root* node is defined in node.lisp
+
 (defparameter *controllers* nil
   "An alist of discovered controllers. Format: (controller-id . sdl-controller-handle)")
 (defparameter *haptic* nil
@@ -75,7 +77,14 @@
   "Called when a controller's axis moves. Arguments (controller-id axis-id position timestamp)")
 
 (defparameter *on-idle* nil
-  "Called when there are no pending events. Take no arguments.")
+  "Called when there are no pending events. Take no arguments.
+   Default can be overridden.")
+
+(clinch:defevent clinch:*on-idle* ()
+
+  (gl:clear :color-buffer-bit :depth-buffer-bit)
+  (clinch:render *root* :projection *projection*))
+
 (defparameter *on-quit* nil
   "Called when clinch is about to exit. Take no arguments.")
 
@@ -432,9 +441,12 @@ working while cepl runs"
 		    (format t "Beginning main loop.~%")
 		    (finish-output)
 
+		    (setf *root* (make-instance 'node :translation (v! 0 0 -100)))
+
 		    (main-loop win gl-context width height asynchronous)
 		    (unload-all-uncollected)
-		    (setf *running* nil
+		    (setf *root* nil
+			  *running* nil
 			  *inited* nil
 			  *generic-single-texture-shader* nil
 			  *identity-texture* nil))))))))))

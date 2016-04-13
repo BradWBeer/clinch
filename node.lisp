@@ -3,6 +3,9 @@
 
 (in-package #:clinch)
 
+(defparameter *root* nil
+  "The default root node.")
+
 (defparameter v0 (v! 0 0 0))
 (defparameter vi (v! 1 1 1))
 
@@ -57,18 +60,24 @@
 
 (defgeneric n* (this that &key))
 
-(defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix)
+(defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix (parent *root*))
   "Creats a node with optional translation (vector3), rotation (quaterion) and translation (vector3). Can also use another node or matrix to set its values. If a node and another value is give, the other value is used starting with the matrix."
-  ;;; add decompose-transform here !!! 
-  (setf (translation this) (or translation
-			       (and copy (copy-seq (translation copy)))
-			       v0))
-  (setf (rotation this) (or rotation
-			    (and copy (copy-seq (rotation copy)))
-			    (q:identity)))
-  (setf (scaling this) (or scale
-			 (and copy (copy-seq (scaling copy)))
-			 vi)))
+
+  (if matrix
+      (multiple-value-bind (tr r s) (decompose-transform matrix)
+	(setf (translation this) tr
+	      (rotation this)    r
+	      (scaling this)     s))
+      (setf (translation this) (or translation
+				   (and copy (copy-seq (translation copy)))
+				   v0)
+	    (rotation this) (or rotation
+				(and copy (copy-seq (rotation copy)))
+				(q:identity))
+	    (scaling this) (or scale
+			       (and copy (copy-seq (scaling copy)))
+			       vi))))	
+  
 
 (defmethod !reset ((this node))
   "Resets the node."
