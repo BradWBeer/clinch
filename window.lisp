@@ -10,6 +10,11 @@
   `(setf ,event (lambda ,args
 		  ,@body)))
 
+(defparameter *ticks* nil
+  "The number of milliseconds since init.")
+
+(defparameter *delta-ticks* nil
+  "Change in time since the last on-idle call.")
 ;; *root* node is defined in node.lisp
 
 (defparameter *controllers* nil
@@ -283,6 +288,9 @@ working while cepl runs"
     (:idle ()  
 	   (if *running*
 	       (progn
+		 (setf *ticks* (sdl2:get-ticks)
+		       *delta-ticks* (- *ticks* *delta-ticks*))
+
 		 (fire *next*)
 		 (setf *next* nil)
 		 (fire *on-idle*))
@@ -442,6 +450,8 @@ working while cepl runs"
 		    (finish-output)
 
 		    (setf *root* (make-instance 'node :translation (v! 0 0 -100)))
+		    (setf *ticks* (sdl2:get-ticks)
+			  *delta-ticks* 0)
 
 		    (main-loop win gl-context width height asynchronous)
 		    (unload-all-uncollected)

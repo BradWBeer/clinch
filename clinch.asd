@@ -28,7 +28,7 @@
 	       (:file "viewport")
 	       (:file "framebuffer")
 	       (:file "animation")
-	       (:file "texture-animation")
+	       ;;(:file "texture-animation")
 	       (:file "window")
 	       (:file "shapes")))
 

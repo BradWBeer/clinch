@@ -92,22 +92,31 @@
   (let* ((atype (freeimage::freeimage-getfiletype path 0))
 	 (multi-bitmap (freeimage::freeimage-openmultibitmap (cffi:foreign-enum-value 'freeimage::free-image-format atype) path 0 1 0 freeimage:GIF-PLAYBACK))
 	 (page-count (Freeimage::Freeimage-GetPageCount multi-bitmap)))
-    (loop with total-time = 0
-       for i from 0 to (1- page-count)
-       collect (let* ((page (freeimage::freeimage-lockpage multi-bitmap i))
-		      (time (cffi:with-foreign-object (data :pointer)
-			      (freeimage::freeimage-getmetadata (cffi:foreign-enum-value 'freeimage::FREE-IMAGE-MDMODEL :FIMD-ANIMATION)  page "FrameTime" data)
-			      (cffi:mem-aref (Freeimage::Freeimage-GetTagValue (cffi:mem-aref data :pointer)) :int32)))
-		      (bitmap (freeimage::freeimage-convertto32bits page)))
-		 (Freeimage::Freeimage-FlipVertical bitmap)
-		 
-		 (cons (incf total-time time)
-		       (! (make-instance 'texture
-					 :data (freeimage::freeimage-getbits bitmap)
-					 :width (freeimage::freeimage-getwidth bitmap)
-					 :height (freeimage::freeimage-getheight bitmap))))))))
+    (coerce
+     (loop with total-time = 0
+	for i from 0 to (1- page-count)
+	collect (let* ((page (freeimage::freeimage-lockpage multi-bitmap i))
+		       (time (cffi:with-foreign-object (data :pointer)
+			       (freeimage::freeimage-getmetadata (cffi:foreign-enum-value 'freeimage::FREE-IMAGE-MDMODEL :FIMD-ANIMATION)  page "FrameTime" data)
+			       (cffi:mem-aref (Freeimage::Freeimage-GetTagValue (cffi:mem-aref data :pointer)) :int32)))
+		       (bitmap (freeimage::freeimage-convertto32bits page)))
+		  (Freeimage::Freeimage-FlipVertical bitmap)
+		  
+		  (cons (incf total-time time)
+			(! (make-instance 'texture
+					  :data (freeimage::freeimage-getbits bitmap)
+					  :width (freeimage::freeimage-getwidth bitmap)
+					  :height (freeimage::freeimage-getheight bitmap))))))
+     'vector)))
 
 
 
+;; !!!! This is a temporary. I will change this to create an animation and then use an animator.  
 
-
+(defun make-animation-and-quad (path &key (parent clinch:*root*))
+  (let* ((a (clinch::load-animation path))
+	 (f (let ((max (get-animation-time a)))
+	      (lambda () 
+		(get-keyframe a (mod (sdl2:get-ticks) max)))))
+	 (q (make-quad-for-texture (cdr (aref a 0)) :parent parent)))
+    (setf (uniform q "t1") f)))
