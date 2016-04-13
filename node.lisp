@@ -46,9 +46,6 @@
 (defgeneric (setf translation) (val this))
 (defgeneric (setf rotation) (val this))
 (defgeneric (setf scaling) (val this))
-(clone-function (setf translation) (setf !t))
-(clone-function (setf rotation) (setf !r))
-(clone-function (setf scaling) (setf !s))
 
 (defgeneric translation-matrix (this &key))
 (defgeneric rotation-matrix (this &key))
@@ -94,7 +91,7 @@
 
 (defmethod !reset-scaling ((this node))
   (setf (slot-value this 's-matrix) nil
-	(translation this) vi))
+	(scaling this) vi))
 
 
 (defmethod print-object ((this node) s)
@@ -225,8 +222,15 @@
 	    (q:* rot (rotation this)))
       (q:* rot (rotation this))))
 
-(defmacro !r (this w x y z)
-  `(scale ,this ,w ,x ,y, z))  
+(defmacro !r (this w x y z &optional in-place)
+  (let ((tthis (gensym))
+	(v (gensym)))
+	
+    `(let ((,tthis ,this)
+	   (,v (v! ,w ,x ,y, z)))
+       (if ,in-place
+	   (setf (rotation ,tthis) ,v)
+	   (rotate ,tthis ,v)))))
 
 (defmethod translate ((this node) trans &key (modify t))
   "Translate the node. Takes a vector3."
@@ -235,8 +239,15 @@
 	    (v:+ trans (translation this)))
       (v:+ trans (translation this))))
 
-(defmacro !t (this x y z)
-  `(translate ,this ,x ,y, z))  
+(defmacro !t (this x y z &optional in-place)
+  (let ((tthis (gensym))
+	(v (gensym)))
+	
+    `(let ((,tthis ,this)
+	   (,v (v! ,x ,y, z)))
+       (if ,in-place
+	   (setf (translation ,tthis) ,v)
+	   (translate ,tthis ,v)))))
 
 (defmethod scale ((this node) size &key (modify t))
   "Scales a node. Takes a vector3."
@@ -245,8 +256,16 @@
 	    (v:* size (scaling this)))
       (v:* size (scaling this))))
 
-(defmacro !s (this x y z)
-  `(scale ,this ,x ,y, z))  
+(defmacro !s (this x y z &optional in-place)
+  (let ((tthis (gensym))
+	(v (gensym)))
+	
+    `(let ((,tthis ,this)
+	   (,v (v! ,x ,y, z)))
+       (if ,in-place
+	   (setf (scaling ,tthis) ,v)
+	   (scale ,tthis ,v)))))
+
 
 (defmethod n* ((this node) (that node) &key new-node)
   "Multiplies a node? I'm not sure if this works." ;;!!!!
