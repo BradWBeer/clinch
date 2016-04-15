@@ -92,7 +92,7 @@
 
    #:get-keyframe #:get-animation-time #:animation #:animator #:frames #:current-position #:repeat #:run-speed #:run-length
    #:play #:pause #:stop #:skip
-
+   #:update 
    #:texture-animation #:get-current-frame
 
    #:node #:children #:changed? #:render #:traverse-node

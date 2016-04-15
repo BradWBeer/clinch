@@ -88,7 +88,7 @@
 
 
 ;; notes!!!: Change the output to ((time . texture) ... with time in ms.
-(defun load-animation (path)
+(defun load-animation-as-vector (path)
   (let* ((atype (freeimage::freeimage-getfiletype path 0))
 	 (multi-bitmap (freeimage::freeimage-openmultibitmap (cffi:foreign-enum-value 'freeimage::free-image-format atype) path 0 1 0 freeimage:GIF-PLAYBACK))
 	 (page-count (Freeimage::Freeimage-GetPageCount multi-bitmap)))
@@ -110,13 +110,19 @@
      'vector)))
 
 
+(defun load-animation (path)
+  (make-instance 'animation
+		 :frames (load-animation-as-vector path)))
 
 ;; !!!! This is a temporary. I will change this to create an animation and then use an animator.  
 
 (defun make-animation-and-quad (path &key (parent clinch:*root*))
-  (let* ((a (clinch::load-animation path))
-	 (f (let ((max (get-animation-time a)))
-	      (lambda () 
-		(get-keyframe a (mod (sdl2:get-ticks) max)))))
-	 (q (make-quad-for-texture (cdr (aref a 0)) :parent parent)))
-    (setf (uniform q "t1") f)))
+  (let* ((a (load-animation path))
+	 (o (make-instance 'animator :animation a))
+    	 (q (make-quad-for-texture (cdr (aref (frames a) 0)) :parent parent)))
+
+    (setf (uniform q "t1") o)
+    (values q
+	    o
+	    a)))
+	    

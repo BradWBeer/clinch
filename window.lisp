@@ -287,9 +287,9 @@ working while cepl runs"
     
     (:idle ()  
 	   (if *running*
-	       (progn
+	       (let ((last-ticks *ticks*))
 		 (setf *ticks* (sdl2:get-ticks)
-		       *delta-ticks* (- *ticks* *delta-ticks*))
+		       *delta-ticks* (- *ticks* last-ticks))
 
 		 (fire *next*)
 		 (setf *next* nil)
@@ -451,7 +451,7 @@ working while cepl runs"
 
 		    (setf *root* (make-instance 'node :translation (v! 0 0 -100)))
 		    (setf *ticks* (sdl2:get-ticks)
-			  *delta-ticks* 0)
+			  *delta-ticks* *ticks*)
 
 		    (main-loop win gl-context width height asynchronous)
 		    (unload-all-uncollected)

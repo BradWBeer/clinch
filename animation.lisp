@@ -6,20 +6,18 @@
 (defclass animation () 
   ((frames :accessor frames
 	   :initform nil
-	   :initarg :frames)
-   (children :accessor children
-	     :initform nil
-	     :initarg :children)))
+	   :initarg :frames)))
+
 
 (defclass animator () 
   ((animation :accessor animation
 	      :initform nil
 	      :initarg :animation)
    (current-time :accessor current-time
-		     :initform 0.0
-		     :initarg :start)
+		 :initform 0
+		 :initarg :start)
    (paused :accessor paused
-	   :initform nil
+	   :initform t
 	   :initarg :paused)
    (repeat :accessor repeat
 	   :initform t
@@ -29,7 +27,9 @@
 	      :initarg :run-speed)
    (run-length :accessor run-length 
 	       :initform nil
-	       :initarg :run-length)))
+	       :initarg :run-length)
+   (last-update-time :initform nil)))
+		     
 
 (defmethod get-animation-time (this))
 
@@ -42,10 +42,10 @@
 	   (car (aref this (1- (length this)))))
 
 (defmethod get-animation-time ((this animation))
-  (caar (last (frames this))))
+  (get-animation-time (frames this)))
 
 (defmethod get-animation-time ((this animator))
-  (caar (last (frames (animation this)))))
+  (get-animation-time (animation this)))
 
 (defmethod get-keyframe ((this list) (time number) &key)
   (loop for (end . tex) in this
@@ -61,33 +61,46 @@
      finally (return tex)))
 
 (defmethod get-keyframe ((this animation) (time number) &key)
-  (loop for (end . tex) in (frames this)
-     if (<= time end) 
-     do (return tex)
-     finally (return tex)))
+  (get-keyframe (frames this) time))
 
 (defmethod get-keyframe ((this animator) time &key)
-  (loop for (end . tex) in (frames (animation this))
-     if (<= time end) 
-     do (return tex)
-     finally (return tex)))
+  (get-keyframe (animation this) time))
 
-
-(defgeneric play (this &optional delta-time))
+(defgeneric play (this &key))
 (defgeneric stop (this &key))
 (defgeneric pause (this &key))
+
+;; Not yet implemented!
 (defgeneric skip (this position &key))
 
-(defmethod play ((this animator) &optional (delta-time *delta-time*))
+(defmethod update ((this animator) &key (time *ticks*))
   (unless (paused this)
-    (let* ((ct (incf (current-time this) (* delta-time (run-speed this))))
-	   (len (get-animation-time this))
-	   (r? (repeat this)))
-      (get-keyframe (animation this)
-		    (cond ((eql r? t) (mod ct len))
-			  ((null r?)  (min ct len))
-			  ((numberp r?) (min ct (* len r?)))
-			  (t 0))))))
+    (with-slots ((lt last-update-time)) this
+      (unless lt (setf lt time))
+      
+      (with-accessors ((ct current-time)) this
+	(let ((new-time (* (- time (or lt time))
+			   (run-speed this))))
+	  (setf lt time
+		ct (if (repeat this)
+		       (mod (+ ct new-time) (get-animation-time this))
+		       (min (+ ct new-time) (get-animation-time this)))))))))
+
+(defmethod render ((this animator) &key time)
+  (update this)
+  (get-keyframe this
+		(or time
+		    (current-time this))))
+
+(defmethod play ((this animator) &key)
+  (setf (paused this) nil))
+
+(defmethod pause ((this animator) &key)
+  (setf (paused this) t))
+
+(defmethod stop ((this animator) &key)
+  (pause this)
+  (setf (current-time this) 0))
 		      				   
   
   
