@@ -431,11 +431,11 @@ working while cepl runs"
 
 		  (setf *uncollected*
 		    #+ccl (make-hash-table :test 'eq)
-		    #+(not ccl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
+		    #-ccl (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
 		  
 		  (setf *dependents*  
 		    #+ccl (make-hash-table :test 'eq)
-		    #+(not ccl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
+		    #-ccl (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
 
 		  (sdl2:with-gl-context (gl-context win)
 
