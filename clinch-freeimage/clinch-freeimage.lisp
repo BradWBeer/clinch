@@ -15,7 +15,7 @@
 		   :qtype  :unsigned-char)))
 
 (defgeneric create-quad-for-image (tex-data &key width height center parent))
-(defmethod create-quad-for-image ((path string) &key width height (center :center) parent)
+(defmethod create-quad-for-image ((path string) &key width height (center :center) (parent *root*))
   (let ((texture (create-texture-from-file path :width width :height height)))
     (values (make-quad (width texture)
 		       (height texture)
@@ -125,4 +125,4 @@
     (values q
 	    o
 	    a)))
-	    
+
