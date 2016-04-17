@@ -16,15 +16,24 @@
 
 
 ;; not currently using these
-(defparameter *current-shader-attributes* (trivial-garbage:make-weak-hash-table :test 'eq))
-(defparameter *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table :test 'eq))
+(defparameter *current-shader-attributes*
+  #+ccl (make-hash-table :test 'eq)
+  #+(not ccl) (trivial-garbage:make-weak-hash-table :test 'eq))
+
+(defparameter *current-shader-uniforms*
+  #+ccl (make-hash-table :test 'eq)
+  #+(not ccl) (trivial-garbage:make-weak-hash-table :test 'eq))
 
 (defparameter *shaders->shader-programs* (make-hash-table))
 
-(defparameter *uncollected* (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
+(defparameter *uncollected*
+  #+ccl (make-hash-table :test 'eq)
+  #+(not ccl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
   "Weak hash of loaded OpenGL objects.")
 
-(defparameter *dependents*  (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
+(defparameter *dependents*  
+  #+ccl (make-hash-table :test 'eq)
+  #+(not ccl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
   "Weak hash of OpenGL objects waiting to be unloaded by another.")
 
 (defmacro ! (&body body)
@@ -81,6 +90,9 @@
        (gethash this *dependents*))
   (remhash this *dependents*))
 
+(defun normalize-for-3D (m)
+  (m4:*s m (aref m 15)))
+
 (defun decompose-transform (m)
   "Decomposes a matrix into it's position vector3, rotation quaterion and scaling vector3.
    Useful for creating/updating the node object."
@@ -124,6 +136,12 @@
 		    ;; values ?
 		    (when (>= hit-distance 0.0)
 		      (values hit-distance u v))))))))))))
+
+(defun ray-triangle-intersect? (origin ray-dir v0 v1 v2)
+  (let ((dir
+	 (v3:normalize
+	  (m4:*v3 (inverse *root*) 
+		  (v3:- (v! 0 0 1) (v! 0 0 0))))))))
 
 (defmacro clone-function (old new)
   `(setf (fdefinition ',new) (fdefinition ',old)))
