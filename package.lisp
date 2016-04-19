@@ -50,6 +50,7 @@
    #:uninit
    #:*root*
    #:*projection*
+   #:*viewport*
    #:*ticks* #:*delta-ticks*
    #:*next*
    #:*on-window-size-changed*
@@ -91,7 +92,7 @@
    #:transform #:make-vector #:transform-point #:ray-triangle-intersect? #:make-matrix #:degrees->radians #:radians->degrees #:d->r #:r->d #:qtype #:transform #:transform->list #:m* #:transpose #:determinate #:inverse #:scale #:translate #:rotate #:make-orthogonal-transform #:make-frustum-transform  #:make-perspective-transform #:unproject #:get-screen-direction #:data-from-pointer #:make-pbo-for-texture #:make-quad #:make-quad-for-texture
 
    #:get-keyframe #:get-animation-time #:animation #:animator #:frames #:current-position #:repeat #:run-speed #:run-length
-   #:play #:pause #:stop #:skip
+   #:play #:paused #:pause #:stop #:skip
    #:update 
    #:texture-animation #:get-current-frame
 

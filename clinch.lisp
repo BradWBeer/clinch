@@ -115,6 +115,11 @@
 (defun set-assoc-name (alist item value)
   (setf (car (assoc item alist)) value))
 
+(defun get-point (array i)
+  (let ((x (* i 3)))
+    (subseq array x (+ x 3))))
+
+
 (defun ray-triangle-intersect? (origin ray-dir v0 v1 v2)
   "Given an origin, direction and a triangle returns if and where they intersect.
    Presently does not cull backfacing triangles."
@@ -137,11 +142,17 @@
 		    (when (>= hit-distance 0.0)
 		      (values hit-distance u v))))))))))))
 
-(defun ray-triangle-intersect? (origin ray-dir v0 v1 v2)
-  (let ((dir
-	 (v3:normalize
-	  (m4:*v3 (inverse *root*) 
-		  (v3:- (v! 0 0 1) (v! 0 0 0))))))))
+(defun get-intersections (start direction iarray varray)
+  (loop for x from 0 below (length iarray) by 3
+
+     for ret = (let ((x (get-point varray (aref iarray x)))
+		     (y (get-point varray (aref iarray (+ x 1))))
+		     (z (get-point varray (aref iarray (+ 2 x)))))
+		 ;;(format t "~A ~A ~A ~%" x y z)
+		 (multiple-value-list (ray-triangle-intersect? start direction x y z)))
+     when (cdr ret) collect ret))
+
+
 
 (defmacro clone-function (old new)
   `(setf (fdefinition ',new) (fdefinition ',old)))

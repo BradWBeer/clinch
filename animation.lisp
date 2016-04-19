@@ -100,7 +100,8 @@
 
 (defmethod stop ((this animator) &key)
   (pause this)
-  (setf (current-time this) 0))
+  (setf (current-time this) 0
+	(slot-value this 'last-update-time) nil))
 		      				   
   
   

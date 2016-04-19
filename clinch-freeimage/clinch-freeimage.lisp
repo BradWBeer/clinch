@@ -116,10 +116,16 @@
 
 ;; !!!! This is a temporary. I will change this to create an animation and then use an animator.  
 
-(defun make-animation-and-quad (path &key (parent clinch:*root*))
+(defun make-animation-and-quad (path &key (parent clinch:*root*) width height (center :center) shader-program)
   (let* ((a (load-animation path))
 	 (o (make-instance 'animator :animation a))
-    	 (q (make-quad-for-texture (cdr (aref (frames a) 0)) :parent parent)))
+    	 (q (make-quad-for-texture (cdr (aref (frames a) 0))
+				   :parent parent
+				   :width width
+				   :height height
+				   :center center
+				   :shader-program shader-program)))
+	
 
     (setf (uniform q "t1") o)
     (values q
