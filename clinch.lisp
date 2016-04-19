@@ -143,13 +143,18 @@
 		      (values hit-distance u v))))))))))))
 
 (defun get-intersections (start direction iarray varray)
-  (loop for x from 0 below (length iarray) by 3
+  (loop 
+     for i from 0
+     for x from 0 below (length iarray) by 3
 
-     for ret = (let ((x (get-point varray (aref iarray x)))
-		     (y (get-point varray (aref iarray (+ x 1))))
-		     (z (get-point varray (aref iarray (+ 2 x)))))
-		 ;;(format t "~A ~A ~A ~%" x y z)
-		 (multiple-value-list (ray-triangle-intersect? start direction x y z)))
+     for ret = (let ((xx (get-point varray (aref iarray x)))
+		     (yy (get-point varray (aref iarray (+ x 1))))
+		     (zz (get-point varray (aref iarray (+ 2 x)))))
+
+		 (multiple-value-bind (distance u v)
+		     (ray-triangle-intersect?
+		      start direction xx yy zz)
+		   (when distance (list i distance u v))))
      when (cdr ret) collect ret))
 
 
