@@ -28,9 +28,8 @@
   "Release buffer resources."
   (trivial-garbage:cancel-finalization this)
   (remove-uncollected this)
-  (!
-   (when (slot-value this 'id)
-     (gl:delete-buffers (list (id this)))))
+  (! (when (slot-value this 'id)
+       (gl:delete-buffers (list (id this)))))
   (setf (slot-value this 'id) nil))
 
 (defmethod bind ((this vao))
