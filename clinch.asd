@@ -15,6 +15,7 @@
 	       #:rtg-math
 	       #:swank)
   :components ((:file "package")
+	       (:file "threads")
 	       (:file "clinch")
 	       (:file "transform")
 	       (:file "node")
