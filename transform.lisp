@@ -33,7 +33,7 @@
   "Create a raw CFFI orthogonal matrix."
   (rtg-math:m! (/ 2 width) 0.0 0.0 0.0
 	       0.0 (/ 2 height) 0.0 0.0
-	       0.0 0.0 (/ (- far near)) (/ (- near) (- far near)) 
+	       0.0 0.0 (/ -2 (- far near)) (- (/ (+ far near) (- far near)))
 	       0.0 0.0 0.0 1.0))
 
 ;;; Do I still need this? !!!
