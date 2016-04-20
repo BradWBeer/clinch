@@ -16,15 +16,24 @@
 
 
 ;; not currently using these
-(defparameter *current-shader-attributes* (trivial-garbage:make-weak-hash-table :test 'eq))
-(defparameter *current-shader-uniforms*   (trivial-garbage:make-weak-hash-table :test 'eq))
+(defparameter *current-shader-attributes*
+  #+ccl (make-hash-table :test 'eq)
+  #+(not ccl) (trivial-garbage:make-weak-hash-table :test 'eq))
+
+(defparameter *current-shader-uniforms*
+  #+ccl (make-hash-table :test 'eq)
+  #+(not ccl) (trivial-garbage:make-weak-hash-table :test 'eq))
 
 (defparameter *shaders->shader-programs* (make-hash-table))
 
-(defparameter *uncollected* (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
+(defparameter *uncollected*
+  #+ccl (make-hash-table :test 'eq)
+  #+(not ccl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
   "Weak hash of loaded OpenGL objects.")
 
-(defparameter *dependents*  (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
+(defparameter *dependents*  
+  #+ccl (make-hash-table :test 'eq)
+  #+(not ccl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
   "Weak hash of OpenGL objects waiting to be unloaded by another.")
 
 (defmacro ! (&body body)
@@ -81,6 +90,9 @@
        (gethash this *dependents*))
   (remhash this *dependents*))
 
+(defun normalize-for-3D (m)
+  (m4:*s m (aref m 15)))
+
 (defun decompose-transform (m)
   "Decomposes a matrix into it's position vector3, rotation quaterion and scaling vector3.
    Useful for creating/updating the node object."
@@ -103,6 +115,11 @@
 (defun set-assoc-name (alist item value)
   (setf (car (assoc item alist)) value))
 
+(defun get-point (array i)
+  (let ((x (* i 3)))
+    (subseq array x (+ x 3))))
+
+
 (defun ray-triangle-intersect? (origin ray-dir v0 v1 v2)
   "Given an origin, direction and a triangle returns if and where they intersect.
    Presently does not cull backfacing triangles."
@@ -124,6 +141,23 @@
 		    ;; values ?
 		    (when (>= hit-distance 0.0)
 		      (values hit-distance u v))))))))))))
+
+(defun get-intersections (start direction iarray varray)
+  (loop 
+     for i from 0
+     for x from 0 below (length iarray) by 3
+
+     for ret = (let ((xx (get-point varray (aref iarray x)))
+		     (yy (get-point varray (aref iarray (+ x 1))))
+		     (zz (get-point varray (aref iarray (+ 2 x)))))
+
+		 (multiple-value-bind (distance u v)
+		     (ray-triangle-intersect?
+		      start direction xx yy zz)
+		   (when distance (list i distance u v))))
+     when (cdr ret) collect ret))
+
+
 
 (defmacro clone-function (old new)
   `(setf (fdefinition ',new) (fdefinition ',old)))

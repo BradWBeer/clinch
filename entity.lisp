@@ -115,6 +115,9 @@
 	   do (progn
 		(when (typep value 'function)
 		  (setf value (funcall value)))
+		(when (typep value 'animator)
+		  (setf value (render value)))
+
 		(cond ((typep value 'buffer)
 		       (bind-buffer-to-attribute-array value current-shader-program name))
 		      (t (bind-static-values-to-attribute 
@@ -127,6 +130,8 @@
 	   do (progn
 		(when (typep value 'function)
 		  (setf value (funcall value)))
+		(when (typep value 'animator)
+		  (setf value (render value)))
 		(cond ((typep value 'texture) (prog1 (bind-sampler value current-shader-program name tex-unit) (incf tex-unit)))
 		      (t (attach-uniform current-shader-program name 
 					 (convert-non-buffer value :projection projection :parent parent)))))))))

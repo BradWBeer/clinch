@@ -278,13 +278,38 @@
 
 (defmethod n* ((this node) (that node) &key new-node)
   "Multiplies a node? I'm not sure if this works." ;;!!!!
-  (if new-node
-      (make-instance 'node
-		     :scale (v:* (scaling this) (scaling that))
-		     :rotation (q:* (rotation this) (rotation that))
-		     :translation (v:+ (translation this) (translation that)))
-      (m:* (transform this)
-	     (transform that))))
+  (let* ((matrix (normalize-for-3d
+		  (m:* (transform this)
+		       (transform that)))))
+    (if new-node
+	(make-instance 'node :matrix matrix)
+	matrix)))
+
+	
+(defmethod n* ((this vector) (that node) &key new-node)
+  "Multiplies a node? I'm not sure if this works." ;;!!!!
+  (let* ((matrix (normalize-for-3d
+		  (m:* this
+		       (transform that)))))
+    (if new-node
+	(make-instance 'node :matrix matrix)
+	matrix)))
+
+(defmethod n* ((this node) (that vector) &key new-node)
+  "Multiplies a node? I'm not sure if this works." ;;!!!!
+  (let* ((matrix (normalize-for-3d (m:* (transform this)
+					that))))
+    (if new-node
+	(make-instance 'node :matrix matrix)
+	matrix)))
+
+(defmethod n* ((this vector) (that vector) &key new-node)
+  "Multiplies a node? I'm not sure if this works." ;;!!!!
+  (let* ((matrix (normalize-for-3D (m4:* this that))))
+    (if new-node
+	(make-instance 'node :matrix matrix)
+	matrix)))
+
 
 (defmethod inverse ((this node))
   (m4:affine-inverse (transform this)))

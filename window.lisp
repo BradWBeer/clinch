@@ -10,6 +10,11 @@
   `(setf ,event (lambda ,args
 		  ,@body)))
 
+(defparameter *ticks* nil
+  "The number of milliseconds since init.")
+
+(defparameter *delta-ticks* nil
+  "Change in time since the last on-idle call.")
 ;; *root* node is defined in node.lisp
 
 (defparameter *controllers* nil
@@ -282,7 +287,10 @@ working while cepl runs"
     
     (:idle ()  
 	   (if *running*
-	       (progn
+	       (let ((last-ticks *ticks*))
+		 (setf *ticks* (sdl2:get-ticks)
+		       *delta-ticks* (- *ticks* last-ticks))
+
 		 (fire *next*)
 		 (setf *next* nil)
 		 (fire *on-idle*))
@@ -421,8 +429,13 @@ working while cepl runs"
 		  (sdl2:gl-set-attr :buffer-size buffer-size)
 		  (sdl2:gl-set-attr :doublebuffer (if double-buffer 1 0))
 
-		  (setf *uncollected*  (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
-		  (setf *dependents*  (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
+		  (setf *uncollected*
+		    #+ccl (make-hash-table :test 'eq)
+		    #+(not ccl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
+		  
+		  (setf *dependents*  
+		    #+ccl (make-hash-table :test 'eq)
+		    #+(not ccl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
 
 		  (sdl2:with-gl-context (gl-context win)
 
@@ -442,6 +455,8 @@ working while cepl runs"
 		    (finish-output)
 
 		    (setf *root* (make-instance 'node :translation (v! 0 0 -100)))
+		    (setf *ticks* (sdl2:get-ticks)
+			  *delta-ticks* *ticks*)
 
 		    (main-loop win gl-context width height asynchronous)
 		    (unload-all-uncollected)

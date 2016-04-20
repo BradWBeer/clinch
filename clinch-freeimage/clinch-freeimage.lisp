@@ -15,7 +15,7 @@
 		   :qtype  :unsigned-char)))
 
 (defgeneric create-quad-for-image (tex-data &key width height center parent))
-(defmethod create-quad-for-image ((path string) &key width height (center :center) parent)
+(defmethod create-quad-for-image ((path string) &key width height (center :center) (parent *root*))
   (let ((texture (create-texture-from-file path :width width :height height)))
     (values (make-quad (width texture)
 		       (height texture)
@@ -88,26 +88,47 @@
 
 
 ;; notes!!!: Change the output to ((time . texture) ... with time in ms.
-(defun load-animation (path)
+(defun load-animation-as-vector (path)
   (let* ((atype (freeimage::freeimage-getfiletype path 0))
 	 (multi-bitmap (freeimage::freeimage-openmultibitmap (cffi:foreign-enum-value 'freeimage::free-image-format atype) path 0 1 0 freeimage:GIF-PLAYBACK))
 	 (page-count (Freeimage::Freeimage-GetPageCount multi-bitmap)))
-    (loop with total-time = 0
-       for i from 0 to (1- page-count)
-       collect (let* ((page (freeimage::freeimage-lockpage multi-bitmap i))
-		      (time (cffi:with-foreign-object (data :pointer)
-			      (freeimage::freeimage-getmetadata (cffi:foreign-enum-value 'freeimage::FREE-IMAGE-MDMODEL :FIMD-ANIMATION)  page "FrameTime" data)
-			      (cffi:mem-aref (Freeimage::Freeimage-GetTagValue (cffi:mem-aref data :pointer)) :int32)))
-		      (bitmap (freeimage::freeimage-convertto32bits page)))
-		 (Freeimage::Freeimage-FlipVertical bitmap)
-		 
-		 (cons (incf total-time time)
-		       (! (make-instance 'texture
-					 :data (freeimage::freeimage-getbits bitmap)
-					 :width (freeimage::freeimage-getwidth bitmap)
-					 :height (freeimage::freeimage-getheight bitmap))))))))
+    (coerce
+     (loop with total-time = 0
+	for i from 0 to (1- page-count)
+	collect (let* ((page (freeimage::freeimage-lockpage multi-bitmap i))
+		       (time (cffi:with-foreign-object (data :pointer)
+			       (freeimage::freeimage-getmetadata (cffi:foreign-enum-value 'freeimage::FREE-IMAGE-MDMODEL :FIMD-ANIMATION)  page "FrameTime" data)
+			       (cffi:mem-aref (Freeimage::Freeimage-GetTagValue (cffi:mem-aref data :pointer)) :int32)))
+		       (bitmap (freeimage::freeimage-convertto32bits page)))
+		  (Freeimage::Freeimage-FlipVertical bitmap)
+		  
+		  (cons (incf total-time time)
+			(! (make-instance 'texture
+					  :data (freeimage::freeimage-getbits bitmap)
+					  :width (freeimage::freeimage-getwidth bitmap)
+					  :height (freeimage::freeimage-getheight bitmap))))))
+     'vector)))
 
 
+(defun load-animation (path)
+  (make-instance 'animation
+		 :frames (load-animation-as-vector path)))
 
+;; !!!! This is a temporary. I will change this to create an animation and then use an animator.  
 
+(defun make-animation-and-quad (path &key (parent clinch:*root*) width height (center :center) shader-program)
+  (let* ((a (load-animation path))
+	 (o (make-instance 'animator :animation a))
+    	 (q (make-quad-for-texture (cdr (aref (frames a) 0))
+				   :parent parent
+				   :width width
+				   :height height
+				   :center center
+				   :shader-program shader-program)))
+	
+
+    (setf (uniform q "t1") o)
+    (values q
+	    o
+	    a)))
 
