@@ -95,7 +95,7 @@
 			     ("P" . :projection)
 			     ("t1" . ,(or texture (get-identity-texture))))))
 
-(defmethod make-quad-for-texture ((this texture) &key width height (center :center) shader-program parent)
+(defmethod make-quad-for-texture ((this texture) &key width height (center :center) shader-program parent no-parent)
   "Creates a quad for a texture which defaults to texture's width and height."
   (make-quad (or width (width this))
 	     (or height (height this))
@@ -104,6 +104,19 @@
 	     :texture this
 	     :parent parent))
 
+(defun get-default-texture ()
+  (unless *texture* 
+    (setf *texture* 
+	  (make-instance 'texture 
+			 :width (width *viewport*)
+			 :height (height *viewport*))))
+  (unless *entity*
+    (setf *entity*
+	  (make-quad-for-texture *texture* :parent nil)))
+  *texture*)
+
+
+    
 ;; (setf diamond '(#(0.0  1.0 0.0) #(-0.70710677 0.0 0.70710677) #(0.70710677 0.0 0.70710677)
 ;; 		#(0.0  1.0 0.0) #(0.9659259 0.0 0.25881892) #(0.25881892 0.0 -0.9659259)
 ;; 		#(0.0  1.0 0.0) #(-0.25881928 0.0 -0.9659258) #(-0.9659258 0.0 0.25881928)

@@ -177,6 +177,7 @@
 
 (defmethod unload ((this entity) &key all)
   "Release entity resources. If :all t, then the index buffer and all uniforms and attributes are unloaded."
+  (setf (enabled this) nil)
   (when all
     (when (indexes this) (unload (indexes this)))
     (loop for (n . v) in (uniforms this)

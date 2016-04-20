@@ -16,7 +16,7 @@
   (cairo:restore context))
 
 ;; working, but put need to group the calls which require the main thread for speed.
-(defmacro with-surface-for-texture ((texture &optional pbo &key (rw :write-only)
+(defmacro with-surface-for-texture ((&optional texture pbo &key (rw :write-only)
 					     (cairo-format :argb32)
 					     (surface-var 'cairo::*surface*)
 					     (width-var   (gensym))
@@ -35,7 +35,7 @@
   (let ((m-texture (gensym))
 	(m-pbo (gensym))
 	(m-tmp-pbo? (gensym)))
-    `(let* ((,m-texture ,texture)
+    `(let* ((,m-texture (or ,texture *texture* (get-default-texture)))
 	    (,m-tmp-pbo? nil)
 	    (,m-pbo (or ,pbo
 			(let ((tmp (make-pbo-for-texture ,m-texture)))
@@ -60,12 +60,12 @@
 	     (progn
 	       (cairo:destroy ,surface-var)
 	       (unmap-buffer ,m-pbo)
-	       (pushg ,texture ,m-pbo)
+	       (pushg ,m-texture ,m-pbo)
 	       (when ,m-tmp-pbo? (unload ,m-pbo))))))))
 
 
 
-(defmacro with-context-for-texture ((texture &optional pbo &key (rw :write-only)
+(defmacro with-context-for-texture ((&optional texture pbo &key (rw :write-only)
 					     (cairo-format :argb32)
 					     (surface-var 'cairo::*surface*)
 					     (context-var 'cairo::*context*)

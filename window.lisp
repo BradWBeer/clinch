@@ -88,7 +88,9 @@
 (clinch:defevent clinch:*on-idle* ()
 
   (gl:clear :color-buffer-bit :depth-buffer-bit)
-  (clinch:render *root* :projection *projection*))
+  (clinch:render *root* :projection *projection*)
+  (when *entity*
+    (clinch:render *entity* :projection *ortho-projection*)))
 
 (defparameter *on-quit* nil
   "Called when clinch is about to exit. Take no arguments.")
@@ -265,11 +267,19 @@ working while cepl runs"
        (cond
 	 ((eql event :size-changed)
 	  (quick-set *viewport* 0 0 d1 d2)
+	  
 	  (fire *on-window-size-changed* win d1 d2 ts))
 	 ((eql event :resized)
 	  (quick-set *viewport* 0 0 d1 d2)
-	  (setf *projection*
-		(make-orthogonal-transform d1 d2 0 1000))
+	  (setf *ortho-projection*
+		(setf *projection*
+		      (make-orthogonal-transform d1 d2 0 1000)))
+
+	  (when (and *entity* *texture*)
+	    (unload *entity* :all t)
+	    (setf *entity* nil
+		  *texture* nil))
+
 	  (fire *on-window-resized* win d1 d2 ts))
 	 ((eql event :hidden) (fire *on-window-hidden* win ts))
 	 ((eql event :exposed) (fire *on-window-exposed* win ts))
@@ -454,13 +464,17 @@ working while cepl runs"
 		    (format t "Beginning main loop.~%")
 		    (finish-output)
 
-		    (setf *root* (make-instance 'node :translation (v! 0 0 -100)))
-		    (setf *ticks* (sdl2:get-ticks)
-			  *delta-ticks* *ticks*)
+		    (setf *entity* nil
+			  *texture* nil
+			  *ticks* (sdl2:get-ticks)
+			  *delta-ticks* *ticks*
+			  *root* (make-instance 'node :translation (v! 0 0 -100)))
 
 		    (main-loop win gl-context width height asynchronous)
 		    (unload-all-uncollected)
 		    (setf *root* nil
+			  *entity* nil
+			  *texture* nil
 			  *running* nil
 			  *inited* nil
 			  *generic-single-texture-shader* nil

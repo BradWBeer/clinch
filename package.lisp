@@ -10,6 +10,8 @@
    #:defevent
    #:*controllers*
    #:*haptic*
+   #:*texture*
+   #:*entity*
 
    ;; run in main (opengl) thread. Returns when done.
    #:!

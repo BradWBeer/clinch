@@ -202,6 +202,11 @@
     (when (tex-id this)
       (gl:delete-textures (list (tex-id this))))))
 
+(defmacro with-texture ((tex) &body body)
+  `(let ((*texture* ,tex))
+     ,@body))
+     
+
 (defmacro with-temporary-pbo ((var texture &key (usage :static-draw) (target :pixel-unpack-buffer)) &body body)
   "Creates a temporary pixel buffer for a texture."
   (let ((tex (gensym)))

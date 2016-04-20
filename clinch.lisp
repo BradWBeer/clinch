@@ -13,7 +13,9 @@
 (defparameter *fbo* nil)
 (defparameter *viewport* nil)
 (defparameter *projection* nil)
-
+(defparameter *ortho-projection* nil)
+(defparameter *texture* nil)
+(defparameter *entity* nil)
 
 ;; not currently using these
 (defparameter *current-shader-attributes*
