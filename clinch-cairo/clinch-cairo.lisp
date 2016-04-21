@@ -91,6 +91,22 @@
 	    (progn ,@body))
        (cairo:destroy ,context-var))))
 
+(defmacro draw ((&optional texture pbo &key (rw :write-only)
+					     (format :argb32)
+					     (surface-var 'cairo::*surface*)
+					     (context-var 'cairo::*context*)
+					     (width-var (gensym))
+					     (height-var (gensym)))
+				    &body body)
+  `(with-context-for-texture (,texture ,pbo 
+				       :rw ,rw
+				       :cairo-format ,format
+				       :surface-var ,surface-var
+				       :context-var ,context-var
+				       :width-var ,width-var
+				       :height-var ,height-var)
+     ,@body))
+
 
 (defmethod create-texture-from-png (path)
   "Load the png image into a texture buffer."
