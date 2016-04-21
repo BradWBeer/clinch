@@ -284,7 +284,6 @@
     (if new-node
 	(make-instance 'node :matrix matrix)
 	matrix)))
-
 	
 (defmethod n* ((this vector) (that node) &key new-node)
   "Multiplies a node? I'm not sure if this works." ;;!!!!
@@ -309,8 +308,7 @@
     (if new-node
 	(make-instance 'node :matrix matrix)
 	matrix)))
-
-
+	
 (defmethod inverse ((this node))
   (m4:affine-inverse (transform this)))
 

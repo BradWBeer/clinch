@@ -19,23 +19,23 @@
 
 ;; not currently using these
 (defparameter *current-shader-attributes*
-  #+ccl (make-hash-table :test 'eq)
-  #+(not ccl) (trivial-garbage:make-weak-hash-table :test 'eq))
+  #+(or ccl ecl) (make-hash-table :test 'eq)
+  #-(or ccl ecl) (trivial-garbage:make-weak-hash-table :test 'eq))
 
 (defparameter *current-shader-uniforms*
-  #+ccl (make-hash-table :test 'eq)
-  #+(not ccl) (trivial-garbage:make-weak-hash-table :test 'eq))
+  #+(or ccl ecl) (make-hash-table :test 'eq)
+  #-(or ccl ecl) (trivial-garbage:make-weak-hash-table :test 'eq))
 
 (defparameter *shaders->shader-programs* (make-hash-table))
 
 (defparameter *uncollected*
-  #+ccl (make-hash-table :test 'eq)
-  #+(not ccl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
+  #+(or ccl ecl) (make-hash-table :test 'eq)
+  #-(or ccl ecl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
   "Weak hash of loaded OpenGL objects.")
 
 (defparameter *dependents*  
-  #+ccl (make-hash-table :test 'eq)
-  #+(not ccl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
+  #+(or ccl ecl) (make-hash-table :test 'eq)
+  #-(or ccl ecl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
   "Weak hash of OpenGL objects waiting to be unloaded by another.")
 
 (defmacro ! (&body body)

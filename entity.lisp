@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass entity ()
+(defclass entity (node)
   ((shader-program
     :initform nil
     :initarg :shader-program
@@ -29,6 +29,10 @@
     :initform t
     :initarg :enabled))
   (:documentation "Renders a mesh with a shader-program with attributes and uniforms."))
+
+(defmethod print-object ((this entity) s)
+  "Print function for node."
+  (format s "#<ENTITY>"))
 
 
 (defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
@@ -141,39 +145,39 @@
 (defmethod update ((this entity) &key parent matrix force)
   "Dummy method when updating nodes.")
 
-(defmethod render ((this entity) &key parent (projection *projection*))
+(defmethod render :after ((this entity) &key parent (projection *projection*))
   "Renders the entity (mesh).
     :parent Sets the parent for the :model"
   (when (enabled this)
-    (draw this :parent parent :projection projection)))
+    (draw this :parent this :projection projection)))
 
-;; (defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
+(defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
 
-;;   (multiple-value-bind (points index) (clinch::get-primitive this primitive)
-;;     (let ((transformed-points (map 'list (lambda (x)
-;; 					   (map 'list (lambda (p) 
-;; 							(clinch:transform-point p transform)) x)) points)))
-;;       (loop
-;; 	 with dist 
-;; 	 with u 
-;; 	 with v
-;; 	 with point
-;; 	 with point-number
-;; 	 for p from 0 to (1- (length transformed-points))
-;; 	 do (let ((pseq (elt transformed-points p)))
-;; 	      (multiple-value-bind (new-dist new-u new-v)
-;; 		  (clinch::ray-triangle-intersect? start end (elt pseq 0) (elt pseq 1) (elt pseq 2))
+  (multiple-value-bind (points index) (clinch::get-primitive this primitive)
+    (let ((transformed-points (map 'list (lambda (x)
+					   (map 'list (lambda (p) 
+							(clinch:transform-point p transform)) x)) points)))
+      (loop
+	 with dist 
+	 with u 
+	 with v
+	 with point
+	 with point-number
+	 for p from 0 to (1- (length transformed-points))
+	 do (let ((pseq (elt transformed-points p)))
+	      (multiple-value-bind (new-dist new-u new-v)
+		  (clinch::ray-triangle-intersect? start end (elt pseq 0) (elt pseq 1) (elt pseq 2))
 		
-;; 		(when (and new-dist
-;; 			   (or (null dist)
-;; 			       (> dist new-dist)))
-;; 		  (setf dist         new-dist
-;; 			u            new-u
-;; 			v            new-v
-;; 			point-number p)
-;; 		  (when index
-;; 		    (setf point (elt index p))))))
-;; 	 finally (return (when dist (values dist u v point point-number)))))))
+		(when (and new-dist
+			   (or (null dist)
+			       (> dist new-dist)))
+		  (setf dist         new-dist
+			u            new-u
+			v            new-v
+			point-number p)
+		  (when index
+		    (setf point (elt index p))))))
+	 finally (return (when dist (values dist u v point point-number)))))))
 
 (defmethod unload ((this entity) &key all)
   "Release entity resources. If :all t, then the index buffer and all uniforms and attributes are unloaded."
