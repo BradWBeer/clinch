@@ -50,7 +50,7 @@
 	 (remhash key *uncollected*)
 	 (sdl2:in-main-thread (:background t) 
 	   (gl:delete-shader val)))))))
-      
+
 
 (defmethod shader-compile ((this shader) &key code defs undefs)
 
@@ -59,7 +59,7 @@
   (with-slots ((id id)) this
 
     (unless id
-      (create-shader this))
+      (make-shader this))
 
     (gl:shader-source id (concatenate 'string
 				      (format nil "~{#define ~A~%~}" defs)
@@ -74,27 +74,27 @@
     (unless (gl:get-shader id :compile-status)
       (error "Could not compile shader!"))))
 
-(defmethod create-shader ((this vertex-shader))
+(defmethod make-shader ((this vertex-shader))
   "Creates a vertex shader."
   (setf (slot-value this 'id)
 	(gl:create-shader :vertex-shader)))
 
-(defmethod create-shader ((this fragment-shader))
+(defmethod make-shader ((this fragment-shader))
   "Creates a fragment shader."
   (setf (slot-value this 'id)
 	(gl:create-shader :fragment-shader)))
 
-(defmethod create-shader ((this geometry-shader))
+(defmethod make-shader ((this geometry-shader))
   "Creates a geometry shader."
   (setf (slot-value this 'id)
 	(gl:create-shader :geometry-shader)))
-  
+
 (defmethod unload ((this shader) &key)
   "Unloads and releases the shader."
 
   (with-slots ((id id))
-    
-    (trivial-garbage:cancel-finalization this)
+      
+      (trivial-garbage:cancel-finalization this)
     (remove-uncollected this)
     
     (when id
@@ -106,4 +106,4 @@
 	  (slot-value this 'name) nil)))
 
 
- 
+

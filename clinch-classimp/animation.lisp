@@ -58,12 +58,12 @@
   (list (slot-value this 'classimp::time)
 	(slot-value this 'classimp:value)))
 
-(defun create-animation-list (lst)
+(defun make-animation-list (lst)
   (when lst
     (cons (cons  
 	   (cons (caar lst) (caadr lst))
 	   (cons (cadar lst) (cadadr lst)))
-	  (create-animation-list (cdr lst)))))
+	  (make-animation-list (cdr lst)))))
 
 ;; turns a list of vector keys into a useful list.
 (defun vector-keys->list (keys)

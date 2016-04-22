@@ -107,7 +107,7 @@
 				       :height-var ,height-var)
      ,@body))
 
-(defmethod create-texture-from-png (path)
+(defmethod make-texture-from-png (path)
   "Load the png image into a texture buffer."
   (cairo:with-png-surface (path surf)
     (let ((bits (cairo:image-surface-get-data surf :pointer-only t))
@@ -116,10 +116,10 @@
       
       (make-instance 'clinch:texture :width w :height h :stride 4 :data bits :qtype :unsigned-char))))
 
-(defgeneric create-quad-for-png (tex-data &key center parent))
-(defmethod create-quad-for-png ((path string) &key width height (center :center) parent)
+(defgeneric make-quad-for-png (tex-data &key center parent))
+(defmethod make-quad-for-png ((path string) &key width height (center :center) parent)
   "Creates a quad entity for a png file."
-  (let ((texture (create-texture-from-png path)))
+  (let ((texture (make-texture-from-png path)))
     (make-quad (or width (width texture))
 	       (or height (height texture))
 	       :center center

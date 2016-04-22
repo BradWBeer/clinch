@@ -1,6 +1,6 @@
 (in-package #:clinch)
 
-(defun create-texture-from-file (path &key width height)
+(defun make-texture-from-file (path &key width height)
   (freeimage:with-loaded-32bit-map (path
    				    :width     width
    				    :height    height
@@ -14,9 +14,9 @@
 		   :stride 4
 		   :qtype  :unsigned-char)))
 
-(defgeneric create-quad-for-image (tex-data &key width height center parent))
-(defmethod create-quad-for-image ((path string) &key width height (center :center) (parent *root*))
-  (let ((texture (create-texture-from-file path :width width :height height)))
+(defgeneric make-quad-for-image (tex-data &key width height center parent))
+(defmethod make-quad-for-image ((path string) &key width height (center :center) (parent *root*))
+  (let ((texture (make-texture-from-file path :width width :height height)))
     (values (make-quad (width texture)
 		       (height texture)
 		       :center center
