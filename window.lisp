@@ -190,8 +190,8 @@ working while cepl runs"
   (declare (optimize (speed 3)))
 
   (setf *viewport* (make-instance 'viewport :x 0 :y 0 :width w :height h))
-  (setf *projection*
-	(make-orthogonal-transform w h 0 1000))
+  ;; (setf *projection*
+  ;; 	(make-orthogonal-transform w h 0 1000))
 			  
   (fire *next*)
   (setf *next* nil)
@@ -272,8 +272,7 @@ working while cepl runs"
 	 ((eql event :resized)
 	  (quick-set *viewport* 0 0 d1 d2)
 	  (setf *ortho-projection*
-		(setf *projection*
-		      (make-orthogonal-transform d1 d2 0 1000)))
+		(make-orthogonal-transform d1 d2 0 1000))
 
 	  (when (and *entity* *texture*)
 	    (unload *entity* :all t)

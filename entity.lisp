@@ -3,7 +3,7 @@
 
 (in-package #:clinch)
 
-(defclass entity (node)
+(defclass entity ()
   ((shader-program
     :initform nil
     :initarg :shader-program
@@ -105,51 +105,47 @@
 			       (t (m3:identity))))
 	(t value)))
 
-(defmethod draw ((this entity) &key parent (projection *projection*))
-  "Draws the object. Use render instead of this."
-  (with-accessors ((shader-program shader-program)) this
-    (when shader-program 
-      (let ((current-shader-program (if (typep shader-program 'function)
-				(funcall shader-program)
-				shader-program)))
-	(use-shader-program current-shader-program)
-	
-	;; first attach attributes...
-	(loop for (name . value) in (attributes this)
-	   do (progn
-		(when (typep value 'function)
-		  (setf value (funcall value)))
-		(when (typep value 'animator)
-		  (setf value (render value)))
-
-		(cond ((typep value 'buffer)
-		       (bind-buffer-to-attribute-array value current-shader-program name))
-		      (t (bind-static-values-to-attribute 
-			  current-shader-program 
-			  name 
-			  (convert-non-buffer value :projection projection :parent parent))))))
-	(loop
-	   with tex-unit = 0
-	   for (name . value) in (uniforms this)
-	   do (progn
-		(when (typep value 'function)
-		  (setf value (funcall value)))
-		(when (typep value 'animator)
-		  (setf value (render value)))
-		(cond ((typep value 'texture) (prog1 (bind-sampler value current-shader-program name tex-unit) (incf tex-unit)))
-		      (t (attach-uniform current-shader-program name 
-					 (convert-non-buffer value :projection projection :parent parent)))))))))
-
-      (draw-with-index-buffer (indexes this) :mode (mode this)))
-
-(defmethod update ((this entity) &key parent matrix force)
-  "Dummy method when updating nodes.")
-
-(defmethod render :after ((this entity) &key parent (projection *projection*))
+(defmethod render ((this entity) &key parent (projection *projection*))
   "Renders the entity (mesh).
     :parent Sets the parent for the :model"
   (when (enabled this)
-    (draw this :parent this :projection projection)))
+    (with-accessors ((shader-program shader-program)) this
+      (when shader-program 
+	(let ((current-shader-program (if (typep shader-program 'function)
+					  (funcall shader-program)
+					  shader-program)))
+	  (use-shader-program current-shader-program)
+	  
+	  ;; first attach attributes...
+	  (loop for (name . value) in (attributes this)
+	     do (progn
+		  (when (typep value 'function)
+		    (setf value (funcall value)))
+		  (when (typep value 'animator)
+		    (setf value (render value)))
+		  
+		  (cond ((typep value 'buffer)
+			 (bind-buffer-to-attribute-array value current-shader-program name))
+			(t (bind-static-values-to-attribute 
+			    current-shader-program 
+			    name 
+			    (convert-non-buffer value :projection projection :parent parent))))))
+	  (loop
+	     with tex-unit = 0
+	     for (name . value) in (uniforms this)
+	     do (progn
+		  (when (typep value 'function)
+		    (setf value (funcall value)))
+		  (when (typep value 'animator)
+		    (setf value (render value)))
+		  (cond ((typep value 'texture) (prog1 (bind-sampler value current-shader-program name tex-unit) (incf tex-unit)))
+			(t (attach-uniform current-shader-program name 
+					   (convert-non-buffer value :projection projection :parent parent)))))))))
+
+    (draw-with-index-buffer (indexes this) :mode (mode this))))
+
+(defmethod update ((this entity) &key parent matrix force)
+  "Dummy method when updating nodes.")
 
 (defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
 
