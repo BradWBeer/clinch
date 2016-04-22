@@ -107,7 +107,6 @@
 				       :height-var ,height-var)
      ,@body))
 
-
 (defmethod create-texture-from-png (path)
   "Load the png image into a texture buffer."
   (cairo:with-png-surface (path surf)
