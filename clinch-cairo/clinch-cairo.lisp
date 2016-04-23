@@ -65,11 +65,13 @@
 
 
 (defmacro draw ((&key texture
+		      array
 		      (surface-var 'cairo::*surface*)
 		      (width-var   (gensym))
 		      (height-var  (gensym))
 		      (bits-var    (gensym))
-		      (cairo-format :argb32))
+		      (cairo-format :argb32)
+		      (update? t))
 		&body body)
   "Takes a texture object, maps its data and creates a cairo:surface for it then destroys the surface when done.
        texture:      A texture object to operate on.
@@ -82,7 +84,7 @@
 	(m-arr (gensym)))
     
     `(let* ((,m-texture (or ,texture *texture* (get-default-texture)))
-	    (,m-arr (pullg ,m-texture))
+	    (,m-arr (or ,array (pullg ,m-texture)))
 	    (,width-var  (clinch:width  ,m-texture))
 	    (,height-var (clinch:height ,m-texture)))
        
@@ -95,7 +97,7 @@
 			      (* ,width-var (stride ,m-texture)))))
 	   (cairo:with-context-from-surface (,surface-var)
 	     ,@body)))
-       (pushg ,m-texture ,m-arr)
+       (when ,update? (pushg ,m-texture ,m-arr))
        ,m-arr)))
 
 
