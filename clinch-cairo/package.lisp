@@ -5,3 +5,5 @@
 (export 'with-context-for-texture)
 (export 'make-texture-from-png)
 (export 'draw)
+(export 'draw)
+(export 'fast-draw)

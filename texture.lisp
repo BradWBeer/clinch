@@ -157,7 +157,7 @@
 		   :usage usage
 		   :target target)))
   
-(defmethod pullg ((tex texture) &key)
+(defmethod pullg ((tex texture) &key data-format)
   "Gets the texture data as a vector array."
   (let ((arr (cffi:make-shareable-byte-vector (size-in-bytes tex))))
     (cffi:with-pointer-to-vector-data (p arr)
@@ -165,7 +165,7 @@
 	(bind tex)
 	(%gl:get-tex-image :texture-2d
 			   0 
-			 (data-format tex)
+			   (or data-format (data-format tex))
 			 (clinch::cffi-type->gl-type  (qtype tex))
 			 p))
       arr)))

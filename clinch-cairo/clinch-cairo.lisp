@@ -17,11 +17,11 @@
 
 ;; working, but put need to group the calls which require the main thread for speed.
 (defmacro with-surface-for-texture ((&optional texture pbo &key (rw :write-only)
-					     (cairo-format :argb32)
-					     (surface-var 'cairo::*surface*)
-					     (width-var   (gensym))
-					     (height-var  (gensym))
-					     (bits-var    (gensym)))
+					       (cairo-format :argb32)
+					       (surface-var 'cairo::*surface*)
+					       (width-var   (gensym))
+					       (height-var  (gensym))
+					       (bits-var    (gensym)))
 				    &body body)
   "Takes a texture object, maps its data and creates a cairo:surface for it then destroys the surface when done.
        texture:      A texture object to operate on.
@@ -64,13 +64,47 @@
 	       (when ,m-tmp-pbo? (unload ,m-pbo))))))))
 
 
+(defmacro draw ((&key texture
+		      (surface-var 'cairo::*surface*)
+		      (width-var   (gensym))
+		      (height-var  (gensym))
+		      (bits-var    (gensym))
+		      (cairo-format :argb32))
+		&body body)
+  "Takes a texture object, maps its data and creates a cairo:surface for it then destroys the surface when done.
+       texture:      A texture object to operate on.
+       surface-var:  The local variable name for the created surface. Defaults to *surface*
+       width-var:    The local variable name for the surface's width.
+       height-var:   The local variable name for the surface's height.
+       bits-var:     The local variable name for the texture's raw cffi data."
+
+  (let ((m-texture (gensym))
+	(m-arr (gensym)))
+    
+    `(let* ((,m-texture (or ,texture *texture* (get-default-texture)))
+	    (,m-arr (pullg ,m-texture))
+	    (,width-var  (clinch:width  ,m-texture))
+	    (,height-var (clinch:height ,m-texture)))
+       
+       (cffi:with-pointer-to-vector-data (,bits-var ,m-arr)
+	 (let ((,surface-var (cairo:create-image-surface-for-data
+			      ,bits-var
+			      ,cairo-format
+			      ,width-var
+			      ,height-var
+			      (* ,width-var (stride ,m-texture)))))
+	   (cairo:with-context-from-surface (,surface-var)
+	     ,@body)))
+       (pushg ,m-texture ,m-arr)
+       ,m-arr)))
+
 
 (defmacro with-context-for-texture ((&optional texture pbo &key (rw :write-only)
-					     (cairo-format :argb32)
-					     (surface-var 'cairo::*surface*)
-					     (context-var 'cairo::*context*)
-					     (width-var (gensym))
-					     (height-var (gensym)))
+					       (cairo-format :argb32)
+					       (surface-var 'cairo::*surface*)
+					       (context-var 'cairo::*context*)
+					       (width-var (gensym))
+					       (height-var (gensym)))
 				    &body body)
   "Takes a texture object, maps its data and creates a cairo:surface AND a context for it then destroys the surface and context it when done.
        texture:      A texture object to operate on.
@@ -81,23 +115,23 @@
        height-var:   The local variable name for the surface's height.
        bits-var:     The local variable name for the texture's raw cffi data."
   `(with-surface-for-texture (,texture ,pbo
-			      :rw ,rw
-			      :cairo-format ,cairo-format
-			      :surface-var  ,surface-var
-			      :width-var    ,width-var
-			      :height-var   ,height-var)
+				       :rw ,rw
+				       :cairo-format ,cairo-format
+				       :surface-var  ,surface-var
+				       :width-var    ,width-var
+				       :height-var   ,height-var)
      (let ((,context-var (cairo:create-context ,surface-var)))
        (unwind-protect
 	    (progn ,@body))
        (cairo:destroy ,context-var))))
 
-(defmacro draw ((&optional texture pbo &key (rw :write-only)
-					     (format :argb32)
-					     (surface-var 'cairo::*surface*)
-					     (context-var 'cairo::*context*)
-					     (width-var (gensym))
-					     (height-var (gensym)))
-				    &body body)
+(defmacro fast-draw ((&optional texture pbo &key (rw :write-only)
+				(format :argb32)
+				(surface-var 'cairo::*surface*)
+				(context-var 'cairo::*context*)
+				(width-var (gensym))
+				(height-var (gensym)))
+		     &body body)
   `(with-context-for-texture (,texture ,pbo 
 				       :rw ,rw
 				       :cairo-format ,format
