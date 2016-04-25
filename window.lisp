@@ -6,15 +6,15 @@
 ;;;; window.lisp
 
 (defmacro defevent (event args &body body)
-  "Creates and updates an event handler."
+  "Creates and updates an event handler. Use this for all your *on-* events. It's just a nice wrapper around (setf event (lambda ..."
   `(setf ,event (lambda ,args
 		  ,@body)))
 
 (defparameter *ticks* nil
-  "The number of milliseconds since init.")
+  "Time elapsed since (init) in milliseconds.")
 
 (defparameter *delta-ticks* nil
-  "Change in time since the last on-idle call.")
+  "Change in time (delta time, dt) since the last on-idle call.")
 ;; *root* node is defined in node.lisp
 
 (defparameter *controllers* nil
@@ -24,6 +24,7 @@
 
 (defparameter *next* nil
   "Runs before the next on-idle call. No arguments.")
+
 (defparameter *on-window-size-changed* nil
   "Always called when window size changes. Arguments (window width height timestamp)")
 (defparameter *on-window-resized* nil
