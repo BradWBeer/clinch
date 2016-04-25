@@ -190,8 +190,8 @@ working while cepl runs"
   (declare (optimize (speed 3)))
 
   (setf *viewport* (make-instance 'viewport :x 0 :y 0 :width w :height h))
-  ;; (setf *projection*
-  ;; 	(make-orthogonal-transform w h 0 1000))
+  (setf *ortho-projection*
+   	(make-orthogonal-transform w h 0 1000))
 			  
   (fire *next*)
   (setf *next* nil)

@@ -16,16 +16,15 @@
   (cairo:restore context))
 
 ;; working, but put need to group the calls which require the main thread for speed.
-(defmacro with-surface-for-texture ((&optional texture pbo &key (rw :write-only)
-					       (cairo-format :argb32)
-					       (surface-var 'cairo::*surface*)
-					       (width-var   (gensym))
-					       (height-var  (gensym))
-					       (bits-var    (gensym)))
+(defmacro with-surface-for-mapped-texture ((&key texture pbo 
+					  (cairo-format :argb32)
+					  (surface-var 'cairo::*surface*)
+					  (width-var   (gensym))
+					  (height-var  (gensym))
+					  (bits-var    (gensym)))
 				    &body body)
   "Takes a texture object, maps its data and creates a cairo:surface for it then destroys the surface when done.
        texture:      A texture object to operate on.
-       rw:           Either :write-only (default), :read-only, or :read-write. Use the most restrictive for greater speed.
        cairo-format: The CAIRO format for the buffer. Defaults to :argb32.
        surface-var:  The local variable name for the created surface. Defaults to *surface*
        width-var:    The local variable name for the surface's width.
@@ -43,7 +42,7 @@
 			    (error "Could not map the PBO for cairo!"))
 			  (setf ,m-tmp-pbo? t)
 			  tmp)))
-	    (,bits-var (map-buffer ,m-pbo ,rw))
+	    (,bits-var (map-buffer ,m-pbo))
 	    (,width-var  (clinch:width  ,m-texture))
 	    (,height-var (clinch:height ,m-texture))
 	    (,surface-var (cairo:create-image-surface-for-data ,bits-var
@@ -96,12 +95,13 @@
 			      ,height-var
 			      (* ,width-var (stride ,m-texture)))))
 	   (cairo:with-context-from-surface (,surface-var)
+	     (cairo:move-to)
 	     ,@body)))
        (when ,update? (pushg ,m-texture ,m-arr))
        ,m-arr)))
 
 
-(defmacro with-context-for-texture ((&optional texture pbo &key (rw :write-only)
+(defmacro with-context-for-mapped-texture ((&key (texture *texture*) pbo 
 					       (cairo-format :argb32)
 					       (surface-var 'cairo::*surface*)
 					       (context-var 'cairo::*context*)
@@ -110,14 +110,13 @@
 				    &body body)
   "Takes a texture object, maps its data and creates a cairo:surface AND a context for it then destroys the surface and context it when done.
        texture:      A texture object to operate on.
-       rw:           Either :write-only (default), :read-only, or :read-write. Use the most restrictive for greater speed.
        cairo-format: The CAIRO format for the buffer. Defaults to :argb32.
        surface-var:  The local variable name for the created surface. Defaults to *surface*
        width-var:    The local variable name for the surface's width.
        height-var:   The local variable name for the surface's height.
        bits-var:     The local variable name for the texture's raw cffi data."
-  `(with-surface-for-texture (,texture ,pbo
-				       :rw ,rw
+  `(with-surface-for-mapped-texture (:texture ,texture
+					      :pbo ,pbo
 				       :cairo-format ,cairo-format
 				       :surface-var  ,surface-var
 				       :width-var    ,width-var
@@ -127,15 +126,15 @@
 	    (progn ,@body))
        (cairo:destroy ,context-var))))
 
-(defmacro fast-draw ((&optional texture pbo &key (rw :write-only)
+(defmacro fast-draw ((&key texture pbo 
 				(format :argb32)
 				(surface-var 'cairo::*surface*)
 				(context-var 'cairo::*context*)
 				(width-var (gensym))
 				(height-var (gensym)))
 		     &body body)
-  `(with-context-for-texture (,texture ,pbo 
-				       :rw ,rw
+  `(with-context-for-mapped-texture (:texture ,texture
+				       :pbo ,pbo 
 				       :cairo-format ,format
 				       :surface-var ,surface-var
 				       :context-var ,context-var

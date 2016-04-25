@@ -209,6 +209,7 @@
 (defmethod unmap-buffer ((this buffer))
   "Release the pointer given by map-buffer. NOTE: THIS TAKES THE BUFFER OBJECT, NOT THE POINTER! ALSO, DON'T TRY TO RELASE THE POINTER."
   (!
+    (gl:bind-buffer (target this) (id this))
     (gl:unmap-buffer (target this))
     (gl:bind-buffer (target this) 0)))
 
