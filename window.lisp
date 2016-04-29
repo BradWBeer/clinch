@@ -134,14 +134,13 @@ working while cepl runs"
 (defun set-default-gl-options ()
   (print "Setting default options")
   (gl:clear-color 0.0 0.0 0.0 0.0)
-  (gl:enable :cull-face)
+  (gl:enable :cull-face :blend :depth-test :depth-clamp)
+  (gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:cull-face :back)
   (gl:front-face :ccw)
-  (gl:enable :depth-test)
   (gl:depth-mask :true)
   (gl:depth-func :less)
-  (gl:depth-range 0.0 1.0)
-  (gl:enable :depth-clamp))
+  (gl:depth-range 0.0 1.0))
 
 
 (defun init-controllers ()
