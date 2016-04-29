@@ -82,7 +82,7 @@
 
   ;; cairo requires a surface and a context to draw something. 
   ;; This macro creates both
-  (with-context-for-texture (texture)
+  (fast-draw (:texture *texture*)
     (clear-cairo-context .95 .95 .95)
 
     ;; Set the width of the "pen"
@@ -183,7 +183,7 @@
     
     ;; render the quad. Use the scaling matrix as the "parent" 
     ;; to scale it to the proper size.
-    (render *quad* :parent *scaling*)))
+    (render *quad* :parent *scaling* :projection clinch::*ortho-projection*)))
 
 ;; On keyDown reset the board.
 (defevent *on-key-down* (win keysym state ts)
