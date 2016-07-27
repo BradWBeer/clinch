@@ -87,7 +87,7 @@
 	    (,width-var  (clinch:width  ,m-texture))
 	    (,height-var (clinch:height ,m-texture)))
        
-       (cffi:with-pointer-to-vector-data (,bits-var ,m-arr)
+       (prog1 (cffi:with-pointer-to-vector-data (,bits-var ,m-arr)
 	 (let ((,surface-var (cairo:create-image-surface-for-data
 			      ,bits-var
 			      ,cairo-format
@@ -95,10 +95,9 @@
 			      ,height-var
 			      (* ,width-var (stride ,m-texture)))))
 	   (cairo:with-context-from-surface (,surface-var)
-	     (cairo:move-to)
 	     ,@body)))
-       (when ,update? (pushg ,m-texture ,m-arr))
-       ,m-arr)))
+       (when ,update? (pushg ,m-texture ,m-arr))))))
+       
 
 
 (defmacro with-context-for-mapped-texture ((&key (texture *texture*) pbo 

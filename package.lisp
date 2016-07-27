@@ -10,7 +10,7 @@
    #:defevent
    #:*controllers*
    #:*haptic*
-   #:*texture*
+   #:*texture* #:get-default-texture
    #:*entity*
 
    ;; run in main (opengl) thread. Returns when done.
@@ -52,6 +52,7 @@
    #:uninit
    #:*root*
    #:*projection*
+   #:*ortho-projection*
    #:*viewport*
    #:*ticks* #:*delta-ticks*
    #:*next*

@@ -115,7 +115,7 @@ void main() {
 
   ;; Creates the texture to use.
   (setf *texture*
-	(clinch::create-texture-from-file 
+	(clinch::make-texture-from-file 
 	 (concatenate 'string 
 		      (directory-namestring
 		       (asdf:system-relative-pathname :clinch "clinch.asd"))

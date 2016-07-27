@@ -70,7 +70,7 @@
   "Called when the mouse wheel is moved. Arguments: (win mouse x y ts)")
 
 (defparameter *on-controller-button-down* nil
-  "Called when a controller's button is pressed. Arguments: (controller-id axis-id value timestamp)")
+  "Called when a controller's button is pressed. Arguments: (controller-id button ts)")
 (defparameter *on-controller-button-up* nil
   "Called when a controller's button is released. Arguments: (controller-id axis-id value timestamp)")
 (defparameter *on-controller-added* nil
@@ -359,9 +359,13 @@ working while cepl runs"
 		:resizable resizable))
        :name "Main Clinch Thread"
        :initial-bindings
-       (cons (cons '*standard-output* *standard-output* )
-	     (cons (cons '*standard-input* *standard-input*)
-		   bordeaux-threads:*default-special-bindings*)))
+       `((*standard-output* . ,*standard-output*)
+	 (*standard-input* . ,*standard-input*)
+	 (*error-output* . ,*error-output*)
+	 (*trace-output* . ,*trace-output*)
+	 (*debug-io* . ,*debug-io*)
+	 (*query-io* . ,*query-io*)
+	 ,@bordeaux-threads:*default-special-bindings*))
       (_init :asynchronous asynchronous
 	     :init-controllers init-controllers
 	     :width width 
@@ -401,15 +405,22 @@ working while cepl runs"
 
   (unless *running* 
     (let ((local-stdout *standard-output*)
-	  (local-input *standard-input*))
-      
+	  (local-input *standard-input*)
+	  (local-error *error-output*)
+	  (local-trace *trace-output*)
+	  (local-debug *debug-io*)
+	  (local-query *query-io*))      
       (with-main
 
 	  (unless *inited*
 	    (sdl2:with-init (:everything)
 	      
 	      (let ((*standard-output* local-stdout)
-		    (*standard-input* local-input))
+		    (*standard-input* local-input)
+		    (*error-output* local-error)
+		    (*trace-output* local-trace)
+		    (*debug-io* local-debug)
+		    (*query-io* local-query))
 		
 		(setf *running* t)
 		
@@ -459,7 +470,7 @@ working while cepl runs"
 		    (finish-output)
 		    (sdl2:gl-make-current win gl-context)
 		    (gl:viewport 0 0 width height)
-		    (gl:clear :color-buffer)
+		    (gl:clear :color-buffer :depth-buffer)
 		    (format t "Beginning main loop.~%")
 		    (finish-output)
 

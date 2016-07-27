@@ -24,7 +24,7 @@
       (cairo:scale (/ min-wh 600) (/ min-wh 600))
       (if (> hours 11)
       	  (pango:print-text '("span" (("foreground" "midnight blue") ("font" "250")) "PM") :alignment :pango_align_left)
-      	  (pango:print-text '("span" (("foreground" "yellow") ("font" "250")) "AM") :alignment :pango_align_left))
+      	  (pango:print-text '("span" (("foreground" "orange") ("font" "250")) "AM") :alignment :pango_align_left))
       (cairo:restore)
 
       (cairo:new-path)
@@ -44,9 +44,6 @@
 
       ))))
 
-
-
-
 (clinch:defevent clinch:*on-idle* ()
 
   (multiple-value-bind (seconds minutes hours) (get-decoded-time)
@@ -62,13 +59,3 @@
     (clinch:render *entity* :projection clinch::*ortho-projection*)))
 
 (clinch:init :init-controllers nil)
-
-
-(defun test ()
-  (multiple-value-bind (seconds minutes hours) (get-decoded-time)
-    (incf seconds (/ (nth-value 1 (get-time-of-day)) 1000000))
-    (incf minutes (/ seconds 60))
-    (incf hours (/ minutes 120))
-    
-    (draw-clock hours minutes seconds)
-    ))

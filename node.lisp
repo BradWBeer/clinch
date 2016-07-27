@@ -60,9 +60,11 @@
 
 (defgeneric n* (this that &key))
 
-(defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix (parent *root*))
+(defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix parent)
   "Creats a node with optional translation (vector3), rotation (quaterion) and translation (vector3). Can also use another node or matrix to set its values. If a node and another value is give, the other value is used starting with the matrix."
-
+  
+  (when parent (add-child parent this))
+  
   (if matrix
       (multiple-value-bind (tr r s) (decompose-transform matrix)
 	(setf (translation this) tr
