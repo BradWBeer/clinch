@@ -94,7 +94,7 @@ out vec4 fragColor;
 
   (make-simple-texture-shader)
   (setf *texture*
-	(clinch::create-texture-from-png
+	(clinch::make-texture-from-png
 	 (concatenate 'string 
 		      (directory-namestring
 		       (asdf:system-relative-pathname :clinch "clinch.asd"))
