@@ -63,7 +63,11 @@
 
 
 (defparameter *slides* nil)
-(load "slides.lisp")
+(load 
+ (concatenate 'string 
+	      (directory-namestring
+	       (asdf:system-relative-pathname :clinch "clinch.asd"))
+	      "examples/presentation02/slides.lisp"))
 
 ;; Initialize the test. 
 (defun init-test ()
