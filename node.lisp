@@ -37,10 +37,19 @@
 	     :initarg  :children))
   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and is not required by Clinch."))
 
-(defgeneric !reset (this))
-(defgeneric !reset-translation (this))
-(defgeneric !reset-rotation (this))
-(defgeneric !reset-scaling (this))
+(defgeneric !reset (this)
+  (:documentation "Resets a node to default. Position 0, rotation 0 and scale of 1. 
+Shortcut is !0."))
+(defgeneric !reset-translation (this)
+  (:documentation "Resets a node's translation to 0,0,0.
+Shortcut is !t0"))
+(defgeneric !reset-rotation (this)
+  (:documentation "Resets a node's rotation to 1,0,0,0.
+Shortcut is !r0"))
+(defgeneric !reset-scaling (this)
+  (:documentation "Resets a node's scaling to 1,1,1.
+Shortcut is !s0"))
+
 (clone-function !reset !0)
 (clone-function !reset-translation !t0)
 (clone-function !reset-rotation !r0)
@@ -50,15 +59,26 @@
 (defgeneric (setf rotation) (val this))
 (defgeneric (setf scaling) (val this))
 
-(defgeneric translation-matrix (this &key))
-(defgeneric rotation-matrix (this &key))
-(defgeneric scale-matrix (this &key))
-(defgeneric transform (this &key))
-(defgeneric translate (this trans &key))
-(defgeneric rotate (this rot &key))
-(defgeneric scale (this scale &key))
+(defgeneric translation-matrix (this &key)
+  (:documentation "Get the translation matrix."))
+(defgeneric rotation-matrix (this &key)
+  (:documentation "Get the rotation matrix."))
+(defgeneric scale-matrix (this &key)
+  (:documentation "Get the scale matrix."))
+(defgeneric transform (this &key)
+  (:documentation "get the entire transform."))
+(defgeneric translate (this trans &key)
+  (:documentation "Translate node.
+Shortcut is !t."))
+(defgeneric rotate (this rot &key)
+  (:documentation "Rotate node.
+Shortcut is !r."))
+(defgeneric scale (this scale &key)
+  (:documentation "Scale node.
+Shortcut is !s."))
 
-(defgeneric n* (this that &key))
+(defgeneric n* (this that &key)
+  (:documentation "Multiplies nodes and matrix transforms."))
 
 (defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix (parent *root*))
   "Creats a node with optional translation (vector3), rotation (quaterion) and translation (vector3). Can also use another node or matrix to set its values. If a node and another value is give, the other value is used starting with the matrix."
@@ -125,7 +145,7 @@
 	    (cons child children)))))
 
 (defmethod remove-child ((this node) child &key)
-  "Removes a child."
+  "Removes a child. Does not unref removed children."
   (with-accessors ((children children)) this
     
     (when (member child children)
@@ -309,10 +329,8 @@
 	(make-instance 'node :matrix matrix)
 	matrix)))
 	
-(defmethod inverse ((this node))
-  (m4:affine-inverse (transform this)))
-
 (defmethod traverse-node ((this node))
+  "Not yet implemented."
   (loop for c in (children this)
      when c
      append (cond 

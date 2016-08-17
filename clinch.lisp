@@ -4,18 +4,31 @@
 (in-package #:clinch)
 
 ;; global variables. Not exported. 
-(defparameter *window* nil)
-(defparameter *context* nil)
+(defparameter *window* nil
+  "Global window object.")
+(defparameter *context* nil
+  "Global Opengl Contex object.")
 
 (defparameter *inited* nil)
 (defparameter *running* nil)
 
-(defparameter *fbo* nil)
-(defparameter *viewport* nil)
-(defparameter *projection* nil)
-(defparameter *ortho-projection* nil)
-(defparameter *texture* nil)
-(defparameter *entity* nil)
+(defparameter *fbo* nil
+  "Current Frame Buffer Object.")
+
+(defparameter *viewport* nil
+  "Current viewport object.")
+
+(defparameter *projection* nil
+  "Current default projection.")
+
+(defparameter *ortho-projection* nil
+  "An automatically generated orthogonal projection for the window. Pixel to pixel.")
+
+(defparameter *texture* nil
+  "The current texture. Defaults to the window's overlay.")
+
+(defparameter *entity* nil
+  "The current entity")
 
 ;; not currently using these
 (defparameter *current-shader-attributes*
@@ -48,7 +61,9 @@
   `(sdl2:in-main-thread (:background t)
      ,@body))
 
-(defgeneric unload (this &key))
+(defgeneric unload (this &key) 
+  (:documentation "Unloads an opengl object. Does nothing for non-opengl objects."))
+
 (defmethod unload ((this t) &key))
 
 (defun add-uncollected (this)
