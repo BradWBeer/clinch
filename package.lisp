@@ -55,6 +55,7 @@
    #:*context*
    #:fbo*
    #:*projection*
+   #:*ortho-projection*
    #:*viewport*
    #:*ticks* #:*delta-ticks*
    #:*next*

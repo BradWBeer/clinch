@@ -12,10 +12,10 @@
 ;; and I'm using a png file.
 (ql:quickload :clinch-freeimage)
 
-;; Var to hold the square entityl
+;; Var to hold the entity for the background
 (defparameter *entity*  nil)
 
-;; var to hold the texture;
+;; var to hold the background texture;
 (defparameter *texture* nil)
 
 ;; var to hold the projection matrix
@@ -46,11 +46,13 @@
 
 (defparameter *move-to-page* 0)
 
+;; As a slide...
 (defmacro as-slide  ((i w h) &body body)
   `(lambda (,i ,w ,h)
      (declare (ignorable ,i ,h ,w))
      ,@body))
 
+;; Print-Paragraph
 (defmacro pp (text w h)
   (declare (ignorable h))
   `(pango:print-text `("span" (("font_desc" "Century Schoolbook L Roman bold 50"))
@@ -58,10 +60,11 @@
 		     :width ,w
 		     :alignment :pango_align_left))
 
+;; Newline
 (defmacro nl (w h)
   `(pp " " ,w ,h))
 
-
+;; Hold the slides here...
 (defparameter *slides* nil)
 (load 
  (concatenate 'string 
@@ -69,43 +72,37 @@
 	       (asdf:system-relative-pathname :clinch "clinch.asd"))
 	      "examples/presentation02/slides.lisp"))
 
-;; Initialize the test. 
-(defun init-test ()
-
-  (gl:disable :cull-face))
-
-
 ;; Next runs one time before the next on-idle.
 (clinch:defevent clinch:*next* ()
 
-  ;; Enable a few opengl features. 
-  (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d :cull-face)
+  ;; Enable/disable a few opengl features. 
+  (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d)
+  (gl:disable :cull-face)
   (%gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:polygon-mode :front-and-back :fill)
 
   (gl:clear-color 0 0 1 0)
 
-  (make-slides 1 1)
-  
-  ;; Initialize 
-  (init-test))
-
+  (make-slides 1 1))
 
 ;; Main loop
 (clinch:defevent clinch:*on-idle* ()
 
-  (incf *move-to-page* (/ *delta-ticks* 1000))
-  (let ((pos (easing:out-back *move-to-page*)))
-    (when (< pos 1)
+  (when (<= *move-to-page* 1) 
+    (incf *move-to-page* (/ *delta-ticks* 1000))
+
+    (let ((pos (easing:out-back *move-to-page*)))
+      
       (when (and *start-rotation*
 		 *end-rotation*)
 	(setf (rotation *root*) (q:slerp *start-rotation*
 					 *end-rotation*
-					 pos))
-	    ;; (translation *root*) (v:lerp *start-position*
-	    ;; 				 *end-position*
-	    ;; 				 pos))))
-	    )))
+					 pos)))
+      (when (and *start-position* *end-position*)
+	(setf (translation *root*) (v:lerp *start-position*
+					   *end-position*
+					   pos)))))
+	    
 
   
   ;; clear the screen
@@ -123,7 +120,7 @@
     (setf *start-rotation* (rotation *root*)
 	  *end-rotation* (q:from-fixed-angles 0 rot 0)
 	  *start-position* (translation *root*)
-	  *end-position* (v! 0 0 pos)
+	  *end-position* (v! 0 0 (- pos .5))
 	  *move-to-page* 0)
     (print
      (list
@@ -161,7 +158,7 @@
 			  (q:from-fixed-angles 0 (clinch:degrees->radians (* *mouse-multiplier* xrel)) 0))))
     
     ;; Mouse wheel down: translate.
-    (2 (clinch:translate *root* (clinch:v! (/ xrel 2) (/ yrel -2) 0)))))
+    (2 (clinch:translate *root* (clinch:v! (/ xrel 300) (/ yrel -300) 0)))))
 
 ;; Resize the window and change the projection matrix.    
 (clinch:defevent clinch:*on-window-resized* (win width height ts)
@@ -183,7 +180,12 @@
   (when *entity* (unload *entity*))
   (setf *entity*
 	(make-quad-for-texture *texture* :parent nil))
-  (load-texture-from-file *texture* "/home/brad/work/lisp/iss040e081424.jpg")
+  (load-texture-from-file
+   *texture*
+   (concatenate 'string 
+		(directory-namestring
+		 (asdf:system-relative-pathname :clinch "clinch.asd"))
+		"examples/presentation02/iss040e081424.jpg"))  
   
   *texture*)
 
@@ -235,17 +237,17 @@
     (start-movement 0)
     (!0 *root*)
     (!t *root* 0 0 (- (- dist) -.01))
-    ;;(!t *root* 0 0 -5.65 t)
     
-    (loop
-       for x from 1 to n
-       for i from 0 below (* 2 pi) by rad
-	 for s in *slides*
-       do (progn 
-	    (print (list x i dist))
-	    (multiple-value-bind (tex e n1 n2)
-		(make-slide width height i dist)
-	      (render-slide tex x s))))))
+    (! 
+     (loop
+	for x from 1 to n
+	for i from 0 below (* 2 pi) by rad
+	for s in *slides*
+	do (progn 
+	     (print (list x i dist))
+	     (multiple-value-bind (tex e n1 n2)
+		 (make-slide width height i dist)
+	       (render-slide tex x s)))))))
 
 (defun render-slide (tex num f)
   (clinch:fast-draw (:texture tex :width-var w :height-var h)
