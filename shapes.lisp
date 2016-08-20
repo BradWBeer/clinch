@@ -93,7 +93,7 @@
 			       ("tc1" . ,(make-quad-texture-coordinates)))
 		 :uniforms `(("M" . :model)
 			     ("P" . :projection)
-			     ("t1" . ,(or texture (get-identity-texture))))))
+			     ("t1" . ,(or texture (get-default-texture))))))
 
 (defmethod make-quad-for-texture ((this texture) &key width height (center :center) shader-program parent no-parent)
   "Creates a quad for a texture which defaults to texture's width and height."

@@ -3,18 +3,6 @@
 
 (in-package #:clinch)
 
-(defparameter *identity-texture* nil)
-
-(defun get-identity-texture ()
-  (or *identity-texture*
-      (setf *identity-texture*
-	    (make-instance 'clinch:texture
-			   :data   '(255 255 255 255)
-			   :width  1
-			   :height 1
-			   :stride 4
-			   :qtype  :unsigned-char))))
-
 (defun load-mesh (path)
   (classimp:with-log-to-stdout ()
     (classimp:import-into-lisp 
@@ -98,7 +86,7 @@
 		 :uniforms `(("M" . :model)
 			     ("P" . :projection)
 			     ("N" . :normal)
-			     ("t1" . ,(or texture (get-identity-texture)))
+			     ("t1" . ,(or texture (get-default-texture)))
 			     ("ambientLight" . (.2 .2 .2))
 			     ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
 			     ("lightIntensity" . (.8 .8 .8)))))

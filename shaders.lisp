@@ -35,44 +35,55 @@
 
 (defmethod initialize-instance :after ((this shader) &key code defs undefs)
   "Creates a shader."
-  (with-slots ((id id) (key key)) this 
+  (when code 
+    (!
+      (with-slots ((id id) (key key)) this 
+	(shader-compile this :code code :defs defs :undefs undefs)))))
 
-    (shader-compile this :code code :defs defs :undefs undefs)
 
-    (trivial-garbage:cancel-finalization this)
-    (add-uncollected this)
-    (trivial-garbage:finalize
-     this
-     (let ((val id)
-	   (key (key this)))
-       
-       (lambda ()
-	 (remhash key *uncollected*)
-	 (sdl2:in-main-thread (:background t) 
-	   (gl:delete-shader val)))))))
+(defmethod add-finalizer ((this shader))
+  (trivial-garbage:cancel-finalization this)
+  (add-uncollected this)
+  (trivial-garbage:finalize
+   this
+   (let ((val (id this))
+	 (key (key this)))
+     
+     (lambda ()
+       (remhash key *uncollected*)
+       (sdl2:in-main-thread (:background t) 
+	 (gl:delete-shader val))))))
 
 
 (defmethod shader-compile ((this shader) &key code defs undefs)
 
   (when (null code) (error "No code to build shader!"))
 
-  (with-slots ((id id)) this
-
-    (unless id
-      (make-shader this))
-
-    (gl:shader-source id (concatenate 'string
-				      (format nil "~{#define ~A~%~}" defs)
-				      (format nil "~{#undef ~A~%~}" undefs)
-				      code))
-    (gl:compile-shader id)
+  (! 
+    (let ((old-id (id this)))
+      
+      (setf (slot-value this 'id) (make-shader this))
+      
+      (when old-id
+	(gl:delete-shader old-id)))
+          
+    (gl:shader-source (id this) (concatenate 'string
+					(format nil "~{#define ~A~%~}" defs)
+					(format nil "~{#undef ~A~%~}" undefs)
+					code))
+    (gl:compile-shader (id this)))
+  
+  (format t "id = ~A~%" (id this))
+  
+  (unless (> (id this) 0)
+    (error "Could not create a shader object!"))
+  
+  (let ((err (gl:get-shader (id this) :compile-status)))
+    (format t "err = ~A~%" err)
+    (unless err
+      (error (format nil "Could not compile shader: ~A" (gl:get-shader-info-log (id this))))))
     
-    (let ((log (gl:get-shader-info-log id)))
-      (unless (string-equal log "")
-	(format t "Shader Log: ~A~%" log)))
-    
-    (unless (gl:get-shader id :compile-status)
-      (error "Could not compile shader!"))))
+  (add-finalizer this))
 
 (defmethod make-shader ((this vertex-shader))
   "Creates a vertex shader."
@@ -89,6 +100,16 @@
   (setf (slot-value this 'id)
 	(gl:create-shader :geometry-shader)))
 
+(defmethod shader-source ((this shader))
+  (with-slots ((id id)) this
+    (!
+      (list (cffi:foreign-enum-keyword '%gl::enum 
+				       (gl:get-shader id :shader-type))
+	    (! (gl:get-shader-source id))))))
+
+(defmethod (setf shader-source) ((code string) (this shader))
+  (shader-compile this :code code))
+
 (defmethod unload ((this shader) &key)
   "Unloads and releases the shader."
 
@@ -104,6 +125,3 @@
 	  (slot-value this 'uniforms) nil
 	  (slot-value this 'attributes) nil
 	  (slot-value this 'name) nil)))
-
-
-

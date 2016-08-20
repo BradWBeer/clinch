@@ -477,7 +477,7 @@ working while cepl runs"
 			  *running* nil
 			  *inited* nil
 			  *generic-single-texture-shader* nil
-			  *identity-texture* nil))))))))))
+			  *default-texture* nil))))))))))
 
 (defun uninit ()
   (with-main
