@@ -171,6 +171,28 @@
 ;; (defun get-mesh (scene index) 
 ;;   (elt (classimp:meshes scene) index))
 
+(defun flatten-arrays (vec) 
+  (if (arrayp vec)
+      (loop for i across vec
+	 append (flatten-arrays i))
+      (list vec)))
+
+(defun make-int-buffer-from-array (a)
+  (make-instance 'index-buffer
+		 :data (flatten-arrays a)
+		 :count (length a)
+		 :qtype :unsigned-int
+		 :target :element-array-buffer))
+
+(defun make-float-buffer-from-array (a)
+  (make-instance 'buffer 
+		 :data (flatten-arrays a)
+		 :count (length a)
+		 :Stride (length (aref a 0))))
+
+(defun make-float-buffers-from-array-of-arrays (a)
+	   (loop for i across a
+	    collect (make-float-buffer-from-array i)))
 
 (defun make-index-buffer (v)
   (let* ((len (* (length v) (length (elt v 0)))))

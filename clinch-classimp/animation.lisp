@@ -1,7 +1,31 @@
 ;;;; animation.lisp
 ;;;; Please see the licence.txt for the CLinch 
 
+;; vertex weights buffer is constant
+;; Each mesh might need it's own buffer of bones.
+;; Also, each animator should have a copy of the animation 
+;; and the root node of the mesh.
+;; It will travel down the tree updating the bones.
+;; Update calls should also take an alist of animations.
+;; I'll work on that after I get regular animations working.
+
 (in-package :clinch)
+
+(defclass mesh-animation (animation) 
+  ((bone-animations :initform nil
+		    :initarg :bone-animations
+		    :accessor bone-animations)))
+   
+
+(defclass mesh-animator (animator) 
+  ((animation :initform (error "There must be an animation for the mesh animator!")
+	      :initarg :animation 
+	      :reader animation)
+    (bone-buffer :initform nil
+		:initarg :bone-buffer
+		:accessor bone-buffer)))
+
+
 
 ;; (defmethod translate-weights ((bone classimp:bone))
 ;;   (map 'list (lambda (x) (cons (classimp:id x) (classimp:weight x))) (classimp:weights bone)))

@@ -86,6 +86,8 @@
 
 ;; 		 PBO (make-pbo-for-texture texture-1)))
 
+(defclass image-animation (animation) ())
+(defclass image-animator (animator) ())
 
 ;; notes!!!: Change the output to ((time . texture) ... with time in ms.
 (defun load-animation-as-vector (path)
