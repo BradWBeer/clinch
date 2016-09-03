@@ -7,7 +7,15 @@
   (classimp:with-log-to-stdout ()
     (classimp:import-into-lisp 
      (cffi-sys:native-namestring (truename path))
-     :processing-flags '(:ai-Process-Triangulate :ai-Process-Join-Identical-Vertices :ai-Process-Sort-By-P-Type))))
+     :processing-flags '(:ai-Process-Triangulate 
+			 :ai-Process-Join-Identical-Vertices 
+			 :ai-Process-Sort-By-P-Type 
+			 :ai-process-optimize-graph 
+			 :ai-process-optimize-meshes 
+			 :ai-Process-Find-Instances 
+			 :ai-Process-Find-Invalid-Data 
+			 :ai-Process-Remove-Redundant-Materials 
+			 :ai-process-Gen-Normals))))
 
 
 (defun translate-node-to-clinch (node entities &optional (hash (make-hash-table :test 'equal)))
