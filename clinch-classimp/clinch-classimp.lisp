@@ -83,6 +83,8 @@
 
 (defun make-classimp-entity (index-buffer vertex-buffer normal-buffer &key texture texture-coordinate-buffer vertex-color-buffer parent)
 									
+  (format t "index-buffer=~A vertex-buffer=~A normal-buffer=~A &key texture=~A texture-coordinate-buffer=~A vertex-color-buffer=~A parent=~A~%"
+	  index-buffer vertex-buffer normal-buffer texture texture-coordinate-buffer vertex-color-buffer parent)
   (make-instance 'clinch:entity
 		 :parent parent
 		 :shader-program (get-generic-single-diffuse-light-shader)
@@ -94,7 +96,7 @@
 		 :uniforms `(("M" . :model)
 			     ("P" . :projection)
 			     ("N" . :normal)
-			     ("t1" . ,(or texture (get-default-texture)))
+			     ("t1" . ,(or texture (get-identity-texture)))
 			     ("ambientLight" . (.2 .2 .2))
 			     ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
 			     ("lightIntensity" . (.8 .8 .8)))))

@@ -4,6 +4,7 @@
 (in-package #:clinch)
 
 (defparameter *default-texture* nil)
+(defparameter *identity-texture* nil)
 
 (defclass texture ()
   ((tex-id
@@ -217,12 +218,24 @@
 	 (progn
 	   (unload ,var))))))
 
-(defun get-default-texture ()
+(defmethod set-texture-color ((this texture) r g b &optional (a 1.0))
+  (let ((data (pullg this)))
+    (dotimes (i (length data))
+      (setf (aref data i) 
+	    (case (mod i 4)
+	      (0 (ceiling (* b 255)))
+	      (1 (ceiling (* g 255)))
+	      (2 (ceiling (* r 255)))
+	      (3 (ceiling (* a 255))))))
+    (pushg this data)
+    this))
+
+(defun get-identity-texture ()
   "Creates/returns a 1x1 texture with the values (1.0, 1.0, 1.0, 1.0).
    This is a nice placeholder when you don't want a custom shader."
-  (if *default-texture*
-      *default-texture* 
-      (setf *default-texture*
+  (if *identity-texture*
+      *identity-texture* 
+      (setf *identity-texture*
 	    (make-instance 'clinch:texture
 			   :data   '(255 255 255 255)
 			   :width  1
