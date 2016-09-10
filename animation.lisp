@@ -6,7 +6,10 @@
 (defclass animation () 
   ((frames :accessor frames
 	   :initform nil
-	   :initarg :frames)))
+	   :initarg :frames)
+   (time-modifier :initform nil
+		  :initarg :time-modifier
+		  :accessor time-modifier)))
 
 
 (defclass animator () 
