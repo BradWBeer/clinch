@@ -17,10 +17,35 @@
 			 :ai-Process-Remove-Redundant-Materials 
 			 :ai-process-Gen-Normals))))
 
+(defun translate-bone-to-clinch (node entities &key (hash (make-hash-table :test 'equal)) bone-hash)
+    (let* ((name (classimp:name node))
+	   (bone-data (gethash name bone-hash))
+	   (position (first bone-data))
+	   (offset (second bone-data))
+	   (weights (cddr bone-data))
+	   (ret (make-instance 'bone
+			       :offset-matrix offset
+			       :weights weights
+			    :name name
+			    :pos position
+			    :matrix (classimp:transform node)
+			    :children (append 
+				       (map 'list
+					    (lambda (x)
+					      (nth x entities))
+					    (coerce (classimp:meshes node) 'list))
+				       (reverse (map 'list 
+						     (lambda (x)
+						       (translate-nodes-to-clinch x entities :hash hash :bone-hash bone-hash))
+						     (classimp:children node)))))))
+    (values (if name
+		(setf (gethash name hash) ret)
+		ret)
+	    hash)))
 
-(defun translate-node-to-clinch (node entities &optional (hash (make-hash-table :test 'equal)))
-  (let* ((name (classimp:name node))
-	 (ret (make-instance 'node 
+(defun translate-node-to-clinch (node entities &key (hash (make-hash-table :test 'equal)) bone-hash)
+    (let* ((name (classimp:name node))
+	 (ret (make-instance 'node
 			    :name name
 			    :matrix (classimp:transform node)
 			    :children (append 
@@ -30,12 +55,19 @@
 					    (coerce (classimp:meshes node) 'list))
 				       (reverse (map 'list 
 						     (lambda (x)
-						       (translate-node-to-clinch x entities hash))
+						       (translate-nodes-to-clinch x entities :hash hash :bone-hash bone-hash))
 						     (classimp:children node)))))))
     (values (if name
 		(setf (gethash name hash) ret)
 		ret)
 	    hash)))
+
+
+(defun translate-nodes-to-clinch (node entities &key (hash (make-hash-table :test 'equal)) bone-hash)
+  (if (and bone-hash
+	   (gethash (classimp:name node) bone-hash))
+      (translate-bone-to-clinch node entities :hash hash :bone-hash bone-hash)
+      (translate-node-to-clinch node entities :hash hash :bone-hash bone-hash)))
     
 
 (defun get-base-path (file)
@@ -71,7 +103,7 @@
 		  (let* ((file (replace-slashes (third (cadr i))))
 			 (tex (or (gethash file texture-hash)
 				  (setf (gethash file texture-hash)
-					(create-texture-from-file (concatenate 'string base-path file))))))
+					(make-texture-from-file (concatenate 'string base-path file))))))
 		    (cons "t1" tex))			 
 		  i))
    texture-hash))
@@ -81,7 +113,7 @@
      collect (process-material (get-uniforms i) texture-hash base-path)))
 
 
-(defun make-classimp-entity (index-buffer vertex-buffer normal-buffer &key texture texture-coordinate-buffer vertex-color-buffer parent)
+(defun make-classimp-entity (index-buffer vertex-buffer normal-buffer &key texture texture-coordinate-buffer vertex-color-buffer parent bones)
 									
   (format t "index-buffer=~A vertex-buffer=~A normal-buffer=~A &key texture=~A texture-coordinate-buffer=~A vertex-color-buffer=~A parent=~A~%"
 	  index-buffer vertex-buffer normal-buffer texture texture-coordinate-buffer vertex-color-buffer parent)
@@ -125,9 +157,14 @@
 						 (elt tc 0))))))))
 
     (multiple-value-bind (ret node-hash)
-	(translate-node-to-clinch (classimp:root-node scene) entities)
-      node-hash
-      ret)))
+	(translate-nodes-to-clinch (classimp:root-node scene) entities :bone-hash (clinch::get-all-bones scene))
+      (values ret
+	      node-hash
+	      scene
+	      base-path
+	      materials
+	      meshes
+	      entities))))
 
 
 ;; (defun get-uniforms (scene texture-hash )
@@ -240,3 +277,13 @@
 (defun make-texture-coord-buffer (mesh index)
   (clinch::make-vector-buffer (elt (classimp:texture-coords mesh) index)
 			      :stride (elt (classimp:components-per-texture-coord mesh) index)))
+
+
+(defun merge-hash-tables (&rest tables)
+  (let ((ret (make-hash-table :test 'equal)))
+    (loop 
+       for x from 0
+       for table in tables 
+       do (maphash (lambda (k v)
+		     (setf (gethash k ret) v)) table))
+    ret))

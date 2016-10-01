@@ -24,6 +24,10 @@
     :initform nil
     :initarg :attributes
     :reader attributes)
+   (bones
+    :initform nil
+    :initarg :bones
+    :accessor bones)
    (enabled
     :accessor enabled
     :initform t

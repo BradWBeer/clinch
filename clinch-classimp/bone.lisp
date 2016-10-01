@@ -29,15 +29,9 @@
 ;; 	    :initarg :weights)))
 
 (defclass bone (node) 
-  ((name :initform nil
-       :initarg :name
-       :reader name)
-   (id :initform (error "Bones must have a unique id for the gl-buffer!")
-       :initarg :id
-       :reader id)
-   (gl-buffer :initform nil
-	      :initarg :buffer
-	      :accessor buffer)
+  ((position :initform nil
+	     :initarg :pos
+	     :accessor pos)
    (offset-matrix :initform (m4:identity)
 		  :initarg :offset-matrix
 		  :accessor offset-matrix)
@@ -47,13 +41,17 @@
 	    :initarg :weights
 	    :accessor weights)))
 
+(defmethod print-object ((this bone) s)
+  "Print function for node."
+  (format s "#<BONE children: ~A ~%~A>" (length (children this)) (transform this)))
+
+
 (defmethod weights-to-alist (bone)
 	   (loop for i across (weights bone)
 	      collect (cons (id i) (weight i))))
 
 ;; Subclass method transform to add offset matrix
 ;; and do animations?
-
 
 (defclass bone-animation () 
   ((bone :initform (error "Bone animations must have a bone attached!")
@@ -68,6 +66,36 @@
    (scale-frames :initform nil
 		 :initarg :scale-frames
 		 :accessor scale-frames)))
+
+
+(defun weight->cell (weight)
+  (cons (classimp:id weight)
+	(classimp:weight weight)))
+
+(defun bone-weights (bone)
+  (loop for x below (length (classimp:weights bone))
+     collect (weight->cell (elt (classimp:weights bone) x))))
+
+(defun get-mesh-bones (mesh &optional (bone-hash (make-hash-table :test 'equal)))
+  (let ((bones (classimp:bones mesh)))
+    (loop for x from 0 below (length bones)
+       do (let ((bone (elt bones x)))
+	    (setf (gethash (classimp:name bone) bone-hash)
+		  (cons x
+			(cons (classimp:offset-matrix bone)
+			      (bone-weights bone)))))))
+  bone-hash)
+
+
+	     
+(defun get-all-bones (scene)
+  (let ((bone-hash (make-hash-table :test 'equal)))
+    (map 'nil 
+	 (lambda (i)
+	   (get-mesh-bones i bone-hash))
+	 (classimp:meshes scene))
+    bone-hash))
+
 
 (defun key-frames-to-list (frames)
   (map 'list (lambda (k)

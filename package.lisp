@@ -122,6 +122,6 @@
 
    #:frame-buffer #:unbind #:depth-buffer #:make-depth-texture #:color-attachment #:make-color-texture #:with-fbo
    #:clear-color #:attribute #:uniform #:init #:clean-up #:enable #:disable #:window-width #:window-height #:*parent*
-
+   #:walk-node-tree
    ))
 

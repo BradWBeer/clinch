@@ -336,3 +336,19 @@ Shortcut is !s."))
      append (cond 
 	      ((typep c 'node) (traverse-node c))
 	      (t (list c)))))
+
+(defmethod walk-node-tree (this f &key test)
+  (when (or (null test)
+	    (funcall test this))
+    (funcall f this)))
+	   
+
+(defmethod walk-node-tree ((this node) f &key test) 
+  "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
+  (when (enabled this)
+    (when (or (null test)
+	      (funcall test this))
+      (funcall f this))
+    
+    (loop for i in (children this)
+       do (walk-node-tree i f :test test))))
