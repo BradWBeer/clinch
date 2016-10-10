@@ -128,7 +128,7 @@ Shortcut is !s."))
   (with-accessors ((name name)) this
     (format s "#<NODE ~A children: ~A ~%~A>" (if name
 					       (concatenate 'string "\"" name "\"")
-					       "")
+					       (id this))
 	  (length (children this)) (transform this))))
 
 (defmethod changed? ((this node))
@@ -357,3 +357,23 @@ Shortcut is !s."))
     (loop for i in (children this)
 	 if (or non-node (typep i 'node))
        do (walk-node-tree i f :test test :non-node non-node))))
+
+(defmethod node-top-map-string ((this node) &optional parent)
+  (let ((children 
+	 (loop for n in (children this)
+	    when (typep n 'node)
+	    append (node-top-map-string n this))))
+    (if (and parent (name parent))
+	(cons (list (name this) (name parent))
+	      children)
+	children)))
+
+(defmethod node-top-map ((this node) &optional parent)
+  (let ((children 
+	 (loop for n in (children this)
+	    when (typep n 'node)
+	    append (node-top-map n this))))
+    (if (and parent parent)
+	(cons (list this parent)
+	      children )
+	children)))

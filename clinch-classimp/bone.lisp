@@ -43,8 +43,19 @@
   (with-accessors ((name name)) this
     (format s "#<BONE ~A children: ~A ~%~A>" (if name
 					       (concatenate 'string "\"" name "\"")
-					       "")
+					       (id this))
 	  (length (children this)) (transform this))))
+
+(defun remove-non-bones (lst)
+  (loop for i in lst
+     when (typep i 'bone)
+     collect i))
+       
+(defmethod number-bones ((this node) &key)
+  (loop for n in (remove-non-bones
+		  (topological-sort (node-top-map this) :test 'eq))
+       for x from 0
+       collect (cons x n)))
 
 
 (defmethod weights-to-alist (bone)
