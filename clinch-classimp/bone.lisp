@@ -40,7 +40,11 @@
 
 (defmethod print-object ((this bone) s)
   "Print function for node."
-  (format s "#<BONE children: ~A ~%~A>" (length (children this)) (transform this)))
+  (with-accessors ((name name)) this
+    (format s "#<BONE ~A children: ~A ~%~A>" (if name
+					       (concatenate 'string "\"" name "\"")
+					       "")
+	  (length (children this)) (transform this))))
 
 
 (defmethod weights-to-alist (bone)
