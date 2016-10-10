@@ -337,13 +337,13 @@ Shortcut is !s."))
 	      ((typep c 'node) (traverse-node c))
 	      (t (list c)))))
 
-(defmethod walk-node-tree (this f &key test)
+(defmethod walk-node-tree (this f &key test non-node)
   (when (or (null test)
 	    (funcall test this))
     (funcall f this)))
 	   
 
-(defmethod walk-node-tree ((this node) f &key test) 
+(defmethod walk-node-tree ((this node) f &key test non-node) 
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
   (when (enabled this)
     (when (or (null test)
@@ -351,4 +351,5 @@ Shortcut is !s."))
       (funcall f this))
     
     (loop for i in (children this)
-       do (walk-node-tree i f :test test))))
+	 if (or non-node (typep i 'node))
+       do (walk-node-tree i f :test test :non-node non-node))))

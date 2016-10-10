@@ -27,7 +27,6 @@
 			       :offset-matrix offset
 			       :weights weights
 			    :name name
-			    :pos position
 			    :matrix (classimp:transform node)
 			    :children (append 
 				       (map 'list

@@ -73,13 +73,10 @@
 					code))
     (gl:compile-shader (id this)))
   
-  (format t "id = ~A~%" (id this))
-  
   (unless (> (id this) 0)
     (error "Could not create a shader object!"))
   
   (let ((err (gl:get-shader (id this) :compile-status)))
-    (format t "err = ~A~%" err)
     (unless err
       (error (format nil "Could not compile shader: ~A" (gl:get-shader-info-log (id this))))))
     

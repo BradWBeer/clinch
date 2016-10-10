@@ -29,10 +29,7 @@
 ;; 	    :initarg :weights)))
 
 (defclass bone (node) 
-  ((position :initform nil
-	     :initarg :pos
-	     :accessor pos)
-   (offset-matrix :initform (m4:identity)
+  ((offset-matrix :initform (m4:identity)
 		  :initarg :offset-matrix
 		  :accessor offset-matrix)
 
@@ -49,6 +46,13 @@
 (defmethod weights-to-alist (bone)
 	   (loop for i across (weights bone)
 	      collect (cons (id i) (weight i))))
+
+(defmethod get-mesh-bone-names ((this classimp:mesh))
+  (map 'list #'classimp:name (classimp:bones this)))
+
+(defmethod get-all-mesh-bone-names ((this classimp:scene))
+  (loop for m in (coerce (classimp:meshes this) 'list)
+       append (get-mesh-bone-names m)))
 
 ;; Subclass method transform to add offset matrix
 ;; and do animations?
