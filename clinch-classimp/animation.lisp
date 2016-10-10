@@ -1,6 +1,33 @@
 ;;;; animation.lisp
 ;;;; Please see the licence.txt for the CLinch 
 
+;; vertex weights and bone buffers are constant
+;; Entities handle weights and bones with regular buffers.
+;; There is also a buffer with the bone transform data
+;; (rotation, scaling and translation.)
+;;
+;; A skeleton is needed.
+;; Skeletons keep the bone information separate from
+;; everything else.
+;; It contains it's own node tree (scene graph) and 
+;; vertex weights.
+;; It can construct a buffer for the bones and weights
+;; or fill in the data for existing ones.
+;;
+;; An entity-animation needs a skeleton but also keep a list of
+;; movements for the bones, including easing functions.
+;; It's also able to update/update the animation buffer.
+;;
+;; An animation object should just be able to animate this fine.
+;;
+;; Also, each animator should have a copy of the animation 
+;; and the root node of the mesh.
+;; It will travel down the tree updating the bones.
+;; Update calls should also take an alist of animations.
+;; I'll work on that after I get regular animations working.
+
+(in-package :clinch)
+
 ;; vertex weights buffer is constant
 ;; Each mesh might need it's own buffer of bones.
 ;; Also, each animator should have a copy of the animation 
@@ -9,7 +36,60 @@
 ;; Update calls should also take an alist of animations.
 ;; I'll work on that after I get regular animations working.
 
-(in-package :clinch)
+;; const int MAX_BONES   = 100;
+;; const int MAX_WEIGHTS = 5;
+
+;;
+;; struct boneTransform {
+;;   vec3 scale;
+;;   vec4 rot;
+;;   vec3 trans;
+;; }
+
+;; struct boneWeight {
+;;   int bone;
+;;   float weight;
+;; }
+
+;; GLSL function to rotate vec3 by quaternion. 
+;;
+;; vec3 rotate(vec3 vec, vec4 quat) {
+;; return vec + 2.0 * cross( cross( vec, quat.xyz ) + quat.w * vec, quat.xyz );
+;; }
+
+;;
+;; vec3 translate(vec3 vec, vec3 translation) {
+;;
+;; return vec + translation;
+;; 
+;;}
+
+;;
+;; vec3 scale(vec3 vec, vec3 scale) {
+;;
+;; return vec * scale;
+;; 
+;;}
+
+;; vec3 transform(vec3 vec, mat4 bone, boneTransform transform) {
+;;
+;; return translate(rotate(scale(vec, bone.scale), bone.rotation), bone.translation);
+;; 
+;;}
+
+;; vec3 merge_vectors(vec3 vec, mat4 bones[], boneWeight weights[], boneTransform transforms[]) {
+;;
+;; int i;
+;; vec3 ret = vec3(0, 0, 0);
+;; for(i=0; i<MAX_WEIGHTS && weights[i].weight>0, i++) {
+;;
+;;   vec3 tmp = bones[weights[i].bone] * vec;
+;;   ret += translate(tmp, transforms[weight[i].bone) * weight[i].weight;
+;;   
+;; }
+;;
+;; return ret;
+;; }
 
 (defclass mesh-animation (animation) 
   ((bone-animations :initform nil
