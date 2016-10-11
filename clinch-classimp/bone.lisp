@@ -41,10 +41,12 @@
 (defmethod print-object ((this bone) s)
   "Print function for node."
   (with-accessors ((name name)) this
-    (format s "#<BONE ~A children: ~A ~%~A>" (if name
-					       (concatenate 'string "\"" name "\"")
-					       (id this))
-	  (length (children this)) (transform this))))
+    (format s "#<BONE ~A children: ~A ~%~A>"
+	    (cond
+	      ((stringp name) (concatenate 'string "\"" name "\""))
+	      (name name)
+	      (t "<unnamed>"))
+	    (length (children this)) (transform this))))
 
 (defun remove-non-bones (lst)
   (loop for i in lst
@@ -91,7 +93,7 @@
   (cons (classimp:id weight)
 	(classimp:weight weight)))
 
-(defun bone-weights (bone)
+(defun get-bone-weights (bone)
   (loop for x below (length (classimp:weights bone))
      collect (weight->cell (elt (classimp:weights bone) x))))
 
@@ -102,7 +104,7 @@
 	    (setf (gethash (classimp:name bone) bone-hash)
 		  (cons x
 			(cons (classimp:offset-matrix bone)
-			      (bone-weights bone)))))))
+			      (get-bone-weights bone)))))))
   bone-hash)
 
 
@@ -151,3 +153,32 @@
 ;; 	 bones)
 
 ;;     (values bone-hash weights)))
+
+
+(defmethod find-top-level-bones ((this node)) 
+  (with-accessors ((children children)) this
+    (when children 
+      (if (some (lambda (n) 
+		  (typep n 'clinch::bone))
+		children)
+	  (make-instance 'clinch:node 
+			 :parent nil 
+			 :children (loop for i in children
+				      when (typep i 'clinch::bone)
+				      collect i))
+	  (dolist (n children) 
+	    (let ((ret (find-top-level-bones n)))
+	      (when ret (return ret))))))))
+		    
+
+(defmethod debone ((this node))
+  (with-accessors ((children children)) this
+    (when children
+      (setf children
+	    (remove-if (lambda (n)
+			 (typep n 'clinch::bone))
+		       children))
+      (map nil (lambda (n)
+		 (when (typep n 'node)
+		   (debone n)))
+	   children))))

@@ -126,10 +126,12 @@ Shortcut is !s."))
 (defmethod print-object ((this node) s)
   "Print function for node."
   (with-accessors ((name name)) this
-    (format s "#<NODE ~A children: ~A ~%~A>" (if name
-					       (concatenate 'string "\"" name "\"")
-					       (id this))
-	  (length (children this)) (transform this))))
+    (format s "#<NODE ~A children: ~A ~%~A>"
+	    	    (cond
+		      ((stringp name) (concatenate 'string "\"" name "\""))
+		      (name name)
+		      (t "<unnamed>"))
+		    (length (children this)) (transform this))))
 
 (defmethod changed? ((this node))
   "Has this node changed and not updated?"

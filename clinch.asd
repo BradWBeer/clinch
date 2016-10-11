@@ -21,6 +21,7 @@
 	       (:file "node")
 	       (:file "shaders")
 	       (:file "shader-program")
+	       (:file "default-shaders")
 	       (:file "buffer")
 	       (:file "index-buffer")
 	       (:file "pixel-buffer")

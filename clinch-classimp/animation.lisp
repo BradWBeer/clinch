@@ -92,11 +92,17 @@
 ;; }
 
 (defclass mesh-animation (animation) 
-  ((bone-animations :initform nil
-		    :initarg :bone-animations
-		    :accessor bone-animations)))
+  ((skeleton
+    :accessor skeleton
+    :initform nil
+    :initarg :skeleton)
+   (bone-animations
+    :initform nil
+    :initarg :bone-animations
+    :accessor bone-animations)))
    
 
+;; I don't think I need a separate mesh animator...
 (defclass mesh-animator (animator) 
   ((animation :initform (error "There must be an animation for the mesh animator!")
 	      :initarg :animation 

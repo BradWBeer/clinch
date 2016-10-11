@@ -4,9 +4,9 @@
 (in-package #:clinch)
 
 (defparameter *generic-single-diffuse-light-shader* nil)
-
 (defun get-generic-single-diffuse-light-shader ()
-  (or *generic-single-diffuse-light-shader*
+  (if (and *generic-single-diffuse-light-shader* (program *generic-single-diffuse-light-shader*))
+      *generic-single-diffuse-light-shader*
       (setf *generic-single-diffuse-light-shader*
 	    (make-instance 'clinch:shader-program
 			   :name "generic-single-diffuse-light-shader"
