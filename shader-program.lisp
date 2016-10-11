@@ -193,13 +193,20 @@
 (defmethod list-shader-uniforms ((this shader-program))
   "List the shader-program's uniform arguments."
   (! (loop for i from 0 below (gl:get-program (program this) :active-uniforms) 
-	collect (cons i (multiple-value-list (gl:get-active-uniform (program this) i))))))
+	collect (multiple-value-bind (id type name) (gl:get-active-uniform (program this) i)
+		  (list i
+			(gl:get-uniform-location (program this) name)
+			type
+			name)))))
 
 (defmethod list-shader-attributes ((this shader-program))
   "List the shader-program's attribute arguments."
   (! (loop for i from 0 below (gl:get-program (program this) :active-attributes) 
-	collect (cons i (multiple-value-list (gl:get-active-attrib (program this) i))))))
-
+	collect (multiple-value-bind (id type name) (gl:get-active-attrib (program this) i)
+		  (list i
+			(gl:get-attrib-location (program this) name)
+			type
+			name)))))
 ;;doesn't work yet...
 ;; (defmethod list-shader-uniform-blocks ((this shader-program))
 ;;   (! (loop for i from 0 below (gl:get-program (program this) :active-uniform-blocks) 
@@ -337,144 +344,4 @@
 (defmethod remove-shader-program-uniform ((this shader-program) key)
   "Removes a shader-program uniform"
   (remhash key (slot-value this 'shader-program-uniform)))
-
-(defparameter *generic-single-texture-shader* nil)
-(defun get-generic-single-texture-shader ()
-  "Creates/returns a shader-program which blits a texture to an entity.
-   Uniforms:
-    P: projection matrix
-    M: model-view matrix
-    t1: texture
-   Attributes:
-    v: Vertexes
-    tc1: texture coordinates"
-    
-  (if (and *generic-single-texture-shader* (program *generic-single-texture-shader*))
-      *generic-single-texture-shader*
-      (setf *generic-single-texture-shader*
-	    (make-instance 'clinch:shader-program
-			   :name "generic-single-texture-shader"
-			   :vertex-shader (alexandria:read-file-into-string
-					   (concatenate 'string 
-							(directory-namestring
-							 (asdf:system-relative-pathname :clinch "clinch.asd"))
-							"shaders/generic-single-texture-shader.vert"))
-			   :fragment-shader (alexandria:read-file-into-string
-					     (concatenate 'string 
-							  (directory-namestring
-							   (asdf:system-relative-pathname :clinch "clinch.asd"))
-							  "shaders/generic-single-texture-shader.frag"))
-			   :uniforms '(("P" :matrix)
-				       ("M" :matrix)
-				       ("t1" :int))
-			   :attributes '(("tc1" :float)
-					 ("v" :float))))))
-
-(defparameter *generic-solid-phong-shader* nil)
-(defun get-generic-solid-phong-shader ()
-  "Creates/returns a shader-program which uses simple phong shading with a single color.
-   Uniforms:
-    P: projection matrix
-    M: model-view matrix
-    ambientLight: Ambient Light Color
-    lightDirection: Direction of light
-    lightIntensity: Color of light
-    color: color of object
-   Attributes:
-    v: Vertexes"
-    
-  (if (and *generic-solid-phong-shader* (program *generic-solid-phong-shader*))
-      *generic-solid-phong-shader*
-      (setf *generic-solid-phong-shader*
-	    (make-instance 'clinch:shader-program
-			   :name "generic-solid-phong-shader"
-			   :vertex-shader (alexandria:read-file-into-string
-					   (concatenate 'string 
-							(directory-namestring
-							 (asdf:system-relative-pathname :clinch "clinch.asd"))
-							"shaders/generic-solid-phong-shader.vert"))
-			   :fragment-shader (alexandria:read-file-into-string
-					     (concatenate 'string 
-							  (directory-namestring
-							   (asdf:system-relative-pathname :clinch "clinch.asd"))
-							  "shaders/generic-solid-phong-shader.frag"))
-			   :uniforms '(("P" :matrix)
-				       ("M" :matrix)
-				       ("ambientLight" :float)
-				       ("lightDirection" :float)
-				       ("lightIntensity" :float)
-				       ("color" :float))
-			   :attributes '(("v" :float))))))
-
-(defparameter *generic-single-diffuse-light-shader* nil)
-(defun get-generic-single-diffuse-light-shader ()
-  (if (and *generic-single-diffuse-light-shader* (program *generic-single-diffuse-light-shader*))
-      *generic-single-diffuse-light-shader*
-      (setf *generic-single-diffuse-light-shader*
-	    (make-instance 'clinch:shader-program
-			   :name "generic-single-diffuse-light-shader"
-			   :vertex-shader (alexandria:read-file-into-string
-					   (concatenate 'string 
-							(directory-namestring
-							 (asdf:system-relative-pathname :clinch "clinch.asd"))
-							"clinch-classimp/generic-single-diffuse-light-shader.vert"))
-			   :fragment-shader (alexandria:read-file-into-string
-					   (concatenate 'string 
-							(directory-namestring
-							 (asdf:system-relative-pathname :clinch "clinch.asd"))
-							"clinch-classimp/generic-single-diffuse-light-shader.frag"))
-			   
-			   :uniforms '(("M" :matrix)
-				       ("N" :matrix)
-				       ("P" :matrix)
-				       ("t1" :int)
-				       ("ambientLight" :float)
-				       ("lightDirection" :float)
-				       ("lightIntensity" :float))
-				       
-			   :attributes '(("v" :float)
-					 ("n" :float)
-					 ("c" :float)
-					 ("tc1" :float))))))
-
-
-(defparameter *test-shader* nil)
-(defun get-test-shader ()
-
-  "none of this matters!
-  Creates/returns a shader-program which uses simple phong shading with a single color.
-   Uniforms:
-    P: projection matrix
-    M: model-view matrix
-    ambientLight: Ambient Light Color
-    lightDirection: Direction of light
-    lightIntensity: Color of light
-    color: color of object
-   Attributes:
-    v: Vertexes"
-    
-  (if (and *test-shader* (program *test-shader*))
-      *test-shader*
-      (setf *test-shader*
-	    (make-instance 'clinch:shader-program
-			   :name "test-shader"
-			   :vertex-shader (alexandria:read-file-into-string
-					   (concatenate 'string 
-							(directory-namestring
-							 (asdf:system-relative-pathname :clinch "clinch.asd"))
-							"shaders/test-shader.vert"))
-			   :fragment-shader (alexandria:read-file-into-string
-					     (concatenate 'string 
-							  (directory-namestring
-							   (asdf:system-relative-pathname :clinch "clinch.asd"))
-							  "shaders/test-shader.frag"))
-			   :uniforms '(("P" :matrix)
-				       ("M" :matrix)
-				       ("ambientLight" :float)
-				       ("lightDirection" :float)
-				       ("lightIntensity" :float)
-				       ("color" :float))
-			   :attributes '(("v" :float))))))
-
-
 
