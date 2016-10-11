@@ -95,6 +95,7 @@
    #:get-generic-solid-phong-shader
    #:get-generic-single-texture-shader
    #:get-generic-single-diffuse-light-shader
+   #:get-generic-single-diffuse-light-animation-shader
 
    #:shader-source #:program #:shader-compile #:frag-shader #:vert-shader #:attributes #:uniforms #:use-shader-program #:get-uniform-id #:get-attribute-id #:attach-uniform #:unload #:bind-static-values-to-attribute
    

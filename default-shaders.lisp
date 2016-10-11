@@ -77,7 +77,7 @@
       *generic-single-diffuse-light-shader*
       (setf *generic-single-diffuse-light-shader*
 	    (make-instance 'clinch:shader-program
-			   :name "generic-single-diffuse-light-shader"
+ss			   :name "generic-single-diffuse-light-shader"
 			   :vertex-shader (alexandria:read-file-into-string
 					   (concatenate 'string 
 							(directory-namestring
@@ -100,3 +100,38 @@
 					 ("n" :float)
 					 ("c" :float)
 					 ("tc1" :float))))))
+
+
+(defparameter *generic-single-diffuse-light-animation-shader* nil)
+(defun get-generic-single-diffuse-light-animation-shader ()
+  (if (and *generic-single-diffuse-light-animation-shader* (program *generic-single-diffuse-light-animation-shader*))
+      *generic-single-diffuse-light-animation-shader*
+      (setf *generic-single-diffuse-light-animation-shader*
+	    (make-instance 'clinch:shader-program
+			   :name "test-shader"
+			   :vertex-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-diffuse-light-animation-shader.vert"))
+			   :fragment-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-diffuse-light-animation-shader.frag"))
+			   
+			   :uniforms '(("M" :matrix)
+				       ("N" :matrix)
+				       ("P" :matrix)
+				       ("t1" :int)
+				       ("ambientLight" :float)
+				       ("lightDirection" :float)
+				       ("lightIntensity" :float)
+				       ("bones" :matrix))
+				       
+			   :attributes '(("v" :float)
+					 ("n" :float)
+					 ("c" :float)
+					 ("tc1" :float)
+					 ("boneIDs" :int)
+					 ("weights" :float))))))

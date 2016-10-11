@@ -38,6 +38,22 @@
 	    :initarg :weights
 	    :accessor weights)))
 
+(defmethod transform ((this bone) &key)
+  "Gets the transform matrix."
+  (with-slots ((scale s-matrix)
+	       (trans t-matrix)
+	       (rot   r-matrix)
+	       (transform transform)
+	       (offset offset-matrix)) this
+
+    (if (and scale rot trans transform)
+	(m4:* offset transform)
+	(setf transform
+	      (reduce #'m:* (list (or offset (offset-matrix this))
+				  (or trans (translation-matrix this))
+				  (or rot   (rotation-matrix this))
+				  (or scale (scale-matrix this))))))))
+
 (defmethod print-object ((this bone) s)
   "Print function for node."
   (with-accessors ((name name)) this
@@ -52,24 +68,24 @@
   (loop for i in lst
      when (typep i 'bone)
      collect i))
-       
+
 (defmethod number-bones ((this node) &key)
   (loop for n in (remove-non-bones
 		  (topological-sort (node-top-map this) :test 'eq))
-       for x from 0
-       collect (cons x n)))
+     for x from 0
+     collect (cons x n)))
 
 
 (defmethod weights-to-alist (bone)
-	   (loop for i across (weights bone)
-	      collect (cons (id i) (weight i))))
+  (loop for i across (weights bone)
+     collect (cons (id i) (weight i))))
 
 (defmethod get-mesh-bone-names ((this classimp:mesh))
   (map 'list #'classimp:name (classimp:bones this)))
 
 (defmethod get-all-mesh-bone-names ((this classimp:scene))
   (loop for m in (coerce (classimp:meshes this) 'list)
-       append (get-mesh-bone-names m)))
+     append (get-mesh-bone-names m)))
 
 ;; Subclass method transform to add offset matrix
 ;; and do animations?
@@ -108,7 +124,7 @@
   bone-hash)
 
 
-	     
+
 (defun get-all-bones (scene)
   (let ((bone-hash (make-hash-table :test 'equal)))
     (map 'nil 
@@ -139,14 +155,14 @@
 ;;      do (push (cons bone w) (elt arr index))))
 
 ;; (defmethod translate-bones ((mesh classimp:mesh) (node-hash hash-table))
-  
+
 ;;   (let ((weights (make-array (length (classimp:faces mesh)) :element-type 'list :initial-element nil))
 ;; 	(bone-hash (make-hash-table :test 'equal))
 ;; 	(bones (map 'list (lambda (b)
-			    
+
 ;; 			    (translate-classimp-bone b node-hash))
 ;; 		    (classimp:bones mesh))))
-    
+
 ;;     (map nil (lambda (x)
 ;; 	       (setf (gethash (name (node x)) bone-hash) x)
 ;; 	       (bone-weights-into-array x weights))
@@ -169,7 +185,7 @@
 	  (dolist (n children) 
 	    (let ((ret (find-top-level-bones n)))
 	      (when ret (return ret))))))))
-		    
+
 
 (defmethod debone ((this node))
   (with-accessors ((children children)) this

@@ -26,8 +26,9 @@
    (r-matrix :initform nil)
    (s-matrix :initform nil)
    (transform :initform nil)
-   (current-transform :initform nil
-		      :reader current-transform)
+   (current-transform
+    :initform nil
+    :reader current-transform)
    (enabled
     :accessor enabled
     :initform t
@@ -245,7 +246,7 @@ Shortcut is !s."))
 
     (if (and scale rot trans transform)
 	transform
-	(setf transform
+	(setf (slot-value this 'transform)
 	      (reduce #'m:* (list (or trans (translation-matrix this))
 				    (or rot   (rotation-matrix this))
 				    (or scale (scale-matrix this))))))))

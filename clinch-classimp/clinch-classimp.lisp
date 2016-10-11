@@ -20,7 +20,6 @@
 (defun translate-bone-to-clinch (node entities &key (hash (make-hash-table :test 'equal)) bone-hash)
     (let* ((name (classimp:name node))
 	   (bone-data (gethash name bone-hash))
-	   (position (first bone-data))
 	   (offset (second bone-data))
 	   (weights (cddr bone-data))
 	   (ret (make-instance 'bone
