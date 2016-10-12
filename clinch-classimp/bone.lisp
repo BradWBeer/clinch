@@ -1,4 +1,4 @@
-;;;; bone.lisp
+;;; bone.lisp
 ;;;; Please see the licence.txt for the CLinch 
 
 (in-package #:clinch)
@@ -169,6 +169,15 @@
 ;; 	 bones)
 
 ;;     (values bone-hash weights)))
+
+
+(defmethod find-top-level-bone ((this node) channels) 
+  (with-accessors ((children children)) this
+    (when children 
+      (if (gethash (name this) channels)
+	  (dolist (n children) 
+	    (let ((ret (find-top-level-bones n)))
+	      (when ret (return ret))))))))
 
 
 (defmethod find-top-level-bones ((this node)) 

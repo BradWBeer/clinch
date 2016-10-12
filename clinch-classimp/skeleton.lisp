@@ -1,10 +1,10 @@
 (in-package :clinch)
 
 (defclass skeleton (bone)
-  ((bones
-    :accessor bones
+  ((skeleton
+    :accessor skeleton
     :initform nil
-    :initarg :bones)
+    :initarg :skeleton)
    (weights
     :accessor weights
     :initform nil
@@ -28,3 +28,4 @@
 (defmethod generate-bone-buffer ((this skeleton) &key)
 
   )
+

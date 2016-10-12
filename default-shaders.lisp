@@ -4,6 +4,10 @@
 (in-package #:clinch)
 
 (defparameter *generic-single-texture-shader* nil)
+(defparameter *generic-solid-phong-shader* nil)
+(defparameter *generic-single-diffuse-light-animation-shader* nil)
+(defparameter *generic-single-diffuse-light-shader* nil)
+
 (defun get-generic-single-texture-shader ()
   "Creates/returns a shader-program which blits a texture to an entity.
    Uniforms:
@@ -35,7 +39,7 @@
 			   :attributes '(("tc1" :float)
 					 ("v" :float))))))
 
-(defparameter *generic-solid-phong-shader* nil)
+
 (defun get-generic-solid-phong-shader ()
   "Creates/returns a shader-program which uses simple phong shading with a single color.
    Uniforms:
@@ -71,13 +75,13 @@
 				       ("color" :float))
 			   :attributes '(("v" :float))))))
 
-(defparameter *generic-single-diffuse-light-shader* nil)
+
 (defun get-generic-single-diffuse-light-shader ()
   (if (and *generic-single-diffuse-light-shader* (program *generic-single-diffuse-light-shader*))
       *generic-single-diffuse-light-shader*
       (setf *generic-single-diffuse-light-shader*
 	    (make-instance 'clinch:shader-program
-ss			   :name "generic-single-diffuse-light-shader"
+			   :name "generic-single-diffuse-light-shader"
 			   :vertex-shader (alexandria:read-file-into-string
 					   (concatenate 'string 
 							(directory-namestring
@@ -102,7 +106,6 @@ ss			   :name "generic-single-diffuse-light-shader"
 					 ("tc1" :float))))))
 
 
-(defparameter *generic-single-diffuse-light-animation-shader* nil)
 (defun get-generic-single-diffuse-light-animation-shader ()
   (if (and *generic-single-diffuse-light-animation-shader* (program *generic-single-diffuse-light-animation-shader*))
       *generic-single-diffuse-light-animation-shader*
