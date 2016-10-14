@@ -41,14 +41,16 @@
 
 (defmethod initialize-instance :after ((this entity) &key (compile t) parent (strict-index nil))
   "Creates an entity.
-    :parent adds itself to the given parent. The entity doesn't keep track of its parent.
+    :parent adds itself to the given parent. The entity doesn't keep track of its parent. (t means the root node)
     :indexes sets the index buffer. Required.
     :mode sets what kind of object (triangle, square, etc) will be drawn. Only triangles are tested.
     :uniforms sets the uniform values as an alist.
     :attributes sets the attribute values as an alist.
     :shader-program sets the shader program.
     :enabled sets if this entity will render."
-  (when parent (add-child parent this)))
+  (when parent (if (eq parent t)
+		   (add-child *root* this)
+		   (add-child parent this))))
 
 (defmethod (setf shader-program) (new-value (this entity))
   "Sets the shader-program to use."
