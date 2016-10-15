@@ -276,3 +276,12 @@ in the topological ordering (i.e., the first value)."
 		  all-sorted-p
 		  (unless all-sorted-p
 		    entries)))))))
+
+(defun merge-hashes (hashes)
+
+  (let ((ret (make-hash-table :test 'equal)))
+    (map 'list (lambda (h)
+		 (maphash (lambda (key val)
+			    (setf (gethash key ret) val)) h))
+	 hashes)
+    ret))

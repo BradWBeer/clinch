@@ -17,62 +17,100 @@
 			 :ai-Process-Remove-Redundant-Materials 
 			 :ai-process-Gen-Normals))))
 
-(defun translate-bone-to-clinch (node entities &key (hash (make-hash-table :test 'equal)) bone-hash)
-    (let* ((name (classimp:name node))
-	   (bone-data (gethash name bone-hash))
-	   (offset (second bone-data))
-	   (weights (cddr bone-data))
-	   (ret (make-instance 'bone
-			       :offset-matrix offset
-			       :weights weights
-			    :name name
-			    :matrix (classimp:transform node)
-			    :children (append 
-				       (map 'list
-					    (lambda (x)
-					      (nth x entities))
-					    (coerce (classimp:meshes node) 'list))
-				       (reverse (map 'list 
-						     (lambda (x)
-						       (translate-nodes-to-clinch x entities :hash hash :bone-hash bone-hash))
-						     (classimp:children node)))))))
-    (values (if name
-		(setf (gethash name hash) ret)
-		ret)
-	    hash)))
-
-(defun translate-node-to-clinch (node entities &key (hash (make-hash-table :test 'equal)) bone-hash)
-    (let* ((name (classimp:name node))
-	 (ret (make-instance 'node
-			    :name name
-			    :matrix (classimp:transform node)
-			    :children (append 
-				       (map 'list
-					    (lambda (x)
-					      (nth x entities))
-					    (coerce (classimp:meshes node) 'list))
-				       (reverse (map 'list 
-						     (lambda (x)
-						       (translate-nodes-to-clinch x entities :hash hash :bone-hash bone-hash))
-						     (classimp:children node)))))))
-    (values (if name
-		(setf (gethash name hash) ret)
-		ret)
-	    hash)))
-
-
-(defun translate-nodes-to-clinch (node entities &key (hash (make-hash-table :test 'equal)) bone-hash)
-  (if (and bone-hash
-	   (gethash (classimp:name node) bone-hash))
-      (translate-bone-to-clinch node entities :hash hash :bone-hash bone-hash)
-      (translate-node-to-clinch node entities :hash hash :bone-hash bone-hash)))
-    
+(defun animated? (scene)
+  (or (> (length (classimp:animations scene)) 0)
+      (loop for m across (classimp:meshes scene) 
+	 when (> (length (classimp:bones m)) 0) do (return t))))
+          
 
 (defun get-base-path (file)
   (format nil "~{/~A~}/" 
 	  (cdr 
 	   (pathname-directory 
 	    (truename file)))))
+
+
+(defun import-scene (path &key (texture-hash (make-hash-table :test 'equal)))
+  (let ((scene (load-mesh path))
+	(base-path (get-base-path path)))
+    ;;(if (animated? scene)
+    (if nil
+	(import-animated-scene scene base-path :texture-hash texture-hash)
+	(import-static-scene scene base-path :texture-hash texture-hash))))	 
+  
+
+(defun import-animated-scene (scene base-path &key (texture-hash (make-hash-table :test 'equal)))
+  )
+
+(defun import-static-scene (scene base-path &key (texture-hash (make-hash-table :test 'equal)))
+  (let* ((materials (process-materials (get-materials scene) texture-hash base-path))
+	 (meshes (classimp:meshes scene))
+	 (entities 
+	  (loop for x from 0 below (length meshes)
+	     collect (let* ((mesh (elt meshes x))
+			    (material (nth (classimp:material-index mesh) materials)))
+
+0		       (make-classimp-entity
+			(make-index-buffer (classimp:faces mesh))
+			(make-vector-buffer (classimp:vertices mesh))
+			(make-vector-buffer (classimp:normals mesh))
+			:texture (cdr (assoc "t1" material :test #'string-equal))
+			:texture-coordinate-buffer (let ((tc (classimp:texture-coords mesh)))
+						     (when (> (length tc) 0)
+						       (make-texture-coord-buffer mesh 0)))
+			:vertex-color-buffer (let ((tc (classimp:colors mesh)))
+					       (when (> (length tc) 0)
+						 (elt tc 0))))))))
+
+    (multiple-value-bind (ret node-hash)
+	(get-nodes (classimp:root-node scene) :entities entities)
+      (values ret
+	      node-hash
+	      scene
+	      base-path
+	      materials
+	      meshes
+	      entities))))
+
+
+(defun make-classimp-entity (index-buffer vertex-buffer normal-buffer &key texture texture-coordinate-buffer vertex-color-buffer parent)
+									
+  (make-instance 'clinch:entity
+		 :parent parent
+		 :shader-program (get-generic-single-diffuse-light-shader)
+		 :indexes index-buffer
+		 :attributes `(("v" . ,vertex-buffer)
+			       ("n" . ,normal-buffer)
+			       ("c" . ,(or vertex-color-buffer '(1.0 1.0 1.0 1.0)))
+			       ("tc1" . ,(or texture-coordinate-buffer '(0 0))))
+		 :uniforms `(("M" . :model)
+			     ("P" . :projection)
+			     ("N" . :normal)
+			     ("t1" . ,(or texture (get-identity-texture)))
+			     ("ambientLight" . (.2 .2 .2))
+			     ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
+			     ("lightIntensity" . (.8 .8 .8)))))
+
+
+(defmethod get-nodes ((this classimp:node) &key bone-hash node-name-hash entities bone-count)
+    
+  (unless node-name-hash 
+    (setf node-name-hash (make-hash-table :test 'equal)))
+
+    (if (and bone-hash (gethash (classimp:name this) bone-hash))
+	(multiple-value-bind (node count) (make-bone this
+						     :bone-hash bone-hash
+						     :node-name-hash node-name-hash
+						     :entities entities
+						     :bone-count (if bone-count (incf bone-count) 0))
+	  (values node count))
+	(multiple-value-bind (node count) (make-node this
+						     :bone-hash bone-hash
+						     :node-name-hash node-name-hash
+						     :entities entities
+						     :bone-count bone-count)
+	  (values node count))))
+
 
 
 (defun get-material (materials index)
@@ -110,135 +148,6 @@
   (loop for i in materials
      collect (process-material (get-uniforms i) texture-hash base-path)))
 
-
-(defun make-classimp-entity (index-buffer vertex-buffer normal-buffer &key texture texture-coordinate-buffer vertex-color-buffer parent bones)
-									
-  (format t "index-buffer=~A vertex-buffer=~A normal-buffer=~A &key texture=~A texture-coordinate-buffer=~A vertex-color-buffer=~A parent=~A~%"
-	  index-buffer vertex-buffer normal-buffer texture texture-coordinate-buffer vertex-color-buffer parent)
-  (make-instance 'clinch:entity
-		 :parent parent
-		 :shader-program (get-generic-single-diffuse-light-shader)
-		 :indexes index-buffer
-		 :attributes `(("v" . ,vertex-buffer)
-			       ("n" . ,normal-buffer)
-			       ("c" . ,(or vertex-color-buffer '(1.0 1.0 1.0 1.0)))
-			       ("tc1" . ,(or texture-coordinate-buffer '(0 0))))
-		 :uniforms `(("M" . :model)
-			     ("P" . :projection)
-			     ("N" . :normal)
-			     ("t1" . ,(or texture (get-identity-texture)))
-			     ("ambientLight" . (.2 .2 .2))
-			     ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
-			     ("lightIntensity" . (.8 .8 .8)))))
-
-(defun import-mesh (path &key (texture-hash (make-hash-table :test 'equal)))
-  (let* ((scene (load-mesh path))
-	 (base-path (get-base-path path))
-	 (materials (process-materials (get-materials scene) texture-hash base-path))
-	 (meshes (classimp:meshes scene))
-
-	 (entities 
-	  (loop for x from 0 below (length meshes)
-	     collect (let* ((mesh (elt meshes x))
-			    (material (nth (classimp:material-index mesh) materials)))
-
-		       (make-classimp-entity
-			(make-index-buffer (classimp:faces mesh))
-			(make-vector-buffer (classimp:vertices mesh))
-			(make-vector-buffer (classimp:normals mesh))
-			:texture (cdr (assoc "t1" material :test #'string-equal))
-			:texture-coordinate-buffer (let ((tc (classimp:texture-coords mesh)))
-						     (when (> (length tc) 0)
-						       (make-texture-coord-buffer mesh 0)))
-			:vertex-color-buffer (let ((tc (classimp:colors mesh)))
-					       (when (> (length tc) 0)
-						 (elt tc 0))))))))
-
-    (multiple-value-bind (ret node-hash)
-	(translate-nodes-to-clinch (classimp:root-node scene) entities :bone-hash (clinch::get-all-bones scene))
-      (values ret
-	      node-hash
-	      scene
-	      base-path
-	      materials
-	      meshes
-	      entities))))
-
-
-;; (defun get-uniforms (scene texture-hash )
-;;   (map 'list (lambda (x)
-;; 	       (process-material x texture-hash base-path))
-;;        (get-materials scene)))
-
-;; (defun load-textures-from-material (material path hash)
-;;   (loop 
-;;      with base-path = (get-base-path path)
-;;      for (type tc file) in (cdr (assoc "file" material :test #'string-equal))
-;;      collect (let ((tex (create-texture-from-file (concatenate 'string base-path file))))
-;; 	       (setf (gethash file hash) tex)
-;; 	       (list type tc tex))))
-	      
-;; (defun load-all-textures (materials base-path)
-;;   (let ((textures-hash (make-hash-table :test 'equal)))
-;;     (map nil (lambda (x)
-;; 	       (load-textures-from-material x base-path textures-hash))
-;; 	 materials)
-;;     textures-hash))
-
-;; (defun add-textures-to-material (mat textures-hash)
-;;   (let ((tex-uniforms 
-;; 	 (car (loop for (uniform name . rest) in mat
-;; 		 if (string-equal name "file")
-;; 		 return rest))))
-;;     (remove-if-not (lambda (x)
-;; 		     (cadr x))
-;; 		   (loop for (type _ file) in tex-uniforms
-;; 		      collect (list
-;; 			       :uniform
-;; 			       (case type
-;; 				 (:AI-TEXTURE-TYPE-AMBIENT "ambientTexture")
-;; 				 (:AI-TEXTURE-TYPE-DIFFUSE "diffuseTexture"))
-;; 			       (gethash file textures-hash))))))
-
-;; (defun add-textures-to-all-materials (materials textures-hash)
-;;   (loop for m in materials
-;;      collect (add-textures-to-material m textures-hash)))
-
-;; (defun get-all-material-uniforms (materials textures-hash)
-;;   (loop for m in materials 
-;;      collect (append 
-;; 	      (add-textures-to-material m textures-hash)
-;; 	      (remove-if (lambda (x)
-;; 			   (string-equal "file" (second x)))
-;; 			 m))))
-
-
-;; (defun get-mesh (scene index) 
-;;   (elt (classimp:meshes scene) index))
-
-(defun flatten-arrays (vec) 
-  (if (arrayp vec)
-      (loop for i across vec
-	 append (flatten-arrays i))
-      (list vec)))
-
-(defun make-int-buffer-from-array (a)
-  (make-instance 'index-buffer
-		 :data (flatten-arrays a)
-		 :count (length a)
-		 :qtype :unsigned-int
-		 :target :element-array-buffer))
-
-(defun make-float-buffer-from-array (a)
-  (make-instance 'buffer 
-		 :data (flatten-arrays a)
-		 :count (length a)
-		 :Stride (length (aref a 0))))
-
-(defun make-float-buffers-from-array-of-arrays (a)
-	   (loop for i across a
-	    collect (make-float-buffer-from-array i)))
-
 (defun make-index-buffer (v)
   (let* ((len (* (length v) (length (elt v 0)))))
     (cffi:with-foreign-object (p :unsigned-int len)
@@ -275,13 +184,3 @@
 (defun make-texture-coord-buffer (mesh index)
   (clinch::make-vector-buffer (elt (classimp:texture-coords mesh) index)
 			      :stride (elt (classimp:components-per-texture-coord mesh) index)))
-
-
-(defun merge-hash-tables (&rest tables)
-  (let ((ret (make-hash-table :test 'equal)))
-    (loop 
-       for x from 0
-       for table in tables 
-       do (maphash (lambda (k v)
-		     (setf (gethash k ret) v)) table))
-    ret))

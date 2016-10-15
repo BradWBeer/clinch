@@ -6,8 +6,9 @@
 			:pathname "clinch-classimp"
 			:components
 			((:file "package")
-			 (:file "clinch-classimp")
+			 (:file "node")
 			 (:file "bone")
+			 (:file "clinch-classimp")
 			 (:file "skeleton")
 			 (:file "animation")))))
 			       

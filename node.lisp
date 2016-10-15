@@ -127,7 +127,7 @@ Shortcut is !s."))
 (defmethod print-object ((this node) s)
   "Print function for node."
   (with-accessors ((name name)) this
-    (format s "#<NODE ~A children: ~A ~%~A>"
+    (format s "#<NODE ~A children: ~A ~A>"
 	    	    (cond
 		      ((stringp name) (concatenate 'string "\"" name "\""))
 		      (name name)
@@ -236,6 +236,14 @@ Shortcut is !s."))
   (or (slot-value this 's-matrix)
        (setf (slot-value this 's-matrix)
 	    (m4:scale (scaling this)))))
+
+(defmethod (setf transform) (transform (this node))
+  (multiple-value-bind (tr r s) (decompose-transform transform)
+    (setf (translation this) tr
+	  (rotation this)    r
+	  (scaling this)     s)
+    transform))
+
 
 (defmethod transform ((this node) &key)
   "Gets the transform matrix."
