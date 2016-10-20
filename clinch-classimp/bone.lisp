@@ -29,10 +29,7 @@
 ;; 	    :initarg :weights)))
 
 (defclass bone (node) 
-  ((id :accessor id
-       :initform nil
-       :initarg :id)
-   (offset :initform (m4:identity)
+  ((offset :initform (m4:identity)
 	   :initarg :offset
 	   :accessor offset)
    (weights :initform nil
@@ -69,27 +66,21 @@
 
 
 
-(defmethod make-bone ((this classimp:node) &key bone-hash node-name-hash entities bone-count)
+(defmethod make-bone ((this classimp:node) &key bone-hash node-name-hash entities)
 
-  (let* ((id bone-count)
-	 (current-id id)
-	 (children (append (map 'list 
-				(lambda (n) (multiple-value-bind (node id) 
-						(get-nodes n
-							   :bone-hash bone-hash
-							   :node-name-hash node-name-hash
-							   :entities entities
-							   :bone-count current-id)
-					      ;;(format t "id2 = ~A (~A)~%" id current-id)
-					      (setf current-id id)
-					      node))					      
-				(map 'list (lambda (e)
-					     (nth e entities))
-					     (classimp:children this)))
-			   (coerce (classimp:meshes this) 'list)))
+  (let* ((children (append
+		    (map 'list 
+			 (lambda (n)
+			   (get-nodes n
+				      :bone-hash bone-hash
+				      :node-name-hash node-name-hash
+				      :entities entities))
+			 (classimp:children this))
+		    (map 'list (lambda (e)
+				 (nth e entities))
+			 (coerce (classimp:meshes this) 'list))))
 	 (bone (gethash (classimp:name this) bone-hash))
 	 (ret (make-instance 'bone 
-			     :id current-id
 			     :name (classimp:name this)
 			     :offset (classimp:offset-matrix bone)
 			     :weights (get-bone-weights (gethash (classimp:name this) bone-hash))
@@ -97,7 +88,7 @@
 
     (when node-name-hash 
       (setf (gethash (classimp:name this) node-name-hash) ret))
-    (values ret current-id)))
+    (values ret node-name-hash)))
 
 (defmethod get-mesh-bone-hash ((this classimp:scene) &key )
 
@@ -118,6 +109,22 @@
 		       (classimp:weight b)))
        (classimp:weights this)))
 
+(defun number-bones (lst node-names)
+  (let ((hash (make-hash-table :test 'equal))
+	(x 0))
+    (dolist (i (reverse lst))
+      (let ((node (gethash i node-names)))
+	(unless (gethash node hash)
+	  (setf (gethash node hash) x)
+	  (incf x))))
+    hash))
+
+(defun get-list-of-bone-names (scene)
+  (map 'list #'car 
+       (apply #'append (map 'list 
+			    #'alexandria:hash-table-alist 
+			    (map 'list #'classimp:index 
+				 (classimp:animations scene))))))
 
 ;; (defun remove-non-bones (lst)
 ;;   (loop for i in lst

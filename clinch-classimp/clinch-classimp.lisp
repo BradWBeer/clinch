@@ -33,24 +33,17 @@
 (defun import-scene (path &key (texture-hash (make-hash-table :test 'equal)))
   (let ((scene (load-mesh path))
 	(base-path (get-base-path path)))
-    ;;(if (animated? scene)
-    (if nil
-	(import-animated-scene scene base-path :texture-hash texture-hash)
-	(import-static-scene scene base-path :texture-hash texture-hash))))	 
+    (import-static-scene scene base-path :texture-hash texture-hash)))
   
-
-(defun import-animated-scene (scene base-path &key (texture-hash (make-hash-table :test 'equal)))
-  )
-
-(defun import-static-scene (scene base-path &key (texture-hash (make-hash-table :test 'equal)))
+(defun import-static-scene (scene base-path &key (texture-hash (make-hash-table :test 'equal)) (node-names (make-hash-table :test 'equal)))
   (let* ((materials (process-materials (get-materials scene) texture-hash base-path))
 	 (meshes (classimp:meshes scene))
 	 (entities 
 	  (loop for x from 0 below (length meshes)
 	     collect (let* ((mesh (elt meshes x))
 			    (material (nth (classimp:material-index mesh) materials)))
-
-0		       (make-classimp-entity
+		       
+		       (make-classimp-entity
 			(make-index-buffer (classimp:faces mesh))
 			(make-vector-buffer (classimp:vertices mesh))
 			(make-vector-buffer (classimp:normals mesh))
@@ -61,16 +54,17 @@
 			:vertex-color-buffer (let ((tc (classimp:colors mesh)))
 					       (when (> (length tc) 0)
 						 (elt tc 0))))))))
-
+    
     (multiple-value-bind (ret node-hash)
-	(get-nodes (classimp:root-node scene) :entities entities)
+	(get-nodes (classimp:root-node scene) :entities entities :node-name-hash node-names)
       (values ret
 	      node-hash
 	      scene
 	      base-path
 	      materials
 	      meshes
-	      entities))))
+	      entities
+	      node-names))))
 
 
 (defun make-classimp-entity (index-buffer vertex-buffer normal-buffer &key texture texture-coordinate-buffer vertex-color-buffer parent)
@@ -90,27 +84,6 @@
 			     ("ambientLight" . (.2 .2 .2))
 			     ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
 			     ("lightIntensity" . (.8 .8 .8)))))
-
-
-(defmethod get-nodes ((this classimp:node) &key bone-hash node-name-hash entities bone-count)
-    
-  (unless node-name-hash 
-    (setf node-name-hash (make-hash-table :test 'equal)))
-
-    (if (and bone-hash (gethash (classimp:name this) bone-hash))
-	(multiple-value-bind (node count) (make-bone this
-						     :bone-hash bone-hash
-						     :node-name-hash node-name-hash
-						     :entities entities
-						     :bone-count (if bone-count (incf bone-count) 0))
-	  (values node count))
-	(multiple-value-bind (node count) (make-node this
-						     :bone-hash bone-hash
-						     :node-name-hash node-name-hash
-						     :entities entities
-						     :bone-count bone-count)
-	  (values node count))))
-
 
 
 (defun get-material (materials index)

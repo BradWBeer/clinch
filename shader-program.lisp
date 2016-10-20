@@ -190,23 +190,34 @@
   "Start using the shader-program."
   (gl:use-program (program this)))
 
+(defun remove-shader-value-suffix (str)
+	   (let ((pos (search "[0]" str)))
+	     (if pos
+		 (subseq str 0 pos)
+		 str)))
+
+(defun remove-shader-value-type-suffix (sym)
+	   (let* ((str (symbol-name sym))
+		  (pos (search "-ARB" str)))
+	     (if pos
+		 (intern (subseq str 0 pos) :keyword)
+		 sym)))
+
 (defmethod list-shader-uniforms ((this shader-program))
   "List the shader-program's uniform arguments."
   (! (loop for i from 0 below (gl:get-program (program this) :active-uniforms) 
 	collect (multiple-value-bind (id type name) (gl:get-active-uniform (program this) i)
-		  (list i
-			(gl:get-uniform-location (program this) name)
-			type
-			name)))))
+		  (list (gl:get-uniform-location (program this) name)
+			(remove-shader-value-type-suffix type)
+			(remove-shader-value-suffix name))))))
 
 (defmethod list-shader-attributes ((this shader-program))
   "List the shader-program's attribute arguments."
   (! (loop for i from 0 below (gl:get-program (program this) :active-attributes) 
 	collect (multiple-value-bind (id type name) (gl:get-active-attrib (program this) i)
-		  (list i
-			(gl:get-attrib-location (program this) name)
-			type
-			name)))))
+		  (list (gl:get-attrib-location (program this) name)
+			(remove-shader-value-type-suffix type)
+			(remove-shader-value-suffix name))))))
 ;;doesn't work yet...
 ;; (defmethod list-shader-uniform-blocks ((this shader-program))
 ;;   (! (loop for i from 0 below (gl:get-program (program this) :active-uniform-blocks) 

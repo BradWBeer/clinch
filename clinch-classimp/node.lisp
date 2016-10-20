@@ -3,17 +3,24 @@
 
 (in-package #:clinch)
 
-(defmethod make-node ((this classimp:node) &key bone-hash node-name-hash entities bone-count)
+
+(defmethod get-nodes ((this classimp:node) &key node-name-hash entities)
+    
+  (unless node-name-hash 
+    (setf node-name-hash (make-hash-table :test 'equal)))
+
+  (make-node this
+	     :node-name-hash node-name-hash
+	     :entities entities))
+
+
+(defmethod make-node ((this classimp:node) &key node-name-hash entities)
 
   (let* ((children (append (map 'list 
 				(lambda (n) 
-				  (multiple-value-bind (node id) (get-nodes n
-									    :entities entities
-									    :bone-hash bone-hash
-									    :node-name-hash node-name-hash
-									    :bone-count bone-count)
-				   (setf bone-count id)
-				   node))
+				  (get-nodes n
+					     :entities entities
+					     :node-name-hash node-name-hash))
 				(classimp:children this))
 			   (map 'list (lambda (e)
 					(nth e entities))
@@ -25,4 +32,4 @@
 
     (when node-name-hash 
       (setf (gethash (classimp:name this) node-name-hash) ret))
-    (values ret bone-count)))
+    (values ret node-name-hash)))
