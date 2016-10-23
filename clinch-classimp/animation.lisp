@@ -44,6 +44,37 @@
        (ai:channels animation)))
 
 
+(defun get-keyframes (lst time)
+  "Given a time, will get the frames it's between."
+  (loop 
+     with z
+     for a in lst
+     when (<= time (car a))
+     do (return (values z a))
+     else do (setf z a)
+     finally (return (values a nil))))
+		
+
+;; mixes the keyframes...needs a function specifier.	      
+(defun test (lst time &optional (func #'v:mix))
+
+  (multiple-value-bind (start end) (get-keyframes lst time)
+
+    (cond ((and (null start) end) (cdr end))
+	  ((and start (null end)) (cdr start))
+	  ((and start end) (let ((time1 (car start))
+				 (time2 (car end))
+				 (pos1 (cdr start))
+				 (pos2 (cdr end)))
+
+			     (funcall func
+				      pos1
+				      pos2 
+				      (coerce (/ (- time time1) (- time2 time1))
+					      'single-float)))))))
+
+
+
 ;; (defmethod get-top-animation-node (this node-names &key)
 ;;   nil)
    

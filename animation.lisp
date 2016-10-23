@@ -9,7 +9,14 @@
 	   :initarg :frames)
    (time-modifier :initform nil
 		  :initarg :time-modifier
-		  :accessor time-modifier)))
+		  :accessor time-modifier)
+   (repeat :accessor repeat
+	   :initform t
+	   :initarg :repeat)
+   (run-length :accessor run-length 
+	       :initform nil
+	       :initarg :run-length)))
+
 
 
 (defclass animator () 
