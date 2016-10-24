@@ -191,6 +191,20 @@ Shortcut is !s."))
 	      (when (arrayp i) (setf current-transform (m:* i current-transform)))
 	      (render i :parent current-transform :projection projection))))))
 
+(defmethod update ((this node) &key parent (projection *projection*))
+  "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
+  (when (enabled this)
+    (let ((current-transform
+	   (cond ((typep parent 'node) (m:* (transform parent) (transform this)))
+		 (parent (m:*  parent (transform this)))
+		 (t (transform this)))))
+      
+      ;; for animation this needs to update the nodes first. Then render.
+      ;; This will get better when I move to an aspect oriented system.
+      (loop for i in (children this)
+	 when (typep i 'node)
+	 do (render i :parent current-transform :projection projection)))))
+
 ;;!!!!!!! TODO: Add render for function type. Might be useful for animation and more.
 
 (defmethod (setf translation) (trans (this node))

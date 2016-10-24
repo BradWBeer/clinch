@@ -76,6 +76,18 @@
 
 	  )))))
 
+(defmethod update ((this skeleton) &key)
+  (with-mapped-buffer (buf (clinch::bone-buffer this) :write-only)
+    (loop
+       for x from 0 by 16
+       for b in (clinch::bones this)
+       for o in (clinch::bone-offsets this)
+       do (loop
+	     for y from 0 below 16
+	     for m across (clinch:n* b o)
+	     do (setf (cffi:mem-aref buf :float (+ x y)) m)))))
+
+
 (defun sort-vertex-weights (weights)
   (sort weights (lambda (a b)
 		  (> (cdr a) (cdr b)))))

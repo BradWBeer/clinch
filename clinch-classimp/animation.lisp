@@ -13,7 +13,6 @@
 
   (with-accessors ((f frames)
 		   (n node)) this
-    ;;(when node (setf n node))
 
     (when (and ai-animation node-names)
       
@@ -44,7 +43,10 @@
        (ai:channels animation)))
 
 
-(defun get-keyframes (lst time)
+(defmethod get-keyframe ((this list) (time number) &key)
+  )
+
+(defun get-keyframe-vectors (lst time)
   "Given a time, will get the frames it's between."
   (loop 
      with z
@@ -56,23 +58,38 @@
 		
 
 ;; mixes the keyframes...needs a function specifier.	      
-(defun test (lst time &optional (func #'v:mix))
+(defun interpolate-channel (lst time &key (func #'v:mix) easing-func)
 
-  (multiple-value-bind (start end) (get-keyframes lst time)
+  (multiple-value-bind (start end) (get-keyframe-vectors lst time)
 
     (cond ((and (null start) end) (cdr end))
 	  ((and start (null end)) (cdr start))
-	  ((and start end) (let ((time1 (car start))
-				 (time2 (car end))
-				 (pos1 (cdr start))
-				 (pos2 (cdr end)))
-
+	  ((and start end) (let* ((time1 (car start))
+				  (time2 (car end))
+				  (pos1 (cdr start))
+				  (pos2 (cdr end))
+				  (diff (/ (- time time1) (- time2 time1))))
+			     
 			     (funcall func
 				      pos1
 				      pos2 
-				      (coerce (/ (- time time1) (- time2 time1))
+				      (coerce (if easing-func
+						  (funcall easing-func diff)
+						  diff)
 					      'single-float)))))))
 
+(defun interpolate-node (lst time &key easing-func)
+  (destructuring-bind (node trans scale rot) lst
+    (setf (translation node) (interpolate-channel trans time :easing-func easing-func)
+	  (scaling node) (interpolate-channel scale time :easing-func easing-func)
+	  (rotation node) (interpolate-channel rot time :func #'q:slerp :easing-func easing-func))
+    node))
+ 
+(defmethod get-keyframe ((this node-animation) (time number) &key easing-func) 
+  (map 'list (lambda (n)
+	       (interpolate-node n time :easing-func easing-func))
+       (frames this))
+  this)
 
 
 ;; (defmethod get-top-animation-node (this node-names &key)
