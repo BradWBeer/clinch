@@ -130,7 +130,8 @@
 				       ("ambientLight" :float)
 				       ("lightDirection" :float)
 				       ("lightIntensity" :float)
-				       ("bones" :matrix))
+				       ;;("bones" :matrix)
+				       )
 				       
 			   :attributes '(("v" :float)
 					 ("n" :float)

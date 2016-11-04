@@ -92,7 +92,7 @@
 	      (setf uni (acons name new-value uni))))))
   new-value)
 
-(defun convert-non-buffer (value &key projection parent)
+(defun convert-non-buffer (this value &key projection parent)
   (cond ((eql value :projection) (or projection (m4:identity)))
 	((eql value :Model)      (or parent (m4:identity)))
 	((eql value :model-1) (typecase parent
@@ -100,6 +100,9 @@
 				(array (m4:affine-inverse parent))
 				(t (m4:identity))))
 	((eql value :projection-1) (m4:affine-inverse projection))
+	((eql value :skeleton) (bone-buffer (bones this)))
+	((eql value :bone-ids)  (bone-id-buffer (bones this)))
+	((eql value :bone-widths) (weights-buffer (bones this)))
 	((eql value :normal) (typecase parent
 			       (node
 				(m4:to-mat3 
@@ -135,7 +138,7 @@
 			(t (bind-static-values-to-attribute 
 			    current-shader-program 
 			    name 
-			    (convert-non-buffer value :projection projection :parent parent))))))
+			    (convert-non-buffer this value :projection projection :parent parent))))))
 	  (loop
 	     with tex-unit = 0
 	     for (name . value) in (uniforms this)
@@ -146,7 +149,7 @@
 		    (setf value (render value)))
 		  (cond ((typep value 'texture) (prog1 (bind-sampler value current-shader-program name tex-unit) (incf tex-unit)))
 			(t (attach-uniform current-shader-program name 
-					   (convert-non-buffer value :projection projection :parent parent)))))))))
+					   (convert-non-buffer this value :projection projection :parent parent)))))))))
 
     (draw-with-index-buffer (indexes this) :mode (mode this))))
 

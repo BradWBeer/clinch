@@ -1,7 +1,7 @@
 (in-package :clinch)
 
 (defconstant +MAX-NUMER-OF-BONES+ 100)
-(defconstant +MAX-NUMER-OF-BONE/VERTEX+ 5)
+(defconstant +MAX-NUMER-OF-BONE/VERTEX+ 4)
 
 (defclass skeleton ()
   ((bones
@@ -51,14 +51,15 @@
 	(setf IDs (coerce tmp-ids 'list)
 	      weights tmp-weights)
 
-	(multiple-value-bind (vIdArr vWeightsArr) (fill-two-arrays-by-chunks tmp-weights 5)
+	(multiple-value-bind (vIdArr vWeightsArr) (fill-two-arrays-by-chunks tmp-weights +MAX-NUMER-OF-BONE/VERTEX+)
 	  
-	  (let ((num-vertices (/ (length vIdArr) 5))
+	  (let ((num-vertices (/ (length vIdArr) +MAX-NUMER-OF-BONE/VERTEX+))
 		(num-bones (length (classimp:bones mesh))))
 	    
 	    (!
 	      (setf bb (make-instance 'clinch:buffer 
 	      			     :count num-bones
+				     :target :uniform-buffer
 				     :qtype :float
 	      			     :stride 16))
 	      

@@ -2,7 +2,7 @@
 
 
 const int MAX_BONES = 100;
-const int MAX_WEIGHTS = 5;
+const int MAX_WEIGHTS = 4;
 
 uniform   mat4 P;
 uniform   mat4 M;
