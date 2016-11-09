@@ -89,6 +89,8 @@
   (map 'list (lambda (n)
 	       (interpolate-node n time :easing-func easing-func))
        (frames this))
+  (update (node this))
+  
   this)
 
 

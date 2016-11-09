@@ -183,12 +183,21 @@
       ;; (unless (eq (gethash id *current-shader-attributes*) name)
       ;; 	(setf (gethash id *current-shader-attributes*) name)
 
+      ;;(print (qtype this))
+
       (gl:enable-vertex-attrib-array id)
       (bind this :index index :offset offset :length length)
-      (gl:vertex-attrib-pointer id
+
+      (if (eql (qtype this) :int)
+	  (gl:vertex-attrib-ipointer id
 				(stride this)
 				(qtype this)
-				0 0 (cffi:null-pointer)))))
+				0 (cffi:null-pointer))
+
+	  (gl:vertex-attrib-pointer id
+				    (stride this)
+				    (qtype this)
+				    0 0 (cffi:null-pointer))))))
 
 (defmethod unbind-buffer-attribute-array ((this buffer) (shader-program shader-program) name)
   "Bind buffer to a shader-program attribute."

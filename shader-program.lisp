@@ -143,7 +143,7 @@
 	 (when geo
 	   (detach-shader this geo)))
 
-       (setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
+       ;;(setf (slot-value this 'uniforms) (make-hash-table :test 'equal))
        (setf (slot-value this 'attributes) (make-hash-table :test 'equal))
 
        (trivial-garbage:cancel-finalization this)
@@ -158,22 +158,11 @@
 				      (unload-all-dependants key)
 				      (gl:delete-program program-val)))))
 
-       (when attributes
-	 (loop for (name type) in attributes
-	    for location = (gl:get-attrib-location program name)
-	    if (>= location 0)
-	    do (setf (gethash name (slot-value this 'attributes))
-		     (cons type location))
-	    else do (format t "could not find attribute ~A!~%" name)))
-       
+       (find-shader-attributes this)
+       (find-shader-uniforms this)
+       )
 
-       (when uniforms
-	 (loop for (name type) in uniforms
-	    for location = (gl:Get-Uniform-Location program name)
-	    if (>= location 0)
-	    do (setf (gethash name (slot-value this 'uniforms))
-		     (cons type location))
-	    else do (format t "could not find uniform ~A!~%" name)))))))
+     )))
 
 (defmethod pullg ((this shader-program) &key)
   "Returns shader-program's available information such as shader source, uniforms and attributes."
@@ -218,10 +207,37 @@
 		  (list (gl:get-attrib-location (program this) name)
 			(remove-shader-value-type-suffix type)
 			(remove-shader-value-suffix name))))))
+
+
+(defmethod list-raw-shader-attributes ((this shader-program))
+  "List the shader-program's attribute arguments."
+  (! (loop for i from 0 below (gl:get-program (program this) :active-attributes) 
+	collect (multiple-value-bind (id type name) (gl:get-active-attrib (program this) i)
+		  (list (gl:get-attrib-location (program this) name)
+			type
+			name)))))
+
+
 ;;doesn't work yet...
 ;; (defmethod list-shader-uniform-blocks ((this shader-program))
 ;;   (! (loop for i from 0 below (gl:get-program (program this) :active-uniform-blocks) 
 ;; 	collect (cons i (multiple-value-list (gl:get-active-uniform-block-name (program this) i))))))
+
+(defmethod find-shader-uniforms ((this shader-program) &key)
+  (let ((hash (make-hash-table :test 'equal)))
+    
+    (loop for (id type name) in (clinch::list-shader-uniforms this)
+       do (setf (gethash name hash)
+		(cons type id)))
+    (setf (slot-value this 'uniforms) hash)))
+
+(defmethod find-shader-attributes ((this shader-program) &key)
+  (let ((hash (make-hash-table :test 'equal)))
+    
+    (loop for (id type name) in (clinch::list-shader-attributes this)
+       do (setf (gethash name hash)
+		(cons type id)))
+    (setf (slot-value this 'attributes) hash)))
 
 (defmethod get-uniform-id ((this shader-program) (id integer))
   "Shaders pass information by using named values called Uniforms and Attributes. If we are using the raw id, this returns it."
@@ -257,16 +273,23 @@
       (setf (gethash ret *current-shader-uniforms*) value)
       
       (destructuring-bind (type . id) ret
-	
+       
+
 	(let ((f (case type
 		   (:float #'gl:uniformf)
+		   (:float-vec3 #'gl:uniformf)
 		   (:int #'gl:uniformi)
+		   (:SAMPLER-2D #'gl:uniformi)
+		   (:FLOAT-MAT4 #'gl:uniform-matrix-4fv)
+		 
 		   (:matrix (lambda (id value)
 			      (gl:uniform-matrix id 2 (cond
 							((arrayp value) value)
 							((typep value 'node) (transform
 									      value))
-							(t (error "Unknown Type in attach-uniform!")))))))))
+							(t (error "Unknown Type in attach-uniform!"))))))
+		   (otherwise (error (format nil "Uniform type ~A not yet defined!~%" type)))
+		   )))
 	  
 	  (if (listp value)
 	      (apply f id value)

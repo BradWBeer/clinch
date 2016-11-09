@@ -175,8 +175,10 @@ Shortcut is !s."))
 	 do (render i :parent current-transform :projection projection))
       ;; Now render...
       (loop for i in (children this)
-	 if (typep i 'entity)
-	 do (render i :parent current-transform :projection projection)))))
+      	 if (typep i 'entity)
+      	 do (render i :parent current-transform :projection projection)))
+
+  )))
 
 (defmethod render ((this list) &key parent (projection *projection*))
   "Render a list of rendables."
@@ -198,12 +200,12 @@ Shortcut is !s."))
 	   (cond ((typep parent 'node) (m:* (transform parent) (transform this)))
 		 (parent (m:*  parent (transform this)))
 		 (t (transform this)))))
-      
+      (setf (slot-value this 'current-transform) current-transform)
       ;; for animation this needs to update the nodes first. Then render.
       ;; This will get better when I move to an aspect oriented system.
       (loop for i in (children this)
 	 when (typep i 'node)
-	 do (render i :parent current-transform :projection projection)))))
+	 do (update i :parent current-transform :projection projection)))))
 
 ;;!!!!!!! TODO: Add render for function type. Might be useful for animation and more.
 

@@ -57,36 +57,59 @@
 		(num-bones (length (classimp:bones mesh))))
 	    
 	    (!
-	      (setf bb (make-instance 'clinch:buffer 
-	      			     :count num-bones
-				     :target :uniform-buffer
-				     :qtype :float
-	      			     :stride 16))
+	      ;; (setf bb (make-instance 'clinch:buffer 
+	      ;; 			     :count num-bones
+	      ;; 			     :target :uniform-buffer
+	      ;; 			     :qtype :float
+	      ;; 			     :stride 16))
+	      
+	      (setf bb
+		    (cffi:foreign-alloc :float :count (* 16 +MAX-NUMER-OF-BONES+)))
 	      
 	      (setf bib (make-instance 'clinch:buffer 
 				       :count num-vertices
 				       :stride +MAX-NUMER-OF-BONE/VERTEX+
-				       :qtype :unsigned-int
-				       :data vIdArr)))
-
-	    (setf w (make-instance 'clinch:buffer 
-				   :count num-vertices
-				   :stride +MAX-NUMER-OF-BONE/VERTEX+
-				   :qtype :float
-				   :data vWeightsArr)))
+				       :qtype :int
+				       :data vIdArr))
+	    
+	      (setf w (make-instance 'clinch:buffer 
+				     :count num-vertices
+				     :stride +MAX-NUMER-OF-BONE/VERTEX+
+				     :qtype :float
+				     :data vWeightsArr))))
 
 	  )))))
 
 (defmethod update ((this skeleton) &key)
-  (with-mapped-buffer (buf (clinch::bone-buffer this) :write-only)
+  (with-accessors ((buf bone-buffer)) this
+    ;;(with-mapped-buffer (buf (clinch::bone-buffer this) :write-only)
+    
     (loop
        for x from 0 by 16
        for b in (clinch::bones this)
        for o in (clinch::bone-offsets this)
        do (loop
 	     for y from 0 below 16
-	     for m across (clinch:n* b o)
+	     for m across (clinch:n* o b)
 	     do (setf (cffi:mem-aref buf :float (+ x y)) m)))))
+
+(defmethod attach-uniform ((this shader-program) (uniform string) (bones skeleton))
+  "Shaders pass information by using named values called Uniforms and Attributes. This sets a uniform to value."
+  (let ((ret (get-uniform-id this uniform)))
+    
+    (when ret
+      ;;(unless (eq (gethash ret *current-shader-uniforms*) value)
+      (destructuring-bind (type . id) ret
+	(cond ((eq type :FLOAT-MAT4)
+	       ;;(loop for x from 0 below (length (bones bones))
+	       ;;do
+	       
+		    (%gl:uniform-matrix-4fv
+		      id 
+		      (length (bones bones))
+		      0
+		      (bone-buffer bones))))))))
+
 
 
 (defun sort-vertex-weights (weights)
@@ -122,8 +145,8 @@
 
 ;; Need to make this work with array instead of list
 (defun fill-two-arrays-by-chunks (arr stride)
-  (let ((arr1 (make-array (* (length arr) stride) :initial-element 0 :element-type 'integer))
-	(arr2 (make-array (* (length arr) stride) :initial-element 0.0 :element-type 'float)))
+  (let ((arr1 (make-array (* (length arr) stride) :initial-element 0 )); :element-type :int))
+	(arr2 (make-array (* (length arr) stride) :initial-element 0.0))); :element-type 'float)))
 
     (loop
        for x from 0 below (length arr1) by stride
