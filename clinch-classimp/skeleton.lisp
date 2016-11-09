@@ -90,7 +90,9 @@
        for o in (clinch::bone-offsets this)
        do (loop
 	     for y from 0 below 16
-	     for m across (clinch:n* o b)
+	     for m across (clinch:n*
+			   (clinch:n* o b)
+			   (m4:inverse o))
 	     do (setf (cffi:mem-aref buf :float (+ x y)) m)))))
 
 (defmethod attach-uniform ((this shader-program) (uniform string) (bones skeleton))

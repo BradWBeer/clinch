@@ -85,12 +85,20 @@
 	  (rotation node) (interpolate-channel rot time :func #'q:slerp :easing-func easing-func))
     node))
  
-(defmethod get-keyframe ((this node-animation) (time number) &key easing-func) 
+(defmethod get-keyframe ((this node-animation) (time number) &key easing-func)
+  
   (map 'list (lambda (n)
 	       (interpolate-node n time :easing-func easing-func))
        (frames this))
-  (update (node this))
   
+  (update (node this))
+  ;; (map 'list (lambda (x)
+  ;; 	       (current-transform (car x)))
+  ;;      (frames this))
+
+  
+  
+
   this)
 
 

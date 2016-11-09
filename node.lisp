@@ -98,7 +98,7 @@ Shortcut is !s."))
 	    (scaling this) (or scale
 			       (and copy (copy-seq (scaling copy)))
 			       vi))))	
-  
+
 
 (defmethod !reset ((this node))
   "Resets the node."
@@ -128,11 +128,11 @@ Shortcut is !s."))
   "Print function for node."
   (with-accessors ((name name)) this
     (format s "#<NODE ~A children: ~A ~A>"
-	    	    (cond
-		      ((stringp name) (concatenate 'string "\"" name "\""))
-		      (name name)
-		      (t "<unnamed>"))
-		    (length (children this)) (transform this))))
+	    (cond
+	      ((stringp name) (concatenate 'string "\"" name "\""))
+	      (name name)
+	      (t "<unnamed>"))
+	    (length (children this)) (transform this))))
 
 (defmethod changed? ((this node))
   "Has this node changed and not updated?"
@@ -156,7 +156,7 @@ Shortcut is !s."))
   (with-accessors ((children children)) this
     
     (when (member child children)
-     
+      
       (setf children
 	    (remove child children)))))
 
@@ -178,7 +178,7 @@ Shortcut is !s."))
       	 if (typep i 'entity)
       	 do (render i :parent current-transform :projection projection)))
 
-  )))
+    ))
 
 (defmethod render ((this list) &key parent (projection *projection*))
   "Render a list of rendables."
@@ -250,7 +250,7 @@ Shortcut is !s."))
 (defmethod scale-matrix ((this node) &key)
   "Gets the scaling matrix."
   (or (slot-value this 's-matrix)
-       (setf (slot-value this 's-matrix)
+      (setf (slot-value this 's-matrix)
 	    (m4:scale (scaling this)))))
 
 (defmethod (setf transform) (transform (this node))
@@ -272,8 +272,8 @@ Shortcut is !s."))
 	transform
 	(setf (slot-value this 'transform)
 	      (reduce #'m:* (list (or trans (translation-matrix this))
-				    (or rot   (rotation-matrix this))
-				    (or scale (scale-matrix this))))))))
+				  (or rot   (rotation-matrix this))
+				  (or scale (scale-matrix this))))))))
 
 (defmethod rotate ((this node) rot &key (modify t))
   "Rotate the node. Takes a quaterion."
@@ -285,7 +285,7 @@ Shortcut is !s."))
 (defmacro !r (this w x y z &optional in-place)
   (let ((tthis (gensym))
 	(v (gensym)))
-	
+    
     `(let ((,tthis ,this)
 	   (,v (v! ,w ,x ,y, z)))
        (if ,in-place
@@ -302,7 +302,7 @@ Shortcut is !s."))
 (defmacro !t (this x y z &optional in-place)
   (let ((tthis (gensym))
 	(v (gensym)))
-	
+    
     `(let ((,tthis ,this)
 	   (,v (v! ,x ,y, z)))
        (if ,in-place
@@ -319,7 +319,7 @@ Shortcut is !s."))
 (defmacro !s (this x y z &optional in-place)
   (let ((tthis (gensym))
 	(v (gensym)))
-	
+    
     `(let ((,tthis ,this)
 	   (,v (v! ,x ,y, z)))
        (if ,in-place
@@ -335,7 +335,7 @@ Shortcut is !s."))
     (if new-node
 	(make-instance 'node :matrix matrix)
 	matrix)))
-	
+
 (defmethod n* ((this vector) (that node) &key new-node)
   "Multiplies a node? I'm not sure if this works." ;;!!!!
   (let* ((matrix (normalize-for-3d
@@ -359,7 +359,7 @@ Shortcut is !s."))
     (if new-node
 	(make-instance 'node :matrix matrix)
 	matrix)))
-	
+
 (defmethod traverse-node ((this node))
   "Not yet implemented."
   (loop for c in (children this)
@@ -372,7 +372,7 @@ Shortcut is !s."))
   (when (or (null test)
 	    (funcall test this))
     (funcall f this)))
-	   
+
 
 (defmethod walk-node-tree ((this node) f &key test non-node) 
   "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
@@ -382,7 +382,7 @@ Shortcut is !s."))
       (funcall f this))
     
     (loop for i in (children this)
-	 if (or non-node (typep i 'node))
+       if (or non-node (typep i 'node))
        do (walk-node-tree i f :test test :non-node non-node))))
 
 (defmethod node-top-map-string ((this node) &optional parent)
