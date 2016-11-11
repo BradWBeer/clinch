@@ -285,3 +285,16 @@ in the topological ordering (i.e., the first value)."
 			    (setf (gethash key ret) val)) h))
 	 hashes)
     ret))
+
+(defun make-list-length (len lst &optional (fill-value 0))
+  (loop for i in lst
+     append (loop 
+	       with llst = i
+	       for x from 0 below len
+	       collect (if llst (car llst) fill-value)
+	       do (setf llst (when llst (cdr llst))))))
+
+
+
+
+  
