@@ -3,7 +3,6 @@
 
 (in-package #:clinch)
 
-
 (defmethod get-nodes ((this classimp:node) &key node-name-hash entities)
     
   (unless node-name-hash 

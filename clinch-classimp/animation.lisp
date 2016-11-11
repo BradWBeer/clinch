@@ -9,6 +9,7 @@
     :initarg :node
     :accessor node)))
 
+
 (defmethod initialize-instance :after ((this node-animation) &key ai-animation node-names)
 
   (with-accessors ((f frames)
@@ -42,9 +43,6 @@
 	       (decode-channel chan bone-nodes))
        (ai:channels animation)))
 
-
-(defmethod get-keyframe ((this list) (time number) &key)
-  )
 
 (defun get-keyframe-vectors (lst time)
   "Given a time, will get the frames it's between."
@@ -86,20 +84,33 @@
     node))
  
 (defmethod get-keyframe ((this node-animation) (time number) &key easing-func)
-  
+ 
   (map 'list (lambda (n)
 	       (interpolate-node n time :easing-func easing-func))
        (frames this))
+  (update (node this)))
+
+
+  ;; "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
+  ;; (when (enabled this)
+  ;;   (let ((current-transform
+  ;; 	   (cond ((typep parent 'node) (m:* (transform parent) (transform this)))
+  ;; 		 (parent (m:*  parent (transform this)))
+  ;; 		 (t (transform this)))))
+  ;;     (setf (slot-value this 'current-transform) current-transform)
+  ;;     ;; for animation this needs to update the nodes first. Then render.
+  ;;     ;; This will get better when I move to an aspect oriented system.
+  ;;     (loop for i in (children this)
+  ;; 	 when (typep i 'node)
+  ;; 	 do (update i :parent current-transform :projection projection)))))
+
   
-  (update (node this))
+  
+  ;;(update (node this))
   ;; (map 'list (lambda (x)
   ;; 	       (current-transform (car x)))
   ;;      (frames this))
-
   
-  
-
-  this)
 
 
 ;; (defmethod get-top-animation-node (this node-names &key)

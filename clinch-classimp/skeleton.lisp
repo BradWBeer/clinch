@@ -80,7 +80,7 @@
 
 	  )))))
 
-(defmethod update ((this skeleton) &key)
+(defmethod update ((this skeleton) &key prefix)
   (with-accessors ((buf bone-buffer)) this
     ;;(with-mapped-buffer (buf (clinch::bone-buffer this) :write-only)
     
@@ -90,9 +90,10 @@
        for o in (clinch::bone-offsets this)
        do (loop
 	     for y from 0 below 16
-	     for m across (clinch:n*
-			   (clinch:n* o b)
-			   (m4:inverse o))
+	     for m across (let ((tmp (clinch:n* o (m4:transpose (current-transform b))  )))
+			    (if prefix
+				(n* prefix tmp)
+				tmp))
 	     do (setf (cffi:mem-aref buf :float (+ x y)) m)))))
 
 (defmethod attach-uniform ((this shader-program) (uniform string) (bones skeleton))
