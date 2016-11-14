@@ -13,13 +13,23 @@
 (defmethod initialize-instance :after ((this node-animation) &key ai-animation node-names)
 
   (with-accessors ((f frames)
-		   (n node)) this
+		   ;;(n node)
+		   (r repeat)
+		   (l run-length)) this
 
     (when (and ai-animation node-names)
       
       (when f (error "Can not merge classimp:animation with existing channels."))
      
-      (setf f (decode-channels ai-animation node-names)))))
+      (setf (name this) (ai:name ai-animation))
+      (setf f (decode-channels ai-animation node-names))
+      (setf r t)
+      (setf l (* 1000
+		 (or (ai:duration ai-animation)
+		     (get-animation-time this))))
+	    
+      
+      )))
 
 
 (defun key->cons (k)
@@ -89,6 +99,10 @@
 	       (interpolate-node n time :easing-func easing-func))
        (frames this))
   (update (node this)))
+
+(defmethod get-animation-time ((this node-animation))
+  (reduce #'max (loop for i in (clinch::frames this)
+			  collect (caar (last (car (last i)))))))
 
 
   ;; "Render child objects. You don't need to build your application with nodes/render. This is just here to help."

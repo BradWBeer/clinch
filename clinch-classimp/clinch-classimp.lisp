@@ -41,12 +41,15 @@
 	 (entities 
 	  (loop for x from 0 below (length meshes)
 	     collect (let* ((mesh (elt meshes x))
-			    (material (nth (classimp:material-index mesh) materials)))
+			    (material (nth (classimp:material-index mesh) materials))
+			    (skeleton (unless (zerop (length (ai:bones mesh)))
+					(make-instance 'clinch::skeleton :mesh mesh :node-hash node-names))))
 		       
 		       (make-classimp-entity
 			(make-index-buffer (classimp:faces mesh))
 			(make-vector-buffer (classimp:vertices mesh))
 			(make-vector-buffer (classimp:normals mesh))
+			:bones skeleton
 			:texture (cdr (assoc "t1" material :test #'string-equal))
 			:texture-coordinate-buffer (let ((tc (classimp:texture-coords mesh)))
 						     (when (> (length tc) 0)
@@ -57,33 +60,50 @@
     
     (multiple-value-bind (ret node-hash)
 	(get-nodes (classimp:root-node scene) :entities entities :node-name-hash node-names)
-      (values ret
-	      node-hash
-	      scene
-	      base-path
-	      materials
-	      meshes
-	      entities
-	      node-names))))
 
+      (let ((animations
+	     (loop for a across (ai:animations scene)
+		collect (make-instance 'clinch::node-animation
+				       :node ret
+				       :ai-animation a 
+				       :node-names node-names))))
 
-(defun make-classimp-entity (index-buffer vertex-buffer normal-buffer &key texture texture-coordinate-buffer vertex-color-buffer parent)
-									
-  (make-instance 'clinch:entity
-		 :parent parent
-		 :shader-program (get-generic-single-diffuse-light-shader)
-		 :indexes index-buffer
-		 :attributes `(("v" . ,vertex-buffer)
-			       ("n" . ,normal-buffer)
-			       ("c" . ,(or vertex-color-buffer '(1.0 1.0 1.0 1.0)))
-			       ("tc1" . ,(or texture-coordinate-buffer '(0 0))))
-		 :uniforms `(("M" . :model)
-			     ("P" . :projection)
-			     ("N" . :normal)
-			     ("t1" . ,(or texture (get-identity-texture)))
-			     ("ambientLight" . (.2 .2 .2))
-			     ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
-			     ("lightIntensity" . (.8 .8 .8)))))
+	(values ret
+		animations
+		node-hash
+		scene
+		base-path
+		materials
+		meshes
+		entities
+		node-names)))))
+  
+
+(defun make-classimp-entity (index-buffer vertex-buffer normal-buffer &key bones shader-program texture texture-coordinate-buffer vertex-color-buffer parent)
+  (let ((entity 
+	 (make-instance 'clinch:entity
+			:parent parent
+			:shader-program (cond (shader-program shader-program)
+					      (bones (get-generic-single-diffuse-light-animation-shader))
+					      (t (get-generic-single-diffuse-light-shader)))
+			:indexes index-buffer
+			:attributes `(("v" . ,vertex-buffer)
+				      ("n" . ,normal-buffer)
+				      ("c" . ,(or vertex-color-buffer '(1.0 1.0 1.0 1.0)))
+				      ("tc1" . ,(or texture-coordinate-buffer '(0 0))))
+			:uniforms `(("M" . :model)
+				    ("P" . :projection)
+				    ("N" . :normal)
+				    ("t1" . ,(or texture (get-identity-texture)))
+				    ("ambientLight" . (.2 .2 .2))
+				    ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
+				    ("lightIntensity" . (.8 .8 .8))))))
+    (when bones
+      (setf (uniform entity "bones") bones
+	    (attribute entity "weights") (weights-buffer bones)
+	    (attribute entity "boneIDs") (bone-id-buffer bones)))
+    entity))    
+
 
 
 (defun get-material (materials index)

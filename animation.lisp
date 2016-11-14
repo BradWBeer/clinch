@@ -4,12 +4,12 @@
 (in-package #:clinch)
 
 (defclass animation () 
-  ((frames :accessor frames
+  ((name :initform nil
+	 :initarg :name
+	 :accessor name)
+   (frames :accessor frames
 	   :initform nil
 	   :initarg :frames)
-   (time-modifier :initform nil
-		  :initarg :time-modifier
-		  :accessor time-modifier)
    (repeat :accessor repeat
 	   :initform t
 	   :initarg :repeat)

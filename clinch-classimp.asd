@@ -8,7 +8,9 @@
 			((:file "package")
 			 (:file "node")
 			 (:file "bone")
-			 (:file "clinch-classimp")
+			 (:file "node-animation")
 			 (:file "skeleton")
-			 (:file "animation")))))
+			 (:file "clinch-classimp")))))
+
+
 			       
