@@ -83,6 +83,13 @@
 ;; Not yet implemented!
 (defgeneric skip (this position &key))
 
+(defmethod skip ((this animator) position &key)
+  (setf (slot-value this 'last-update-time) nil)
+  (setf (slot-value this 'current-time)
+	(if (repeat this)
+	    (mod position (get-animation-time this))
+	    (min position (get-animation-time this)))))))))
+
 (defmethod update ((this animator) &key (time *ticks*))
   (unless (paused this)
     (with-slots ((lt last-update-time)) this

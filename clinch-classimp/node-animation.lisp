@@ -33,7 +33,7 @@
 
 
 (defun key->cons (k)
-  (cons (ai:key-time k)
+  (cons (* (ai:key-time k) 1000)
 	(ai:value k)))
 
 (defun keys->list (k)
@@ -103,6 +103,34 @@
 (defmethod get-animation-time ((this node-animation))
   (reduce #'max (loop for i in (clinch::frames this)
 			  collect (caar (last (car (last i)))))))
+
+
+(defclass node-animator (animator) 
+  ((bones :initform nil
+	  :initarg :bones
+	  :accessor bones)))
+
+(defmethod initialize-instance :after ((this node-animator) &Key)
+  (unless (run-length this)
+    (setf (run-length this)
+	  (run-length (animation this)))))
+
+
+
+(defmethod render ((this node-animator) &key time)
+  ;;(PRINT "HELLO?")
+  (update this)
+  (get-keyframe (animation this)
+		(or time
+		    (current-time this)))
+  (update (bones this)))
+
+
+
+
+
+;; (defmethod get-animation-time ((this node-animator))
+;;   (get-animation-time (animation (animation this))))
 
 
   ;; "Render child objects. You don't need to build your application with nodes/render. This is just here to help."
