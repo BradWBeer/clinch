@@ -39,7 +39,7 @@
 	       :initform nil
 	       :initarg :run-length)
    (last-update-time :initform nil)))
-		     
+
 
 (defmethod get-animation-time (this))
 
@@ -49,7 +49,7 @@
   (caar (last this)))
 
 (defmethod get-animation-time ((this vector))
-	   (car (aref this (1- (length this)))))
+  (car (aref this (1- (length this)))))
 
 (defmethod get-animation-time ((this animation))
   (get-animation-time (frames this)))
@@ -88,7 +88,7 @@
   (setf (slot-value this 'current-time)
 	(if (repeat this)
 	    (mod position (get-animation-time this))
-	    (min position (get-animation-time this)))))))))
+	    (min position (get-animation-time this)))))
 
 (defmethod update ((this animator) &key (time *ticks*))
   (unless (paused this)
@@ -119,6 +119,6 @@
   (pause this)
   (setf (current-time this) 0
 	(slot-value this 'last-update-time) nil))
-		      				   
-  
-  
+
+
+
