@@ -119,11 +119,12 @@
 
 (defmethod render ((this node-animator) &key time)
   ;;(PRINT "HELLO?")
-  (update this)
-  (get-keyframe (animation this)
-		(or time
-		    (current-time this)))
-  (update (bones this)))
+  (unless (paused this)
+    (update this)
+    (get-keyframe (animation this)
+		  (or time
+		      (current-time this)))
+    (update (bones this))))
 
 
 

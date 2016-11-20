@@ -250,10 +250,12 @@ working while cepl runs"
 
     (:mouseclick
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
+     (print "MOUSE CLICK!")
      (fire *on-mouse-click* win d1 d2 ts)) ;;; FIX THIS!!!
 
     (:mousedoubleclick
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
+     (print "MOUSE DOUBLE-CLICK!")
      (fire *on-mouse-double-click* win d1 d2 ts)) ;;; FIX THIS!!!
 
     (:mousewheel

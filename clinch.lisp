@@ -159,6 +159,17 @@
 		    (when (>= hit-distance 0.0)
 		      (values hit-distance u v))))))))))))
 
+(defun ray-triangles-intersect (points index origin direction)
+  (loop for x from 0 below (length index) by 3
+       
+     collect (multiple-value-list 
+	      (ray-triangle-intersect? origin 
+				       direction 
+				       (get-point-by-index points (elt index (+ 0 x)))
+				       (get-point-by-index points (elt index (+ 1 x)))
+				       (get-point-by-index points (elt index (+ 2 x)))))))
+	 
+
 (defun get-intersections (start direction iarray varray)
   (loop 
      for i from 0

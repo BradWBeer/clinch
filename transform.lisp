@@ -56,7 +56,16 @@
 	 (xmax (* ymax aspect)))
     (make-frustum-transform (- xmax) xmax (- ymax) ymax znear zfar)))
 
-;;; Do I still need this? !!!
+(defun get-point-by-index (points index)
+  (let ((start (* 3 index)))
+    (subseq points start (+ 3 start))))
+
+(defun set-point-by-index (points index value)
+  (loop for x from (* 3 index)
+     for v across value
+     do (setf (elt points x) v))
+  points)
+	
 (defun transform-point (p m)
   (let ((w (/
 	    (+ (* (elt m 3) (elt p 0))
@@ -75,6 +84,20 @@
 		(* (elt m 6) (elt p 1))
 		(* (elt m 10) (elt p 2))
 		(elt m 14))))))
+
+(defun transform-points (points matrix) 
+  (loop
+     for i from 0 below (length points) by 3
+     do (loop 
+	   for j across (transform-point (v! (elt points (+ 0 i) )
+					     (elt points (+ 1 i)) 
+					     (elt points (+ 2 i)))
+					 matrix)
+	   for x from 0
+	   do (setf (elt points (+ i x)) j)))
+  points)
+
+
 
 						     
 ;;; Do I still need this? !!!

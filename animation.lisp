@@ -96,7 +96,8 @@
       (unless lt (setf lt time))
       
       (with-accessors ((ct current-time)) this
-	(let ((new-time (* (- time (or lt time))
+	(let ((old-time ct)
+	      (new-time (* (- time (or lt time))
 			   (run-speed this))))
 	  (setf lt time
 		ct (if (repeat this)
@@ -104,10 +105,11 @@
 		       (min (+ ct new-time) (get-animation-time this)))))))))
 
 (defmethod render ((this animator) &key time)
-  (update this)
-  (get-keyframe this
-		(or time
-		    (current-time this))))
+  (unless (paused this)
+    (update this)
+    (get-keyframe this
+		  (or time
+		      (current-time this)))))
 
 (defmethod play ((this animator) &key)
   (setf (paused this) nil))

@@ -156,12 +156,14 @@
 (defmethod update ((this entity) &key parent matrix force)
   "Dummy method when updating nodes.")
 
+
 (defmethod ray-entity-intersect? ((this clinch:entity) transform start end &optional (primitive :vertices))
 
   (multiple-value-bind (points index) (clinch::get-primitive this primitive)
     (let ((transformed-points (map 'list (lambda (x)
 					   (map 'list (lambda (p) 
 							(clinch:transform-point p transform)) x)) points)))
+      (print transformed-points)
       (loop
 	 with dist 
 	 with u 

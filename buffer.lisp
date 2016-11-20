@@ -81,6 +81,7 @@
 				(let ((id-value id)
 				      (key (key this)))
 				  (lambda ()
+
 				    (remhash key *uncollected*)
 				    (sdl2:in-main-thread (:background t)
 				      (gl:delete-buffers (list id-value))))))
