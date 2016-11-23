@@ -104,6 +104,11 @@
 	     :texture this
 	     :parent parent))
 
+(defmethod make-quad-and-texture (width height &key (center :center) shader-program (parent *root*) no-parent)
+  (make-quad-for-texture
+   (make-instance 'texture :width width :height height)
+   :center center :shader-program shader-program :parent parent :no-parent no-parent))
+
 (defun get-default-texture ()
   (unless *texture* 
     (setf *texture* 

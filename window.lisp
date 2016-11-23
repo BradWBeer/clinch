@@ -51,12 +51,14 @@
   "Called when window loses focus. Arguments (window timestamp)")
 (defparameter *on-window-close* nil
   "Called when window is closing. Arguments (window timestamp)")
-
 (defparameter *on-key-down* nil
   "Called when a key is pressed. Arguments (win keysym state ts)")
 (defparameter *on-key-up* nil
   "Called when a key is released. Arguments (win keysym state ts)")
-
+(defparameter *text-editing* nil
+  "Called when editing text.")
+(defparameter *on-text-input* nil
+  "Call when text input happens.")
 (defparameter *on-mouse-move* nil
   "Called when mouse is moved. Arguments (win mouse state x y xrel yrel ts)")
 (defparameter *on-mouse-down* nil
@@ -66,6 +68,7 @@
 (defparameter *on-mouse-click* nil
   "Called when mouse button is released. Arguments: (win mouse x y button state clicks ts)") ;; This isn't correct. !!!
 (defparameter *on-mouse-double-click* nil)
+
 (defparameter *on-mouse-wheel-move* nil
   "Called when the mouse wheel is moved. Arguments: (win mouse x y ts)")
 
@@ -262,6 +265,16 @@ working while cepl runs"
      (:window-id win :which mouse :x x :y y :timestamp ts) 
      (declare (ignore x))
      (fire *on-mouse-wheel-move* win mouse x y ts))
+
+    (:textediting
+     (:window-id win :timestamp ts :text text)
+     (fire *text-editing* win text ts))
+
+    (:textinput
+     (:window-id win :timestamp ts :text text)
+     (fire *on-text-input* win text ts))
+
+
     
     (:windowevent
      (:event raw-event :window-id win :data1 d1 :data2 d2 :timestamp ts)

@@ -4,6 +4,13 @@
 (in-package #:clinch)
 (defvar *layout* '*layout*)
 
+(defun get-available-fonts ()
+  (map 'list (lambda (x)
+	       (cons (pango:pango_font_family_get_name x)
+		     (map 'list #'pango:pango_font_face_get_face_name
+			  (pango:list-font-faces x))))
+       (pango::list-font-families)))
+
 ;; (defmacro with-paragraph ((&key (layout *layout*)  (context 'cairo:*context*) (alignment :PANGO_ALIGN_CENTER) width (wrap :pango_wrap_word)) &body body)
 ;;   "Create a paragraph of text"
 ;;   (let ((gwidth (gensym))
