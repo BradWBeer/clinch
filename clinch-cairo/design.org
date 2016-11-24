@@ -1,0 +1,33 @@
+* CairoScript
+
+(defun make-op (op &rest args)
+  (lambda (cmd &rest cmdargs)
+    (ecase cmd
+      (:eval ;; eval the operation
+       (funcall op args))
+      (:newop ;; change the operation but not the args
+       (setf op (first cmdargs)))
+      (:currop ;; what is the current op
+       op)
+      (:curargs ;; what is the current args
+       args)
+      (:newargs ;; change the arguments to the op
+       (setf args (copy-seq cmdargs))))))
+
+(defun make-oplist ()
+  (list (make-op #'set-source-rgb 0 0 1)
+	(make-op #'paint)
+	(make-op #'move-to 200 0)
+	(make-op #'line-to 0 100)
+	(make-op #'set-source-rgb 1 1 1)
+	(make-op #'set-line-width 5)
+	(make-op #'stroke)))
+
+(defun eval-cairo-ops (oplist)
+  ;; assume *context* and *surface* are bound appropriately
+  (dolist (op oplist)
+    (funcall op :eval)))
+
+(eval-cairo-ops (make-oplist))
+
+
