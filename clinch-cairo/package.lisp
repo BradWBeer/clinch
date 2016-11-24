@@ -7,3 +7,4 @@
 (export 'draw)
 (export 'draw)
 (export 'fast-draw)
+(export 'draw-rounded-rectangle)

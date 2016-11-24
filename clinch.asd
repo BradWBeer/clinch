@@ -26,6 +26,7 @@
 	       (:file "index-buffer")
 	       (:file "pixel-buffer")
 	       (:file "texture")
+	       (:file "2d-node")
 	       (:file "entity")
 	       (:file "viewport")
 	       (:file "framebuffer")

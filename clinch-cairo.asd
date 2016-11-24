@@ -6,5 +6,6 @@
 			:pathname "clinch-cairo"
 			:components
 			((:file "package")
-			 (:file "clinch-cairo")))))
+			 (:file "clinch-cairo")
+			 (:file "shapes")))))
 			       

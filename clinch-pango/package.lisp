@@ -2,3 +2,4 @@
 
 (export 'print-text)
 (export 'with-paragraph)
+(export 'position-text)

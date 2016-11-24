@@ -1,4 +1,4 @@
-;; This is working file as I test features...please don't use. Use tutorial05 instead.
+;; is working file as I test features...please don't use. Use tutorial05 instead.
 
 (ql:quickload :clinch)
 (ql:quickload :clinch-cairo)
@@ -11,10 +11,43 @@
 (defparameter *q* nil)
 (defparameter *buttons* nil)
 
+(defclass button ()
+  ((node :initform (make-instance 'node)
+	 :initarg :node
+	 :accessor node)
+   (entity :initform nil
+	   :initarg :entity
+	   :accessor entity)
+   (texture :initform nil
+	    :initarg :texture
+	    :accessor texture)
+   (events :initform (make-hash-table)
+	   :accessor events)))
+   
+
+(defmethod initialize-instance :after ((this button) &key width height events)
+  (describe this)
+  )
+		   
+
+    
+
+    
+    ;; (unless tex
+    ;;   (unless (and width height)
+    ;; 	(error "You must have a texture or a width and height!"))
+    ;;   (setf tex (make-instance 'texture :width width :height height)))
+
+
+    ;; ))
+    
+    ;; (unless e
+    ;;   (setf e (make-quad-for-texture tex :width width :height height)))))	
+
 
 (defun init-test ()
   (setf *node* (make-instance 'clinch:node :parent nil))
-  (clinch:translate *node* (clinch:v! 0 0 -2))
+  (clinch:translate *node* (clinch:v! 0 0 -450))
   ;; (setf *q* (make-quad-and-texture 200 200))
   ;; (add-child *node* *q*)
 
@@ -24,7 +57,9 @@
   ;; Set the blending mode.
   (%gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:polygon-mode :front-and-back :fill)
-  (gl:clear-color .8 .8 .8 0))
+  (gl:clear-color .8 .8 .8 0)
+  ;;(add-quad "Hello world" 600 400)
+  )
 
 ;; Next runs one time before the next on-idle.
 (clinch:defevent clinch:*next* ()
@@ -45,6 +80,7 @@
 
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   ;;(clinch:render entity :projection *projection*)
+  (clinch:update *node*)
   (clinch:render *node* :projection *projection*)
 
   )
@@ -52,18 +88,34 @@
 (clinch:defevent clinch:*on-mouse-down* (win mouse x y button state clicks ts)
 
   (format t "win: ~A mouse: ~A x: ~A y: ~A button: ~A state: ~A clicks: ~A ts: ~A~%" win mouse x y button state clicks ts)
-  (loop for n in *buttons*
-     do (print (check-intersect (car (children n)) n x y *viewport* *projection*))))
+  (print
+   (loop for n in *buttons*
+      collect (check-intersect (car (children n)) n x y *viewport* *projection*))))
 
 ;; Rotate and translate with mouse
 (clinch:defevent clinch:*on-mouse-move* (win mouse state x y xrel yrel ts)
+  ;;(format t "win: ~A mouse: ~A x: ~A y: ~A button: ~A state: ~A clicks: ~A ts: ~A~%" win mouse state x y xrel yrel ts)
+  
+  (loop for n in *buttons*
+     for q = (car (children n))
+     if (some (lambda (x)
+		(not (null x)))
+	      (alexandria:flatten (check-intersect q n x y *viewport* *projection*)))
+     do (draw-button q 
+		     "Hello World!" 		 
+		     :line-width 12
+		     :foreground '(.1 .1 .1 1)
+		     :fill '(0 0 0 .4)
+		     :line '(0 0 .9 1))
+     else 
+     do (draw-button q 
+		     "Hello World!" 		 
+		     :line-width 10
+		     :foreground '(.1 .1 .1 1)
+		     :fill '(0 0 0 .2)
+		     :line '(0 0 .8 1))))
 
-  ;; (case state
-  ;;   ;; (1 (clinch:rotate *node*
-  ;;   ;;                     (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0)))
 
-  ;;   (2 (clinch:translate *node* (clinch:v! (/ xrel 16) (/ yrel -16) 0)))))
-  )
 
 ;; on window resize
 (clinch:defevent clinch:*on-window-resized* (win width height ts)
@@ -95,73 +147,43 @@
   (multiple-value-bind (origin ray) (unproject x y (width viewport) (height viewport) (m4:inverse projection))
     (clinch::ray-triangles-intersect (clinch::transform-points
                                       (pullg (attribute quad "v"))
-                                      (transform *node*))
-                                     (pullg (indexes *q*))
+                                      (clinch::current-transform node))
+                                     (pullg (indexes quad))
                                      origin
                                      ray)))
 
-(defun add-quad (width height)
-  (let ((node (make-instance 'node)))
-    (add-child node (make-quad-and-texture width height))
+(defun add-quad (text width height &key line-width line fill background foreground)
+  (let* ((node (make-instance 'node))
+	 (quad (make-quad-and-texture width height)))
+    (draw-button quad text
+		 :line-width 10
+		 :foreground '(.1 .1 .1 1)
+		 :fill '(0 0 0 .2)
+		 :line '(0 0 .8 1))
+    (add-child node quad)
     (push node *buttons*)
     (add-child *node* node)))
-
+    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defun draw-button (quad text &key
-                                (width 20)
-                                (line '(0 0 0 0))
+                                (line-width 20)
+                                (line '(.1 .1 .1 1))
                                 (fill '(0 0 0 0))
                                 (background '(0 0 0 0))
-                                (foreground '(.75 .75 .75 1)))
+                                (foreground '(.1 .1 .1 1)))
   (with-context-for-mapped-texture (:texture (uniform quad "t1") :width-var w :height-var h)
-    (let* ((x 25.6)
-           (y 25.6)
-           (line-width 20)
-           (lw/2 (/ line-width 2))
-           (aspect 1.0)
+    (let* ((aspect 1.0)
            (corner-radius (/ h 5))
-           (radius (/ corner-radius aspect))
-           (degrees (/ +pi+ 180)))
-
+           (radius (/ corner-radius aspect)))
+      
       (apply #'clear-cairo-context background)
-
-      (cairo:new-path)
-      (cairo:arc (+ radius line-width)
-                 (+ radius line-width)
-                 radius
-                 (degrees->radians 180)
-                 (degrees->radians -90))
-      (cairo:arc (- w (+ radius line-width))
-                 (+ radius line-width)
-                 radius
-                 (degrees->radians 270)
-                 (degrees->radians 0))
-
-      (cairo:arc (- w (+ radius line-width))
-                 (- h (+ radius line-width))
-                 radius
-                 (degrees->radians 0)
-                 (degrees->radians 90))
-
-      (cairo:arc (+ radius line-width)
-                 (- h (+ radius line-width))
-                 radius
-                 (degrees->radians 90)
-                 (degrees->radians 180))
-      (cairo:close-path)
-
-      (apply #'cairo:set-source-rgba fill)
-      (cairo:fill-preserve)
-
-      (apply #'cairo:set-source-rgba line)
-      (cairo:set-line-width width)
-
-
-
-      (cairo:stroke)
+      (clinch:draw-rounded-rectangle  w h
+			       :line-width line-width
+			       :line line
+			       :fill fill)
 
       (apply #'cairo:set-source-rgba foreground)
       (cairo:move-to 0 (/ h 3))
@@ -173,17 +195,3 @@
                      :%y .4
                      :alignment :pango_align_center))))
 
-(defun position-text (text &key (width nil) (height nil) (wrap :pango_wrap_word) (alignment :PANGO_ALIGN_CENTER) (%x .5) (%y .5))
-  (pango::print-with-markup (text :width width :wrap wrap :alignment alignment)
-    (multiple-value-bind (xt yt wt ht) (pango:get-layout-extents)
-      (let* ((x-end (- width wt))
-             (y-start yt)
-             (y-end (- height ht))
-
-             (x-pos (+ (- xt)
-                       (* %x x-end)))
-
-             (y-pos (+ (* %y
-                          (- y-end y-start))
-                       y-start)))
-        (cairo:move-to x-pos y-pos)))))
