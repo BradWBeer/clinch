@@ -162,12 +162,13 @@
 (defun ray-triangles-intersect (points index origin direction)
   (loop for x from 0 below (length index) by 3
        
-     collect (multiple-value-list 
-	      (ray-triangle-intersect? origin 
-				       direction 
-				       (get-point-by-index points (elt index (+ 0 x)))
-				       (get-point-by-index points (elt index (+ 1 x)))
-				       (get-point-by-index points (elt index (+ 2 x)))))))
+     collect (let ((ret (multiple-value-list 
+			 (ray-triangle-intersect? origin 
+						  direction 
+						  (get-point-by-index points (elt index (+ 0 x)))
+						  (get-point-by-index points (elt index (+ 1 x)))
+						  (get-point-by-index points (elt index (+ 2 x)))))))
+	       (when (car ret) ret))))
 	 
 
 (defun get-intersections (start direction iarray varray)

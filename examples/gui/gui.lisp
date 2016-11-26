@@ -25,9 +25,13 @@
 	   :accessor events)))
    
 
+(defparameter *on-click-objects* (make-hash-table))
+(defparameter *on-hover-objects* (make-hash-table))
+(defparameter *on-exit-objects* (make-hash-table))
+(defparameter *last-hover-target* nil)
+
 (defmethod initialize-instance :after ((this button) &key width height events)
-  (describe this)
-  )
+  (describe this))
 		   
 
     
@@ -58,7 +62,7 @@
   (%gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:polygon-mode :front-and-back :fill)
   (gl:clear-color .8 .8 .8 0)
-  ;;(add-quad "Hello world" 600 400)
+  (make-button "Hello world" 600 400)
   )
 
 ;; Next runs one time before the next on-idle.
@@ -85,35 +89,61 @@
 
   )
 
+(defun map-event (f h)
+  (let ((ret))
+    (maphash (lambda (k v)
+	       (push (funcall f k v) ret))
+	     h)
+    ret))
+
+
 (clinch:defevent clinch:*on-mouse-down* (win mouse x y button state clicks ts)
 
-  (format t "win: ~A mouse: ~A x: ~A y: ~A button: ~A state: ~A clicks: ~A ts: ~A~%" win mouse x y button state clicks ts)
-  (print
-   (loop for n in *buttons*
-      collect (check-intersect (car (children n)) n x y *viewport* *projection*))))
+  ;;(format t "win: ~A mouse: ~A x: ~A y: ~A button: ~A state: ~A clicks: ~A ts: ~A~%" win mouse x y button state clicks ts)
+
+  (map-event (lambda (k v)
+	       (let ((collisions (check-intersect (car (children k)) k x y *viewport* *projection*)))
+		 (when collisions (funcall v k collisions))))
+	     *on-click-objects*))
+
+  ;; (loop for n in *buttons*
+  ;;     collect (check-intersect (car (children n)) n x y *viewport* *projection*)))
 
 ;; Rotate and translate with mouse
 (clinch:defevent clinch:*on-mouse-move* (win mouse state x y xrel yrel ts)
   ;;(format t "win: ~A mouse: ~A x: ~A y: ~A button: ~A state: ~A clicks: ~A ts: ~A~%" win mouse state x y xrel yrel ts)
+
+  (map-event (lambda (k v)
+	       (let ((collisions (check-intersect (car (children k)) k x y *viewport* *projection*)))
+		 (if collisions
+		     (unless (eq k *last-hover-target*)
+		       (setf *last-hover-target* k)
+		       (funcall v k collisions))
+		     (when (eq k *last-hover-target*)
+		       (let ((f (gethash k *on-exit-objects*)))
+			 (when f (funcall f k))
+			 (setf *last-hover-target* nil))))))
+	     *on-hover-objects*))
+
   
-  (loop for n in *buttons*
-     for q = (car (children n))
-     if (some (lambda (x)
-		(not (null x)))
-	      (alexandria:flatten (check-intersect q n x y *viewport* *projection*)))
-     do (draw-button q 
-		     "Hello World!" 		 
-		     :line-width 12
-		     :foreground '(.1 .1 .1 1)
-		     :fill '(0 0 0 .4)
-		     :line '(0 0 .9 1))
-     else 
-     do (draw-button q 
-		     "Hello World!" 		 
-		     :line-width 10
-		     :foreground '(.1 .1 .1 1)
-		     :fill '(0 0 0 .2)
-		     :line '(0 0 .8 1))))
+  ;; (loop for n in *buttons*
+  ;;    for q = (car (children n))
+  ;;    if (some (lambda (x)
+  ;; 		(not (null x)))
+  ;; 	      (alexandria:flatten (check-intersect q n x y *viewport* *projection*)))
+  ;;    do (draw-button q 
+  ;; 		     "Hello World!" 		 
+  ;; 		     :line-width 12
+  ;; 		     :foreground '(.1 .1 .1 1)
+  ;; 		     :fill '(0 0 0 .4)
+  ;; 		     :line '(0 0 .9 1))
+  ;;    else 
+  ;;    do (draw-button q 
+  ;; 		     "Hello World!" 		 
+  ;; 		     :line-width 10
+  ;; 		     :foreground '(.1 .1 .1 1)
+  ;; 		     :fill '(0 0 0 .2)
+  ;; 		     :line '(0 0 .8 1))))
 
 
 
@@ -145,15 +175,19 @@
 
 (defun check-intersect (quad node x y viewport projection)
   (multiple-value-bind (origin ray) (unproject x y (width viewport) (height viewport) (m4:inverse projection))
-    (clinch::ray-triangles-intersect (clinch::transform-points
-                                      (pullg (attribute quad "v"))
-                                      (clinch::current-transform node))
-                                     (pullg (indexes quad))
-                                     origin
-                                     ray)))
+    (let ((ret (clinch::ray-triangles-intersect (clinch::transform-points
+						 (pullg (attribute quad "v"))
+						 (clinch::current-transform node))
+						(pullg (indexes quad))
+						origin
+						ray)))
+      (when (some (lambda (x)
+		    x)
+		  ret)
+	ret))))
 
-(defun add-quad (text width height &key line-width line fill background foreground)
-  (let* ((node (make-instance 'node))
+(defun make-button (text width height &key line-width line fill background foreground)
+  (! (let* ((node (make-instance 'node))
 	 (quad (make-quad-and-texture width height)))
     (draw-button quad text
 		 :line-width 10
@@ -161,9 +195,23 @@
 		 :fill '(0 0 0 .2)
 		 :line '(0 0 .8 1))
     (add-child node quad)
-    (push node *buttons*)
-    (add-child *node* node)))
-    
+    ;;(setf (gethash node *gui-objects*)
+    (setf (gethash node *on-click-objects*)
+	  (lambda (n c)
+	    (format t "clicked!~%" n)))
+    (setf (gethash node *on-hover-objects*)
+	  (lambda (n c)
+	    (format t "hovered!~%" n)))
+    (setf (gethash node *on-exit-objects*)
+	  (lambda (n)
+	    (format t "exited!~%" n)))
+    (add-child *node* node)
+    node)))
+
+(defun remove-button (node)
+  (remhash node *on-hover-objects*)
+  (remhash node *on-click-objects*)
+  (setf (enabled node) nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
