@@ -340,8 +340,8 @@ working while cepl runs"
 	       (fullscreen nil)
 	       (no-frame nil)
 	       (alpha-size 8)
-	       (depth-size 32)
-	       (stencil-size 32)
+	       depth-size
+	       stencil-size
 	       (red-size 8)
 	       (green-size 8)
 	       (blue-size 8)
@@ -404,8 +404,8 @@ working while cepl runs"
 		(fullscreen nil)
 		(no-frame nil)
 		(alpha-size 8)
-		(depth-size 32)
-		(stencil-size 32)
+		depth-size
+		stencil-size
 		(red-size 8)
 		(green-size 8)
 		(blue-size 8)
@@ -445,8 +445,8 @@ working while cepl runs"
 
 		  (sdl2:gl-set-attr :context-profile-mask 1)
 		  (sdl2:gl-set-attr :alpha-size alpha-size)
-		  (sdl2:gl-set-attr :depth-size depth-size)
-		  (sdl2:gl-set-attr :stencil-size stencil-size)
+		  (when depth-size (sdl2:gl-set-attr :depth-size depth-size))
+		  (when stencil-size (sdl2:gl-set-attr :stencil-size stencil-size))
 		  (sdl2:gl-set-attr :red-size red-size)
 		  (sdl2:gl-set-attr :green-size green-size)
 		  (sdl2:gl-set-attr :blue-size blue-size)
