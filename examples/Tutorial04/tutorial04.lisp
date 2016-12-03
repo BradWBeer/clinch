@@ -27,7 +27,7 @@
 
   (let ((vertex-shader-source
 	"
-#version 330
+#version 130
 
 uniform   mat4 P;
 uniform   mat4 M;
@@ -61,7 +61,7 @@ void main() {
        
        (fragment-shader-source
 	"
-#version 330
+#version 130
 
 in vec4 fragmentColor;
 out vec4 fragColor;

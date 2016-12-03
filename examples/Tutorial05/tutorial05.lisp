@@ -33,7 +33,7 @@
       (setf *simple-texture-shader*
 	    (let ((vert-source
 		   "
-#version 330
+#version 130
 
 uniform mat4 P;
 uniform mat4 M;
@@ -53,7 +53,7 @@ void main() {
 		  ;;   v_tc is the texture coordinates from the fragment shader
 		  (frag-source
 		   "
-#version 330
+#version 130
 uniform sampler2D ambientTexture;
 in vec2 v_tc1;
 out vec4 fragColor;
