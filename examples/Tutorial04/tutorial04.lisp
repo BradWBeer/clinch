@@ -6,11 +6,7 @@
 ;; The triangle entity which connects the shader, vertexes and projection matrix.
 (defparameter *cube* nil)
 
-;; The shader program. A gpu side program which writes to the screen.
-(defparameter *shader-program* nil)
-
 ;; Lighting values
-
 ;; ambientLight   The lowest amount of light to use. An RGB value.
 (defparameter ambientLight '(.2 .2 .2))
 
@@ -22,71 +18,6 @@
 
 (defparameter *cube-node* nil)
 
-(defun make-shader-program ()
-  ;; A normal shader program is made of two shaders, a vertex shader and a fragment shader.
-
-  (let ((vertex-shader-source
-	"
-#version 130
-
-uniform   mat4 P;
-uniform   mat4 M;
-uniform   mat3 N;
-uniform   vec3 ambientLight;
-uniform   vec3 lightDirection;
-uniform  vec3 lightIntensity;
-
-in  vec3 v;
-in  vec3 n;
-in  vec3 vertexColor;
-
-out vec4 fragmentColor;
-
-vec3 diffuse(vec3 normal, vec3 direction, vec3 intensity) {
-  
-  float power = max( (dot(direction, normal) * -1), 0);
-  return intensity * power; 
-}
-
-void main() {
-            gl_Position = P * M * vec4(v, 1);
-
-            vec3 _n = normalize(N * n);
-            vec3 diffuse = diffuse(normalize(_n), lightDirection, lightIntensity);
-
-
-            fragmentColor = vec4(vertexColor * (ambientLight + diffuse), 1.0);
-}")
-       
-       
-       (fragment-shader-source
-	"
-#version 130
-
-in vec4 fragmentColor;
-out vec4 fragColor;
-
-void main() {
-            fragColor = fragmentColor;
-        }"))
-
-
-    (setf *shader-program*
-	  (make-instance 'clinch:shader-program
-		   :name "Shader01"
-		   :vertex-shader vertex-shader-source
-		   :fragment-shader fragment-shader-source
-		   :uniforms '(("P" :matrix)                ;; Current projection matrix
-			       ("M" :matrix)                ;; Current model matrix
-			       ("N" :matrix)                ;; Current normal matrix
-			       ("ambientLight" :float)      ;; Ambient light
-			       ("lightIntensity" :float)    ;; Brightness
-			       ("lightDirection" :float))   ;; Direction
-
-		   :attributes '(("v" :float)               ;; Vertices
-				 ("n" :float)               ;; Normals
-				 ("vertexColor" :float)))))) ;; Colors
-		   
 
 
 ;; Create a window-resized event handler 
@@ -111,13 +42,10 @@ void main() {
   (%gl:blend-func :src-alpha :one-minus-src-alpha)
   (gl:polygon-mode :front-and-back :fill)
 
-  ;; Make the shader-program
-  (setf *shader-program* (make-shader-program))
-
   ;; create the triangle entity. 
   (setf *cube*
 	(make-instance 'clinch:entity
-		       :shader-program *shader-program*                                   ;; Add the shader
+		       :shader-program  (clinch::get-generic-single-diffuse-light-per-vertex-color-shader)                                   ;; Add the shader
 		       :indexes (make-instance 'clinch:index-buffer :data '(0  1  2       ;; Add the index buffer
 									    2  1  3
 									    4  5  6

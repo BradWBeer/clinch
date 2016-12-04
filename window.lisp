@@ -495,6 +495,7 @@ working while cepl runs"
 			  *generic-solid-phong-shader* nil
 			  *generic-single-diffuse-light-animation-shader* nil
 			  *generic-single-diffuse-light-shader* nil
+			  *get-generic-single-diffuse-light-per-vertex-color* nil
 			  *default-texture* nil))))))))))
 
 (defun uninit ()

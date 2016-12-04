@@ -17,65 +17,13 @@
 ;; var to hold the projection matrix
 (defparameter *projection* nil)
 
-;; var to hold the shader-program.
-;; It's simple because it only puts paints 
-;; the texture and nothing else.
-(defparameter *simple-texture-shader* nil)
-
 ;; Creates the texture. 
 ;; In a real program, I would load these 
 ;; from a file.
 ;; You can see this when it's running 
 ;; using (clinch:pullg *simple-texture-shader*)
 ;; It will also show the input variables.
-(defun make-simple-texture-shader ()
-  (or *simple-texture-shader*
-      (setf *simple-texture-shader*
-	    (let ((vert-source
-		   "
-#version 130
 
-uniform mat4 P;
-uniform mat4 M;
-
-uniform sampler2D ambientTexture;
-in vec3 v;
-in vec2 tc1;
-out vec2 v_tc1;
-
-void main() {
-     gl_Position = P * M * vec4(v, 1);
-     v_tc1 = vec2(tc1.x, -tc1.y);
- }")
-		  
-		  ;; String for the Fragment Shader
-		  ;;   t1    is the texture sampler
-		  ;;   v_tc is the texture coordinates from the fragment shader
-		  (frag-source
-		   "
-#version 130
-uniform sampler2D ambientTexture;
-in vec2 v_tc1;
-out vec4 fragColor;
-
-void main() {
-     fragColor = texture2D(ambientTexture, v_tc1);
- }"))
-	      ;; create and compile the shader. 
-	      (make-instance 'clinch:shader-program
-			     :name "Shader01"
-			     :vertex-shader vert-source
-			     :fragment-shader frag-source
-			     
-			     ;; Sets the uniforms and their types.
-			     ;; Eventually, I would like to query 
-			     ;; the shader for these, until then
-			     ;; it's a manual step.
-			     :uniforms '(("P" :matrix)
-					 ("M" :matrix)
-					 ("ambientTexture" :int)) ;; Textures or samplers are integer values.
-			     :attributes '(("tc1" :float)
-					   ("v" :float)))))))
 
 ;; Initialize the test. 
 (defun init-test ()
@@ -85,7 +33,7 @@ void main() {
 	(make-instance 'clinch:entity
 
 		       ;; shader-program to use
-		       :shader-program  (make-simple-texture-shader)
+		       :shader-program  (clinch:get-generic-single-texture-shader)
 
 		       ;; Index values. 
 		       :indexes (make-instance 'clinch:index-buffer :data '(0 1 2 0 2 3))
@@ -111,7 +59,7 @@ void main() {
 									     1.0   1.0)))))
 		       :uniforms `(("M" . :model)                     ;; :model is a special value which inserts the current model matrix.
 				   ("P" . :projection)                ;; :projection is a special value which inserts the current projection matrix.
-				   ("ambientTexture" . :place-holder)))) ;; Texture value, a place holder for now.
+				   ("t1" . :place-holder)))) ;; Texture value, a place holder for now.
 
   ;; Creates the texture to use.
   (setf *texture*
@@ -120,6 +68,8 @@ void main() {
 		      (directory-namestring
 		       (asdf:system-relative-pathname :clinch "clinch.asd"))
 		      "examples/Tutorial05/lambda.png")))
+
+  (setf (clinch:uniform *quad-mesh* "t1") *texture*)
   
   ;; I could have put this inside the quad's attributes, but I wanted to 
   ;; demonstrate setting a uniform. Attributes work the same way. 
