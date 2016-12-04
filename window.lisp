@@ -440,12 +440,11 @@ working while cepl runs"
 		(when init-controllers (init-controllers))
 
 		(sdl2:with-window (win :w width :h height :title title
-				       :flags `(:shown :opengl :resizable
-						       ,@(remove nil `(:shown :opengl
-									      ,(when fullscreen :fullscreen-desktop)
-									      ,(when resizable :resizable)
-									      ,(when no-frame :borderless)
-									      ,(when hidden :hidden)))))
+				       :flags (remove nil `(:shown :opengl
+								   ,(when fullscreen :fullscreen-desktop)
+								   ,(when resizable :resizable)
+								   ,(when no-frame :borderless)
+								   ,(when hidden :hidden))))
 
 		  (when context-profile-mask (sdl2:gl-set-attr :context-profile-mask context-profile-mask))
 		  (when alpha-size (sdl2:gl-set-attr :alpha-size alpha-size))
