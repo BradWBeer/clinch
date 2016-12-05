@@ -23,11 +23,14 @@
 	    :accessor texture)
    (events :initform (make-hash-table)
 	   :accessor events)))
-   
+
+(defparameter *click-button* 1)
+(defparameter *drag-button* 3)
 
 (defparameter *event-hash* (make-hash-table))
 (defparameter *last-hover-target* nil)
 (defparameter *last-mouse-down-target* nil)
+(defparameter *dragging* nil)
 
 (defmethod initialize-instance :after ((this button) &key width height events)
   (describe this))
@@ -69,9 +72,7 @@
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   ;;(clinch:render entity :projection *projection*)
   (clinch:update *node*)
-  (clinch:render *node* :projection *projection*)
-
-  )
+  (clinch:render *node* :projection *projection*))
 
 (defun map-event (f e)
   (unless (gethash e *event-hash*)
@@ -99,15 +100,23 @@
     (map-event (lambda (k v)
 		 (multiple-value-bind (collisions start ray) (check-intersect (car (children k)) k x y *viewport* *projection*)
 		   (when collisions
-		     (setf *last-mouse-down-target* k)
+		     (when (= button *click-button*)
+		       
+		       (setf *last-mouse-down-target* k))
 		     (funcall v k collisions (acons :event :mouse-down
 						    (acons :ray-start start
-							   (acons :ray ray event)))))))
+							   (acons :ray ray event))))
+		     (when (= button *drag-button*)
+		       (let ((h (gethash :mouse-drag-start *event-hash*)))
+			 (when h
+			   (let ((f (gethash k h)))
+			     (setf *dragging* k)
+			     (when f (funcall f k collisions  (acons :event :mouse-drag-start event))))))))))
 	       :mouse-down)))
 
 (clinch:defevent clinch:*on-mouse-up* (win mouse x y button state clicks ts)
 
-  (format t "win: ~A mouse: ~A x: ~A y: ~A button: ~A state: ~A clicks: ~A ts: ~A~%" win mouse x y button state clicks ts)
+  ;;(format t "win: ~A mouse: ~A x: ~A y: ~A button: ~A state: ~A clicks: ~A ts: ~A~%" win mouse x y button state clicks ts)
     (let ((event `((:window . ,win)
 		   (:mouse . ,mouse)
 		   (:mouse-screen-position ,x . ,y)
@@ -120,9 +129,13 @@
 		     (when collisions
 		       (let ((e (acons :ray-start start
 				       (acons :ray ray event))))
-			 (when (eq *last-mouse-down-target* k)
-			   (let ((f (gethash k (gethash :mouse-click *event-hash*))))
-			     (when f (funcall f k collisions  (acons :event :mouse-click e)))))
+			 (when (and 
+				(= *click-button* button)
+				(eq *last-mouse-down-target* k))
+			   (let ((h (gethash :mouse-click *event-hash*)))
+			     (when h
+			       (let ((f (gethash k h)))
+				 (when f (funcall f k collisions  (acons :event :mouse-click e)))))))
 			 (funcall v k collisions (acons :event :mouse-up e)))
 		       (setf *last-mouse-down-target* nil))))
 		 
@@ -136,7 +149,13 @@
 (clinch:defevent clinch:*on-mouse-move* (win mouse state x y xrel yrel ts)
   ;;(format t "win: ~A mouse: ~A x: ~A y: ~A button: ~A state: ~A clicks: ~A ts: ~A~%" win mouse state x y xrel yrel ts)
 
-  (let ((event (list win mouse state x y xrel yrel ts))
+  (let ((event `((:window . ,win)
+		 (:mouse . ,mouse)
+		 (:mouse-screen-position ,x . ,y)
+		 (:state . ,state)
+		 (:x-relative ,xrel)
+		 (:y-relative . ,yrel)
+		 (:timestamp . ,ts))) 
 	(cached-collisions (make-hash-table)))
 
     (map-event (lambda (k v)
@@ -146,10 +165,10 @@
 			  (setf (gethash k cached-collisions) collisions)
 			  (unless (eq k *last-hover-target*)
 			    (setf *last-hover-target* k)
-			    (funcall v k collisions (cons :mouse-hover event))))
+			    (funcall v k collisions (acons :event :mouse-hover event))))
 		       (when (eq k *last-hover-target*)
 			 (let ((f (gethash k (gethash :mouse-exit *event-hash*))))
-			   (when f (funcall f k nil (cons :mouse-exit event)))
+			   (when f (funcall f k nil (acons :event :mouse-exit event)))
 			   (setf *last-hover-target* nil))))))
 	       :mouse-hover)
 
@@ -157,7 +176,7 @@
 		 (let ((collisions (or (gethash k cached-collisions)
 				       (check-intersect (car (children k)) k x y *viewport* *projection*))))
 		   (when collisions
-		       (funcall v k collisions (cons :mouse-move event)))))
+		       (funcall v k collisions (acons :event :mouse-move event)))))
 	       :mouse-move)))
 
     
@@ -249,13 +268,14 @@
 
 (defun make-event-handler (quad text)
   (lambda (n c e)
-    (cond ((eq (car e) :mouse-down)
-	   (draw-pressed quad text))
-	  ((eq (car e) :mouse-up)    (draw-hover quad text))
-	  ((eq (car e) :mouse-hover) (draw-hover quad text))
-	  ((eq (car e) :mouse-exit) (draw-inactive quad text)))
-    (unless (eq (car e) :mouse-move)
-      (format t "~A~%" e))))
+    (let ((event (cdr (assoc :event e))))
+      (cond ((eq event :mouse-down)
+    	     (draw-pressed quad text))
+    	    ((eq event :mouse-up)    (draw-hover quad text))
+	    ((eq event :mouse-hover) (draw-hover quad text))
+	    ((eq event :mouse-exit) (draw-inactive quad text)))
+      (unless (eq event :mouse-move)
+	(format t "~Ar~%" e)))))
 
 (defun add-event-handler (event object func)
   (let ((hash (or (gethash event *event-hash*)
@@ -327,6 +347,10 @@
 ;; a = (sb-cga:vec* button-end-position entity-distance)
 ;; b-pos & b = buttons start and end 
 ;; d-pos and d-hat = screen position and direction
+
+(defun rejection (a b)
+  (let ((n (v3:normalize a)))
+    (v3:- b (v3:*s n (v:dot n b)))))
 
 (defun calculate-movement (d-pos d-hat a-pos a b-pos b)
   (let ((a-rel (v3:- a-pos d-pos))
