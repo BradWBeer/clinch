@@ -14,7 +14,7 @@
   ;; A normal shader program is made of two shaders, a vertex shader and a fragment shader.
   (let ((vert-source
 	       "
-#version 330
+#version 130
 // Vertex Shader Source Code
 
 // A UNIFORM is single value which is passed to all programs in a run.
@@ -28,7 +28,7 @@ in vec3 v;
         }")
 	      (frag-source
 	       "
-#version 330
+#version 130
 // Fragment Shader Source Code
 
 // This returns the fragment's color.

@@ -7,6 +7,7 @@
 (defparameter *generic-solid-phong-shader* nil)
 (defparameter *generic-single-diffuse-light-animation-shader* nil)
 (defparameter *generic-single-diffuse-light-shader* nil)
+(defparameter *generic-single-diffuse-light-per-vertex-color* nil)
 
 (defun get-generic-single-texture-shader ()
   "Creates/returns a shader-program which blits a texture to an entity.
@@ -139,3 +140,24 @@
 					 ("tc1" :float)
 					 ("boneIDs" :int)
 					 ("weights" :float))))))
+
+
+
+(defun get-generic-single-diffuse-light-per-vertex-color-shader ()
+  (if (and *generic-single-diffuse-light-per-vertex-color* (program *generic-single-diffuse-light-per-vertex-color*))
+      *generic-single-diffuse-light-per-vertex-color*
+      (setf *generic-single-diffuse-light-per-vertex-color*
+	    (make-instance 'clinch:shader-program
+			   :name "test-shader"
+			   :vertex-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-diffuse-light-per-vertex-color.vert"))
+			   :fragment-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-diffuse-light-per-vertex-color.frag"))))))
+			   
+

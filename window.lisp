@@ -339,13 +339,14 @@ working while cepl runs"
 	       (title "Clinch Program")
 	       (fullscreen nil)
 	       (no-frame nil)
-	       (alpha-size 8)
-	       (depth-size 32)
-	       (stencil-size 32)
-	       (red-size 8)
-	       (green-size 8)
-	       (blue-size 8)
-	       (buffer-size 0)
+	       context-profile-mask
+	       alpha-size
+	       depth-size
+	       stencil-size
+	       red-size
+	       green-size
+	       blue-size
+	       buffer-size
 	       (double-buffer t)
 	       (hidden nil)
 	       (resizable t))
@@ -362,6 +363,7 @@ working while cepl runs"
 		:title title 
 		:fullscreen fullscreen
 		:no-frame no-frame
+		:context-profile-mask context-profile-mask
 		:alpha-size alpha-size
 		:depth-size depth-size 
 		:stencil-size stencil-size 
@@ -384,6 +386,7 @@ working while cepl runs"
 	     :title title 
 	     :fullscreen fullscreen
 	     :no-frame no-frame
+	     :context-profile-mask context-profile-mask
 	     :alpha-size alpha-size
 	     :depth-size depth-size 
 	     :stencil-size stencil-size 
@@ -403,13 +406,14 @@ working while cepl runs"
 		(title "Clinch")
 		(fullscreen nil)
 		(no-frame nil)
-		(alpha-size 8)
-		(depth-size 32)
-		(stencil-size 32)
-		(red-size 8)
-		(green-size 8)
-		(blue-size 8)
-		(buffer-size 0)
+		context-profile-mask
+		alpha-size
+		depth-size
+		stencil-size
+		red-size
+		green-size
+		blue-size
+		buffer-size
 		(double-buffer t)
 		(hidden nil)
 		(resizable t))
@@ -436,21 +440,20 @@ working while cepl runs"
 		(when init-controllers (init-controllers))
 
 		(sdl2:with-window (win :w width :h height :title title
-				       :flags `(:shown :opengl :resizable
-						       ,@(remove nil `(:shown :opengl
-									      ,(when fullscreen :fullscreen-desktop)
-									      ,(when resizable :resizable)
-									      ,(when no-frame :borderless)
-									      ,(when hidden :hidden)))))
+				       :flags (remove nil `(:shown :opengl
+								   ,(when fullscreen :fullscreen-desktop)
+								   ,(when resizable :resizable)
+								   ,(when no-frame :borderless)
+								   ,(when hidden :hidden))))
 
-		  (sdl2:gl-set-attr :context-profile-mask 1)
-		  (sdl2:gl-set-attr :alpha-size alpha-size)
-		  (sdl2:gl-set-attr :depth-size depth-size)
-		  (sdl2:gl-set-attr :stencil-size stencil-size)
-		  (sdl2:gl-set-attr :red-size red-size)
-		  (sdl2:gl-set-attr :green-size green-size)
-		  (sdl2:gl-set-attr :blue-size blue-size)
-		  (sdl2:gl-set-attr :buffer-size buffer-size)
+		  (when context-profile-mask (sdl2:gl-set-attr :context-profile-mask context-profile-mask))
+		  (when alpha-size (sdl2:gl-set-attr :alpha-size alpha-size))
+		  (when depth-size (sdl2:gl-set-attr :depth-size depth-size))
+		  (when stencil-size (sdl2:gl-set-attr :stencil-size stencil-size))
+		  (when red-size (sdl2:gl-set-attr :red-size red-size))
+		  (when green-size (sdl2:gl-set-attr :green-size green-size))
+		  (when blue-size (sdl2:gl-set-attr :blue-size blue-size))
+		  (when buffer-size (sdl2:gl-set-attr :buffer-size buffer-size))
 		  (sdl2:gl-set-attr :doublebuffer (if double-buffer 1 0))
 
 		  (setf *uncollected*
@@ -495,6 +498,7 @@ working while cepl runs"
 			  *generic-solid-phong-shader* nil
 			  *generic-single-diffuse-light-animation-shader* nil
 			  *generic-single-diffuse-light-shader* nil
+			  *generic-single-diffuse-light-per-vertex-color* nil
 			  *default-texture* nil))))))))))
 
 (defun uninit ()

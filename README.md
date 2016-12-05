@@ -5,35 +5,40 @@
 
 Clinch is a simple, yet powerful 3d game engine for Lisp. 
 
-Eventually Clinch will become a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp, 3D, shaders, 2d vector graphics, richtext support, 3d physics and much more.
+Clinch is a usable but still under development. It will become a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp, 3D, shaders, 2d vector graphics, richtext support, 3d physics and much more.
 
 ### Features
 
-* Live code in a multithreaded environment.
+* Modern OpenGL features such as shaders and GPU buffers. [Done]
 
-* Load plug-ins for more functionality.
+* Commercial grade windowing, controller, force-feedback, sound, music and more thorough SDL2. [Done]
 
-* Modern OpenGL features such as shaders and GPU buffers.
+* Create and inspect OpenGL objects on the fly. [Done]
 
-* Commercial grade windowing, controller, force-feedback, sound, music and more thorough SDL2.
+* Live code in a multithreaded environment. [Done]
 
-* C and other OpenGL objects on the fly.
-
-* Animate any object such as textures, transforms, etc.
+* Load plug-ins for more functionality. [Done]
 
 
 ### Clinch Plug-ins:
 
-* 3d physics with joints and motors using the ODE physics engine.
+* 3d physics with joints and motors using the ODE physics engine. [Done]
 
-* Texture loading and saving with FreeImage.
+* Texture loading and saving with FreeImage. [Done]
 
-* Integration with 2D vector graphics with Cairo.
+* Integration with 2D vector graphics with Cairo. [Done]
 
-* Integration with fonts and text positioning with Pango.
+* Integration with fonts and text positioning with Pango. [Done]
 
-* 3D asset importing using ClassImp. (animations coming soon!)
+* 3D asset importing using ClassImp. [Current Development]
 
+* Animate textures. [Done] 
+
+* Animate 3D objects. [Current Development]
+
+* 2D physics [Experimental]
+
+* 3D GUI [Current Development]
 
 ## Design Goals
 
