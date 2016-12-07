@@ -1,5 +1,5 @@
 ;;;; window.lisp
-;;;; Please see the licence.txt for the CLinch 
+;;;; Please see the licence.txt for the CLinch
 
 (in-package #:clinch)
 
@@ -152,8 +152,8 @@ working while cepl runs"
 
   (format t "Opening game controllers. ~A ~%"
 	  (sdl2-ffi.functions::sdl-game-controller-add-mappings-from-rw
-	   (sdl2::sdl-rw-from-file 
-	    (concatenate 'string 
+	   (sdl2::sdl-rw-from-file
+	    (concatenate 'string
 			 (directory-namestring
 			  (asdf:system-relative-pathname :clinch "clinch.asd"))
 			 "SDL_GameControllerDB/gamecontrollerdb.txt")
@@ -165,7 +165,7 @@ working while cepl runs"
      do (when (sdl2:game-controller-p i)
 	  (format t "Found gamecontroller: ~a~%"
 		  (sdl2:game-controller-name-for-index i))
-	  
+
 	  (let* ((gc (sdl2:game-controller-open i))
 		 (joy (sdl2:game-controller-get-joystick gc)))
 	    (setf *controllers* (acons i gc *controllers*))
@@ -173,7 +173,7 @@ working while cepl runs"
 	      (let ((h (sdl2:haptic-open-from-joystick joy)))
 		(setf *haptic* (acons i h *haptic*))
 		(sdl2:rumble-init h))))))
-  
+
   (format t "Controlers found: ~A~%" *controllers*))
 
 (defun uninit-controllers ()
@@ -185,7 +185,7 @@ working while cepl runs"
      do (progn
 	  (format t "sdl2:haptic-close~%")
 	  (sdl2:haptic-close (cdr (assoc i *haptic*)))
-	  
+
 	  (format t "sdl2:game-controller-close~%")
 	  (sdl2:game-controller-close controller))))
 
@@ -195,7 +195,7 @@ working while cepl runs"
   (setf *viewport* (make-instance 'viewport :x 0 :y 0 :width w :height h))
   (setf *ortho-projection*
    	(make-orthogonal-transform w h 0 1000))
-			  
+
   (fire *next*)
   (setf *next* nil)
 
@@ -203,7 +203,7 @@ working while cepl runs"
   (fire *on-window-resized* win w h nil)
 
   (sdl2:with-event-loop (:method :poll)
-    
+
     (:keydown
      (:window-id win :state state :keysym keysym :timestamp ts)
      (fire *on-key-down* win keysym state ts))
@@ -211,11 +211,11 @@ working while cepl runs"
     (:keyup
      (:window-id win :state state :keysym keysym :timestamp ts)
      (fire *on-key-up* win keysym state ts))
-    
+
     (:controlleraxismotion
      (:which controller-id :axis axis-id :value value :timestamp ts)
      (fire *on-controller-axis-move* controller-id axis-id value ts))
-    
+
     (:controllerbuttondown
      (:which controller-id :button button :timestamp ts)
      (fire *on-controller-button-down* controller-id button ts))
@@ -224,10 +224,10 @@ working while cepl runs"
      (:which controller-id :button button :timestamp ts)
      (fire *on-controller-button-up* controller-id button ts))
 
-    (:controlleradded 
+    (:controlleradded
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
      (fire *on-controller-added* win d1 d2 ts))
-    
+
     (:controllerremoved
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
      (fire *on-controller-removed* win d1 d2 ts))
@@ -235,7 +235,7 @@ working while cepl runs"
     (:controllerremapped
      (:window-id win :data1 d1 :data2 d2 :timestamp ts)
      (fire *on-controller-remapped* win d1 d2 ts))
-    
+
     (:mousemotion
      (:window-id win :which mouse :state state :x x :y y :xrel xrel :yrel yrel :timestamp ts)
      (declare (ignore x))
@@ -262,7 +262,7 @@ working while cepl runs"
      (fire *on-mouse-double-click* win d1 d2 ts)) ;;; FIX THIS!!!
 
     (:mousewheel
-     (:window-id win :which mouse :x x :y y :timestamp ts) 
+     (:window-id win :which mouse :x x :y y :timestamp ts)
      (declare (ignore x))
      (fire *on-mouse-wheel-move* win mouse x y ts))
 
@@ -275,14 +275,14 @@ working while cepl runs"
      (fire *on-text-input* win text ts))
 
 
-    
+
     (:windowevent
      (:event raw-event :window-id win :data1 d1 :data2 d2 :timestamp ts)
      (let ((event (autowrap:enum-key 'sdl2-ffi:sdl-window-event-id raw-event)))
        (cond
 	 ((eql event :size-changed)
 	  (quick-set *viewport* 0 0 d1 d2)
-	  
+
 	  (fire *on-window-size-changed* win d1 d2 ts))
 	 ((eql event :resized)
 	  (quick-set *viewport* 0 0 d1 d2)
@@ -308,8 +308,8 @@ working while cepl runs"
 	 ((eql event :close) (fire *on-window-close* win ts)
 	  (print "Done...")
 	  ))))
-    
-    (:idle ()  
+
+    (:idle ()
 	   (if *running*
 	       (let ((last-ticks *ticks*))
 		 (setf *ticks* (sdl2:get-ticks)
@@ -325,7 +325,7 @@ working while cepl runs"
 	   ;; Doesn this make any sense here?
 	   (unless asynchronous (update-swank))
 	   )
-    
+
     (:quit ()
 	   (fire *on-quit*)
 	   t)))
@@ -350,29 +350,29 @@ working while cepl runs"
 	       (double-buffer t)
 	       (hidden nil)
 	       (resizable t))
-  "Creates Clinch's window in it's own thread. 
- Use ! (wait and return a value from main thread) or 
+  "Creates Clinch's window in it's own thread.
+ Use ! (wait and return a value from main thread) or
  Use !! (return immediately with a nil."
-  (if asynchronous 
+  (if asynchronous
       (bordeaux-threads:make-thread
        (lambda ()
 	 (_init :asynchronous asynchronous
 		:init-controllers init-controllers
-		:width width 
-		:height height 
-		:title title 
+		:width width
+		:height height
+		:title title
 		:fullscreen fullscreen
 		:no-frame no-frame
 		:context-profile-mask context-profile-mask
 		:alpha-size alpha-size
-		:depth-size depth-size 
-		:stencil-size stencil-size 
-		:red-size red-size 
-		:green-size green-size 
-		:blue-size blue-size 
+		:depth-size depth-size
+		:stencil-size stencil-size
+		:red-size red-size
+		:green-size green-size
+		:blue-size blue-size
 		:buffer-size buffer-size
 		:double-buffer double-buffer
-		:hidden hidden 
+		:hidden hidden
 		:resizable resizable))
        :name "Main Clinch Thread"
        :initial-bindings
@@ -381,21 +381,21 @@ working while cepl runs"
 		   bordeaux-threads:*default-special-bindings*)))
       (_init :asynchronous asynchronous
 	     :init-controllers init-controllers
-	     :width width 
-	     :height height 
-	     :title title 
+	     :width width
+	     :height height
+	     :title title
 	     :fullscreen fullscreen
 	     :no-frame no-frame
 	     :context-profile-mask context-profile-mask
 	     :alpha-size alpha-size
-	     :depth-size depth-size 
-	     :stencil-size stencil-size 
-	     :red-size red-size 
-	     :green-size green-size 
-	     :blue-size blue-size 
+	     :depth-size depth-size
+	     :stencil-size stencil-size
+	     :red-size red-size
+	     :green-size green-size
+	     :blue-size blue-size
 	     :buffer-size buffer-size
 	     :double-buffer double-buffer
-	     :hidden hidden 
+	     :hidden hidden
 	     :resizable resizable)))
 
 (defun _init (&key
@@ -418,20 +418,20 @@ working while cepl runs"
 		(hidden nil)
 		(resizable t))
 
-  (unless *running* 
+  (unless *running*
     (let ((local-stdout *standard-output*)
 	  (local-input *standard-input*))
-      
+
       (with-main
 
 	  (unless *inited*
 	    (sdl2:with-init (:everything)
-	      
+
 	      (let ((*standard-output* local-stdout)
 		    (*standard-input* local-input))
-		
+
 		(setf *running* t)
-		
+
 		(format t "Using SDL Library Version: ~D.~D.~D~%"
 			sdl2-ffi:+sdl-major-version+
 			sdl2-ffi:+sdl-minor-version+
@@ -459,16 +459,16 @@ working while cepl runs"
 		  (setf *uncollected*
 		    #+(or ccl ecl) (make-hash-table :test 'eq)
 		    #-(or ccl ecl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
-		  
-		  (setf *dependents*  
+
+		  (setf *dependents*
 		    #+(or ccl ecl) (make-hash-table :test 'eq)
 		    #-(or ccl ecl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value))
 
 		  (sdl2:with-gl-context (gl-context win)
 
 		    (setf *window* win
-			  *context* gl-context)	
-		    
+			  *context* gl-context)
+
 		    (ensure-cepl-compatible-setup)
 		    (set-default-gl-options)
 
@@ -506,6 +506,5 @@ working while cepl runs"
       (setf *running* nil
 	    *inited* nil)
 
-      (uninit-controllers) 
+      (uninit-controllers)
     (sdl2:push-event :quit)))
-
