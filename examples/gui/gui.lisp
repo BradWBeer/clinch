@@ -219,20 +219,35 @@
         (multiple-value-bind (d-pos d) (clinch:get-screen-direction proj-1)
           (multiple-value-bind (button-start-position button-end-position)
               (unproject x y (width *viewport*) (height *viewport*) proj-1)
-            (let ((trans (calculate-movement d-pos
-                                             d
-                                             (second *drag-start-position*)
-                                             (third *drag-start-position*)
-                                             button-start-position
-                                             button-end-position)))
-              (format t "Drag start ~A~%" *drag-start-position*)
-	      (format t "calculate-movement ~A ~A ~A ~A ~A ~A~%" d-pos
-		      d
-		      (second *drag-start-position*)
-		      (third *drag-start-position*)
-		      button-start-position
-		      button-end-position)
-	      (format t "~A~%" trans))))))))
+            ;; (let ((trans (calc2 d-pos
+	    ;; 			d
+	    ;; 			(second *drag-start-position*)
+	    ;; 			(third *drag-start-position*)
+	    ;; 			button-start-position
+	    ;; 			button-end-position)))
+              ;; (format t "Drag start ~A~%" *drag-start-position*)
+	      ;; (format t "calculate-movement ~A ~A ~A ~A ~A ~A~%" d-pos
+	      ;; 	      d
+	      ;; 	      (second *drag-start-position*)
+	      ;; 	      (third *drag-start-position*)
+	      ;; 	      button-start-position
+	      ;; 	      button-end-position)
+
+	    (let ((tmp (calc2 (first *drag-start-position*)
+			      d d-pos
+			      (third *drag-start-position*)
+			      (second *drag-start-position*)
+			      button-end-position
+			      button-start-position)))
+		
+	      (format t "~A~%" tmp)
+	      (!t0 *dragging*)
+	      (setf (translation *dragging*) (v3:- (first *drag-start-position*) tmp)) 
+
+		    
+		      	    
+	      ;;(format t "~A~%" trans)
+	      )))))))
 
 
 
@@ -424,34 +439,44 @@
 
 ;;(multiple-value-bind (d-pos d) (clinch:get-screen-direction (sb-cga:inverse-matrix lens))
 (defun normalized-vector-match (n v)
-  (v3:length 
-   (v3:/ v n)))
+  (v3:*s n
+	 (/ (expt (v3:length v) 2)
+	    (v3:dot v n)))) 	  
 
-(defun calc2 (start-pos screen-direction screen-position)
-  (let ((scale (- (abs (v3:dot start-pos screen-direction))
-		  (abs (v3:dot screen-position screen-direction)))))
-    (v3:*s screen-direction scale)))
+(defun calc2 (start-pos screen-direction screen-position first-direction first-position click-direction click-position)
+  (let* ((D (normalized-vector-match screen-direction 
+				     (v3:- start-pos screen-position)))
+	 (A (normalized-vector-match first-direction D))
+	 ;; (m1 (v3:- (v3:+ A click-position) 
+	 ;; 	   (v3:+ D screen-position)))
+	 (B (normalized-vector-match click-direction D)))
+    
+    ;; (format t "DATA1=~A~%" (v3:+ (v3:- A B) (v3:- (v3:- start-pos screen-position) A)))
+    ;; (format t "pos=~A ~%A=~A~%B=~A~%sd=~A~%sp=~A~%fd=~A~%fp=~A~%cd=~A~%cp=~A~%" start-pos A B
+    ;; 	    screen-direction screen-position first-direction first-position click-direction click-position)
+     
+    (print (v3:+ (v3:- A B) (v3:- (v3:- start-pos screen-position) A)))))
 
-(defun calculate-movement (d-pos d-hat a-pos a b-pos b)
-  (let ((a-rel (v3:- a-pos d-pos))
-        (b-rel (v3:- b-pos d-pos)))
-    (v3:-
-     (v3:+ b-rel
-           (v3:*s b
-                  ;; find 'x'
-                  (/ (v3:dot (v3:- (v3:+ a-rel a)
-                                   b-rel)
-                             d-hat)
-                     (v3:dot b d-hat))))
-     (v3:+ a-rel a))))
+;; (defun calculate-movement (d-pos d-hat a-pos a b-pos b)
+;;   (let ((a-rel (v3:- a-pos d-pos))
+;;         (b-rel (v3:- b-pos d-pos)))
+;;     (v3:-
+;;      (v3:+ b-rel
+;;            (v3:*s b
+;;                   ;; find 'x'
+;;                   (/ (v3:dot (v3:- (v3:+ a-rel a)
+;;                                    b-rel)
+;;                              d-hat)
+;;                      (v3:dot b d-hat))))
+;;      (v3:+ a-rel a))))
 
 
 ;; Idea...
 ;; Start = original vector
 ;; Current = current vector
-(defun calculate-movement2 (start end)
-  (v3:- end
-        (v3:*s start (v3:dot start end))))
+;; (defun calculate-movement2 (start end)
+;;   (v3:- end
+;;         (v3:*s start (v3:dot start end))))
 
 
 ;; (if (eql mouse-state :dragging)
