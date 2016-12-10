@@ -214,6 +214,7 @@
                :mouse-move)
     (when *dragging*
       ;; move it!
+      (format t "start = ~A current = ~A~%" *drag-start-position* (clinch::current-transform *dragging*))
       (let ((proj-1 (M4:inverse *projection*)))
 
         (multiple-value-bind (d-pos d) (clinch:get-screen-direction proj-1)
@@ -242,7 +243,7 @@
 		
 	      (format t "~A~%" tmp)
 	      (!t0 *dragging*)
-	      (setf (translation *dragging*) (v3:- (first *drag-start-position*) tmp)) 
+	      (setf (translation *dragging*) (v3:- (translation *dragging*) tmp)) 
 
 		    
 		      	    
