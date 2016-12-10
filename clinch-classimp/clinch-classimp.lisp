@@ -33,6 +33,7 @@
 (defun import-scene (path &key (texture-hash (make-hash-table :test 'equal)))
   (let ((scene (load-mesh path))
 	(base-path (get-base-path path)))
+    (print scene)
     (import-static-scene scene base-path :texture-hash texture-hash)))
   
 (defun import-static-scene (scene base-path &key (texture-hash (make-hash-table :test 'equal)) (node-names (make-hash-table :test 'equal)))
@@ -57,16 +58,19 @@
 			:vertex-color-buffer (let ((tc (classimp:colors mesh)))
 					       (when (> (length tc) 0)
 						 (elt tc 0))))))))
+
     
     (multiple-value-bind (ret node-hash)
 	(get-nodes (classimp:root-node scene) :entities entities :node-name-hash node-names)
 
-      (let ((animations
-	     (loop for a across (ai:animations scene)
-		collect (make-instance 'clinch::node-animation
-				       :node ret
-				       :ai-animation a 
-				       :node-names node-names))))
+      (let ((animations))
+	(when (> (length (ai:animations scene)) 0)
+	  (setf animations
+	       (loop for a across (ai:animations scene)
+		  collect (make-instance 'clinch::node-animation
+					 :node ret
+					 :ai-animation a 
+					 :node-names node-names))))
 
 	(values ret
 		animations

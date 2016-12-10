@@ -94,7 +94,7 @@
 
 (clinch:defevent clinch:*on-mouse-down* (win mouse x y button state clicks ts)
 
-  (format t "win: ~A mouse: ~A x: ~A y: ~A button: ~A state: ~A clicks: ~A ts: ~A~%" win mouse x y button state clicks ts)
+  ;;(format t "win: ~A mouse: ~A x: ~A y: ~A button: ~A state: ~A clicks: ~A ts: ~A~%" win mouse x y button state clicks ts)
   (when *q* 
     (multiple-value-bind (origin ray) (unproject x y (width *viewport*) (height *viewport*) (m4:inverse *projection*))
       (print (clinch::ray-triangles-intersect
@@ -114,7 +114,7 @@
 
 ;; on window resize
 (clinch:defevent clinch:*on-window-resized* (win width height ts)
-  (format t "Resized: ~A ~A~%" width height)
+  ;;(format t "Resized: ~A ~A~%" width height)
   
   (setf *projection* (clinch::make-perspective-transform (clinch:degrees->radians 45)
 							 (/ width height) .1 1000)))

@@ -214,7 +214,7 @@
                :mouse-move)
     (when *dragging*
       ;; move it!
-      (format t "start = ~A current = ~A~%" *drag-start-position* (clinch::current-transform *dragging*))
+      ;;(format t "start = ~A current = ~A~%" *drag-start-position* (clinch::current-transform *dragging*))
       (let ((proj-1 (M4:inverse *projection*)))
 
         (multiple-value-bind (d-pos d) (clinch:get-screen-direction proj-1)
@@ -241,7 +241,7 @@
 			      button-end-position
 			      button-start-position)))
 		
-	      (format t "~A~%" tmp)
+	      ;;(format t "~A~%" tmp)
 	      (!t0 *dragging*)
 	      (setf (translation *dragging*) (v3:- (translation *dragging*) tmp)) 
 
@@ -456,7 +456,7 @@
     ;; (format t "pos=~A ~%A=~A~%B=~A~%sd=~A~%sp=~A~%fd=~A~%fp=~A~%cd=~A~%cp=~A~%" start-pos A B
     ;; 	    screen-direction screen-position first-direction first-position click-direction click-position)
      
-    (print (v3:+ (v3:- A B) (v3:- (v3:- start-pos screen-position) A)))))
+    (v3:+ (v3:- A B) (v3:- (v3:- start-pos screen-position) A))))
 
 ;; (defun calculate-movement (d-pos d-hat a-pos a b-pos b)
 ;;   (let ((a-rel (v3:- a-pos d-pos))
