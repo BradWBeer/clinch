@@ -117,6 +117,7 @@
 (defmethod render ((this entity) &key parent (projection *projection*))
   "Renders the entity (mesh).
     :parent Sets the parent for the :model"
+ 
   (when (enabled this)
     (with-accessors ((shader-program shader-program)) this
       (when shader-program 

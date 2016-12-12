@@ -8,6 +8,7 @@
 (defparameter *generic-single-diffuse-light-animation-shader* nil)
 (defparameter *generic-single-diffuse-light-shader* nil)
 (defparameter *generic-single-diffuse-light-per-vertex-color* nil)
+(defparameter *generic-single-color-shader* nil)
 
 (defun get-generic-single-texture-shader ()
   "Creates/returns a shader-program which blits a texture to an entity.
@@ -142,7 +143,6 @@
 					 ("weights" :float))))))
 
 
-
 (defun get-generic-single-diffuse-light-per-vertex-color-shader ()
   (if (and *generic-single-diffuse-light-per-vertex-color* (program *generic-single-diffuse-light-per-vertex-color*))
       *generic-single-diffuse-light-per-vertex-color*
@@ -159,5 +159,25 @@
 							(directory-namestring
 							 (asdf:system-relative-pathname :clinch "clinch.asd"))
 							"shaders/generic-single-diffuse-light-per-vertex-color.frag"))))))
-			   
+
+
+(defun get-generic-single-color-shader ()
+  (if (and *generic-single-color-shader* (program *generic-single-color-shader*))
+      *generic-single-color-shader*
+      (setf *generic-single-color-shader*
+	    (make-instance 'clinch:shader-program
+			   :name "test-shader"
+			   :vertex-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-color-shader.vert"))
+			   :fragment-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-color-shader.frag"))))))
+
+
+
 
