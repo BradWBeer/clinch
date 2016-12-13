@@ -109,6 +109,7 @@
    (make-instance 'texture :width width :height height)
    :center center :shader-program shader-program :parent parent :no-parent no-parent))
 
+
 (defun get-default-texture ()
   (unless *texture* 
     (setf *texture* 
@@ -120,63 +121,225 @@
 	  (make-quad-for-texture *texture* :parent nil)))
   *texture*)
 
+
 (defun make-sphere ()
-  (multiple-value-bind (verts indices) (get-sphere-vertex-and-index-buffers)
+  (multiple-value-bind (verts indices) (get-sphere-vertex-normal-and-index-buffers)
     
     (make-instance 'clinch:entity
 		   :parent nil
 		   :shader-program (get-generic-single-color-shader)
 		   :indexes indices
 		   :attributes `(("v" . ,verts))
-		   
 		   :uniforms `(("M" . :model)
 			       ("P" . :projection)
 			       ("color" . (1 1 1 1))))))
 
 
 ;; Interesting note: the normals are the same as the vertices.    
-(defun get-sphere-vertex-and-index-buffers ()
-  (let ((ICX 0.525731112119133606)
-	(ICZ 0.850650808352039932))
-    (values
-     (make-instance 'buffer :data
-		    (map 'list (lambda (x)
-				 (coerce x 'single-float))
-			 
-			 `( ,(- ICX) 0 ,ICZ
-			     ,ICX 0 ,ICZ
-			     ,(- ICX) 0 ,(- ICZ)
-			     ,ICX 0 ,(- ICZ)
-			     0 ,ICZ ,ICX
-			     0 ,ICZ ,(- ICX)
-			     0 ,(- ICZ) ,ICX
-			     0 ,(- ICZ) ,(- ICX)
-			     ,ICZ ,ICX 0
-			     ,(- ICZ) ,ICX 0
-			     ,ICZ ,(- ICX) 0
-			     ,(- ICZ) ,(- ICX) 0)))
+(defun get-sphere-vertex-normal-and-index-buffers ()
+  (let* ((ICX 0.525731112119133606)
+	 (ICZ 0.850650808352039932)
+	 (v (make-instance 'buffer :data
+			   (map 'list (lambda (x)
+					(coerce x 'single-float))
+				
+				`( ,(- ICX) 0 ,ICZ
+				    ,ICX 0 ,ICZ
+				    ,(- ICX) 0 ,(- ICZ)
+				    ,ICX 0 ,(- ICZ)
+				    0 ,ICZ ,ICX
+				    0 ,ICZ ,(- ICX)
+				    0 ,(- ICZ) ,ICX
+				    0 ,(- ICZ) ,(- ICX)
+				    ,ICZ ,ICX 0
+				    ,(- ICZ) ,ICX 0
+				    ,ICZ ,(- ICX) 0
+				    ,(- ICZ) ,(- ICX) 0)))))
+    (values v 
+	    (make-instance 'index-buffer 
+			   :data '(0 4 1	  
+				   0 9 4
+				   9 5 4	
+				   4 5 8
+				   4 8 1
+				   8 10 1
+				   8 3 10 
+				   5 3 8
+				   5 2 3
+				   2 7 3
+				   7 10 3
+				   7 6 10
+				   7 11 6
+				   11 0 6
+				   0 1 6	
+				   6 1 10
+				   9 0 11
+				   9 11 2
+				   9 2 5	
+				   7 2 11))
+	    v)))
+    
 
-     (make-instance 'index-buffer 
-		    :data '(0 4 1	  
-			    0 9 4
-			    9 5 4	
-			    4 5 8
-			    4 8 1
-			    8 10 1
-			    8 3 10 
-			    5 3 8
-			    5 2 3
-			    2 7 3
-			    7 10 3
-			    7 6 10
-			    7 11 6
-			    11 0 6
-			    0 1 6	
-			    6 1 10
-			    9 0 11
-			    9 11 2
-			    9 2 5	
-			    7 2 11)))))
+(defun make-box ()
+  (multiple-value-bind (verts indices) (get-box-vertex-normal-texture-and-index-buffers)
+    
+    (make-instance 'clinch:entity
+		   :parent nil
+		   :shader-program (get-generic-single-color-shader)
+		   :indexes indices
+		   :attributes `(("v" . ,verts))
+		   :uniforms `(("M" . :model)
+			       ("P" . :projection)
+			       ("color" . (1 1 1 1))))))
+
+
+(defun get-box-vertex-normal-texture-and-index-buffers ()
+  (! (values 
+      (make-instance 'clinch:buffer 
+		     :Stride 3
+		     :data '(-0.5 -0.5  0.5
+			     0.5 -0.5  0.5
+			     -0.5  0.5  0.5
+			     0.5  0.5  0.5
+			     -0.5 -0.5 -0.5
+			     0.5 -0.5 -0.5
+			     -0.5 -0.5  0.5
+			     0.5 -0.5  0.5
+			     -0.5  0.5 -0.5
+			     0.5  0.5 -0.5
+			     -0.5 -0.5 -0.5
+			     0.5 -0.5 -0.5
+			     -0.5  0.5  0.5
+			     0.5  0.5  0.5
+			     -0.5  0.5 -0.5
+			     0.5  0.5 -0.5
+			     0.5 -0.5  0.5
+			     0.5 -0.5 -0.5
+			     0.5  0.5  0.5
+			     0.5  0.5 -0.5
+			     -0.5 -0.5 -0.5 
+			     -0.5 -0.5  0.5 
+			     -0.5  0.5 -0.5 
+			     -0.5  0.5  0.5))
+
+      (make-instance 'clinch:index-buffer 
+		     :data '(0  1  2 
+			     2  1  3
+			     4  5  6
+			     6  5  7
+			     8  9 10 
+			     10  9 11
+			     12 13 14 
+			     14 13 15
+			     16 17 18 
+			     18 17 19
+			     20 21 22 
+			     22 21 23))
+
+
+      (make-instance 'clinch:buffer 
+		  :data '(0.0 0.0 1.0
+			  0.0 0.0 1.0
+			  0.0 0.0 1.0
+			  0.0 0.0 1.0
+			  0.0 -1.0 0.0
+			  0.0 -1.0 0.0
+			  0.0 -1.0 0.0
+			  0.0 -1.0 0.0
+			  0.0 0.0 -1.0
+			  0.0 0.0 -1.0
+			  0.0 0.0 -1.0
+			  0.0 0.0 -1.0
+			  0.0 1.0 0.0
+			  0.0 1.0 0.0
+			  0.0 1.0 0.0
+			  0.0 1.0 0.0
+			  1.0 0.0 0.0
+			  1.0 0.0 0.0
+			  1.0 0.0 0.0
+			  1.0 0.0 0.0
+			  -1.0 0.0 0.0
+			  -1.0 0.0 0.0
+			  -1.0 0.0 0.0
+			  -1.0 0.0 0.0))
+
+      (make-instance 'clinch:buffer 
+		  :Stride 2
+		  :data '(0.0 1.0
+			  1.0 1.0
+			  0.0 0.0
+			  1.0 0.0
+			  0.0 1.0
+			  1.0 1.0
+			  0.0 0.0
+			  1.0 0.0
+			  0.0 1.0
+			  1.0 1.0
+			  0.0 0.0
+			  1.0 0.0
+			  0.0 1.0
+			  1.0 1.0
+			  0.0 0.0
+			  1.0 0.0
+			  0.0 1.0
+			  1.0 1.0
+			  0.0 0.0
+			  1.0 0.0
+			  0.0 1.0
+			  1.0 1.0
+			  0.0 0.0
+			  1.0 0.0)))))
+
+
+(defun make-cylinder (&optional (sides 10))
+  (multiple-value-bind (verts indices) (get-cylinder-vertex-normal-and-index-buffers sides)
+    
+    (make-instance 'clinch:entity
+		   :parent nil
+		   :shader-program (get-generic-single-color-shader)
+		   :indexes indices
+		   :attributes `(("v" . ,verts))
+		   :uniforms `(("M" . :model)
+			       ("P" . :projection)
+			       ("color" . (1 1 1 1))))))
+
+
+(defun get-cylinder-vertex-normal-and-index-buffers (sides)
+  (multiple-value-bind (v n)
+      (loop 
+	 for i from 0 below (* 2 pi) by (/ (* 2 pi) sides)
+	 for x = (cos i)
+	 for y = (sin i)
+	 append (list x y  0.5
+		      x y -0.5
+		      x y  0.5
+		      x y -0.5)  into verts
+	 append (list x y 0.0
+		      0.0 0.0 1.0
+		      x y 0.0
+		      x y -1.0) into norms
+	   
+	 finally (return (values verts norms)))
+    (setf v (append v '(0.0 0.0 0.5 0.0 0.0 -0.5)))
+    (setf n (append n '(0.0 0.0 0.5 0.0 0.0 -0.5)))
+    (let* ((len (/ (length v) 3)))
+      (values (make-instance 'buffer :data (map 'list (lambda (x) (coerce x 'float)) v))
+	      (make-instance 'index-buffer
+			     :data (loop for x from 0 below sides
+				      append (let ((offset (* x 4)))						     
+					       (map 'list (lambda (y)
+							    (if (< y 0)
+								(+ len y)
+								(mod (+ offset y) (- len 2))))
+						    `(0 1 4 1 5 4  ; side
+							5 1 -1 
+							0 4 -2)))))
+	      (make-instance 'buffer :data (map 'list (lambda (x) (coerce x 'float)) n))))))
+				 
+			
+	      
+
+
 
     
 ;; (setf diamond '(#(0.0  1.0 0.0) #(-0.70710677 0.0 0.70710677) #(0.70710677 0.0 0.70710677)
