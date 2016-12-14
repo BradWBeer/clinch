@@ -1,5 +1,63 @@
 (ql:quickload :alexandria)
 
+;; a framebuffer object sorts whatever is inside it.
+;; This is necessary because a topological sort
+;; can jumble the state, such as background color or
+;; active shader.
+;; For items where state matters, they must be differnt
+;; from a topological sort.
+;;
+;; Ordering of frambuffers should be fine because they
+;; rely on textures or are completely separate.
+;; If a particular order is necessary then we can use
+;; dependancies...which fits well.
+;; Examples include:
+;;      The overlay being drawn after other render calls.
+;;      Sorting for transparent objects. (transparent
+;;              objects are rendered after the others,
+;;              back to front.)
+;;      Deferred lighting passes.
+;;      
+;; For now, dependancies will need to be done explictly.
+;; Which shouldn't be a big problem unless there are some
+;; exotic shaders or states.
+;;
+
+;; Order of operations:
+;;    Init (such as setting initial node transforms and such.)
+;;    Input
+;;    Update
+;;      Input  (This might update events as well.)
+;;      Timers (Physics ticks, check for file updates, AI, ...)
+;;      Other objects should be marked "dirty" by modifying them.
+;;    Render ... Which is a subset of update now.
+;;    Shutdown (deleting all objects, closing files, etc)
+;;
+;; AI and physics could be run in a separate thread.
+;; Frustum culling can also be done at this time.
+;; (I believe I can use 5 infinite planes (4 sides and the min depth of the user)
+;;
+;; Async updates could be given as messages to main thread.
+;;
+;; This abstracts dependancies, such as node heiarchies,
+;; message heiarchies, file dependancies, etc.
+;; An item in the graph can be marked as clean, dirty, or alway dirty (always update).
+;;
+;; This topological algorithm checks for loops and excludes them.
+;; I don't know what to do about their dependancies. Likely just error.
+;;
+;; By starting with the end result, writing to the screen, I can also iterate
+;; "upwards" and see which items are not being used.
+;; There can be handlers for various items as well.
+;; The default would be to free them, but more can be done
+;; such as notifying the user, or keeping some items in memory
+;; for later use.
+
+;; Entire scenes can have a separate heiarchy which keeps things in memory until
+;; the scene is unloaded or an item is removed from the scene.
+
+
+
 (setf *nodes* '((n2 n1)
 		(n1 root)
 	 	(animation1 timer1 camera)
