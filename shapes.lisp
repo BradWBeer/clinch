@@ -339,6 +339,69 @@
 			
 	      
 
+(defun random-heightfield (w h &optional (max 1) (x-offset (/ (1- w) -2)) (y-offset (/ (1- h) -2)))
+  (make-array (* w h 3)
+	      :element-type 'single-float
+	      :initial-contents 
+	      (map 'list (lambda (x)
+			   (coerce x 'single-float))
+		   (loop for i from 0 below w
+		      append (loop for j from 0 below h
+				append (list (+ i x-offset)
+					     (* max (/ (random 1000) 1000))
+					     (+ j y-offset)))))))
+
+
+(defun heightmap->buffers (arr w h)
+  (let ((tx (/ (1- w)))
+	(ty (/ (1- h)))
+	(points)
+	(normals)
+	(tex-coords))
+    
+  (labels ((get-point (x)
+	     (let ((start (* 3 x)))
+	       (subseq arr start (+ 3 start))))
+	   
+	   (make-triangle (a b c)
+	     (let ((n (v3:normalize 
+		       (v3:cross (v3:- b a) (v3:- c a)))))
+	       (values (concatenate 'vector a b c)
+		       (concatenate 'vector n n n))))
+
+	   (add-triangle (a)
+	     (multiple-value-bind (p n)
+		 (apply #'make-triangle 
+			(map 'list #'get-point a))
+	        (push p points)
+	        (push n normals)))
+
+	   (add-tc (x y)
+	     (push (v! (* tx x) (* ty y)) tex-coords)
+	     (push (v! (* tx (1+ x)) (* ty y)) tex-coords)
+	     (push (v! (* tx x) (* ty (1+ y))) tex-coords)
+
+	     (push (v! (* tx (1+ x)) (* ty y)) tex-coords)
+	     (push (v! (* tx (1+ x)) (* ty (1+ y))) tex-coords)
+	     (push (v! (* tx x) (* ty (1+ y))) tex-coords)))
+	     
+    (loop for i from 0 below (1- w)
+       do (loop for j from 0 below (1- h)
+	     for a1 = (+ j (* w i))
+	     for a2 = (1+ a1)
+	     for b1 = (+ w a1)
+	     for b2 = (1+ b1)
+	       
+	     do (progn (add-triangle (list a1 a2 b1))
+		       (add-triangle(list a2 b2 b1))
+		       (add-tc i j))))
+	
+				
+    (values (make-instance 'buffer :data (apply #'concatenate 'vector (reverse points)))
+	    (make-instance 'index-buffer 
+			   :data (loop for i from 0 below (* 3 2 w h)
+				    collect i))
+	    (make-instance 'buffer :stride 2 :data (apply #'concatenate 'vector (reverse tex-coords)))))))
 
 
     
