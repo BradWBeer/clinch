@@ -5,7 +5,7 @@
 (ql:quickload :clinch-classimp)
 
 (defparameter scene-path
-  "/home/warweasle/work/tools/assimp/test/models/X/Testwuson.X")
+  "/home/warweasle/work/external/assimp/test/models/BLEND/HUMAN.blend")
 
 (defparameter *node* nil)
 (defparameter *projection* nil)
@@ -14,7 +14,7 @@
 (defun init-test ()
   (setf *node* (make-instance 'clinch:node :parent nil))
   (clinch:translate *node* (clinch:v! 0 0 -2))
-  (clinch:add-child *node* (clinch:import-mesh scene-path)))
+  (clinch:add-child *node* (clinch::import-scene scene-path)))
 		    
 
 ;; Next runs one time before the next on-idle.
