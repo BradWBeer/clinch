@@ -1,5 +1,22 @@
 (ql:quickload :alexandria)
 
+;; Chicken mesh: https://www.dropbox.com/s/j6loyxc2rswsavw/chickenV3.dae?dl=0
+;; 15:02 <warweasle> dto: Anything in ODE can be static if you don't
+;;                   give it a body.
+;; 15:02 <borodust> and that's the whole package
+;;                  https://www.dropbox.com/s/zmltkdkq2whiy6o/chicken.zip
+
+;;https://github.com/vurtun/nuklear
+
+;; 15:21 <Xach> warweasle: asdf:load-asd was what we discussed
+;;              yesterday. it seemed to work as you expected, right?
+;; 15:22 *** sellout- QUIT Quit: Leaving.
+;; 15:22 <warweasle> Xach: It only created the package, it didn't load
+;;                   the code.
+;; 15:22 <Xach> warweasle: right, but then you asdf:load-system it
+;; 15:22 <Xach> did that work?
+
+
 ;; a framebuffer object sorts whatever is inside it.
 ;; This is necessary because a topological sort
 ;; can jumble the state, such as background color or
