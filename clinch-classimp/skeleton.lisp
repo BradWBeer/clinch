@@ -53,15 +53,9 @@
 
 	(multiple-value-bind (vIdArr vWeightsArr) (fill-two-arrays-by-chunks tmp-weights +MAX-NUMER-OF-BONE/VERTEX+)
 	  
-	  (let ((num-vertices (/ (length vIdArr) +MAX-NUMER-OF-BONE/VERTEX+))
-		(num-bones (length (classimp:bones mesh))))
+	  (let ((num-vertices (/ (length vIdArr) +MAX-NUMER-OF-BONE/VERTEX+)))
 	    
 	    (!
-	      ;; (setf bb (make-instance 'clinch:buffer 
-	      ;; 			     :count num-bones
-	      ;; 			     :target :uniform-buffer
-	      ;; 			     :qtype :float
-	      ;; 			     :stride 16))
 	      
 	      (setf bb
 		    (cffi:foreign-alloc :float :count (* 16 +MAX-NUMER-OF-BONES+)))
