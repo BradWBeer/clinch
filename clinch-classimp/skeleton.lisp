@@ -76,7 +76,20 @@
 	      ;; 			     :qtype :float
 	      ;; 			     :stride 16))
 	      
+<<<<<<< 2f026bb0c1637c6861bd57634e28bb96acdf97ac
 
+=======
+	      (setf bb
+		    (cffi:foreign-alloc :float :count (* 16 +MAX-NUMER-OF-BONES+)))
+
+	      (loop 
+		   with identity = (m4:identity)
+		 for x from 0 below
+		   (* 16 clinch::+MAX-NUMER-OF-BONES+) by 16
+		 do (loop for y from 0 below 16
+		       do (setf (cffi:mem-aref bb :float (+ y x))
+				(elt identity y))))
+>>>>>>> can view animated meshes without animating them first.
 	      
 	      (setf bib (make-instance 'clinch:buffer 
 				       :count num-vertices
