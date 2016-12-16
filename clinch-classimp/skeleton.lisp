@@ -55,6 +55,19 @@
 	  
 	  (let ((num-vertices (/ (length vIdArr) +MAX-NUMER-OF-BONE/VERTEX+))
 		(num-bones (length (classimp:bones mesh))))
+
+	    (setf bb
+		  (cffi:foreign-alloc :float :count (* 16 +MAX-NUMER-OF-BONES+)))
+	    (loop
+	       for x from 0 by 16
+	       for b in (clinch::bones this)
+	       for o in (clinch::bone-offsets this)
+	       do (loop
+		       with identity = (m4:identity)
+		     for y from 0 below 16
+		     for m across 
+		     do (setf (cffi:mem-aref buf :float (+ x y)) m)))
+	    
 	    
 	    (!
 	      ;; (setf bb (make-instance 'clinch:buffer 
@@ -63,8 +76,7 @@
 	      ;; 			     :qtype :float
 	      ;; 			     :stride 16))
 	      
-	      (setf bb
-		    (cffi:foreign-alloc :float :count (* 16 +MAX-NUMER-OF-BONES+)))
+
 	      
 	      (setf bib (make-instance 'clinch:buffer 
 				       :count num-vertices
