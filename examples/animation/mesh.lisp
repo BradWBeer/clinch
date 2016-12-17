@@ -202,9 +202,12 @@
 
 (defun test-step (animation time)
 
- 
+
+  ;;(ode:physics-step 1/60 (cffi:callback physics-near-callback)))
+
   ;;(get-keyframe animation (mod time (run-length animation)))
 
+    (ode:physics-step *world* *space*)
 
   ;;(update (node ao))
   ;;(update skelly)

@@ -134,3 +134,11 @@
 	    o
 	    a)))
 
+(defun load-height-map (path)
+  (freeimage:with-loaded-32bit-map (path
+				    :bitvar bits 
+				    :widthvar w 
+				    :heightvar h)
+    (cons (cons w h)
+	  (loop for x from 0 below (* w h 4) by 4
+	     collect (cffi:mem-aref bits :unsigned-char x)))))

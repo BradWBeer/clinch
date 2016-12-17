@@ -89,11 +89,11 @@
 		 :parent parent
 		 :shader-program (or shader-program (get-generic-single-texture-shader))
 		 :indexes (make-quad-indices)
-		 :attributes `(("v" . ,(make-quad-vertexes width height :center center))
+		 :attributes (copy-list `(("v" . ,(make-quad-vertexes width height :center center)))
 			       ("tc1" . ,(make-quad-texture-coordinates)))
-		 :uniforms `(("M" . :model)
-			     ("P" . :projection)
-			     ("t1" . ,(or texture (get-default-texture))))))
+		 :uniforms (copy-list `(("M" . :model)
+					("P" . :projection)
+					("t1" . ,(or texture (get-default-texture)))))))
 
 (defmethod make-quad-for-texture ((this texture) &key width height (center :center) shader-program parent no-parent)
   "Creates a quad for a texture which defaults to texture's width and height."
@@ -123,16 +123,24 @@
 
 
 (defun make-sphere ()
-  (multiple-value-bind (verts indices) (get-sphere-vertex-normal-and-index-buffers)
+  (multiple-value-bind (verts indices normals) (get-sphere-vertex-normal-and-index-buffers)
     
     (make-instance 'clinch:entity
 		   :parent nil
-		   :shader-program (get-generic-single-color-shader)
+		   :shader-program (get-generic-single-diffuse-light-shader)
 		   :indexes indices
-		   :attributes `(("v" . ,verts))
-		   :uniforms `(("M" . :model)
-			       ("P" . :projection)
-			       ("color" . (1 1 1 1))))))
+		   :attributes (copy-list `(("v" . ,verts)
+					    ("n" . ,normals)
+					    ("c" . (1.0 1.0 1.0 1.0))
+					    ("tc1" . (0 0))))
+		   :uniforms (copy-list `(("M" . :model)
+					  ("P" . :projection)
+					  ("N" . :normal)
+					  ("t1" . ,(get-identity-texture))
+					  ("ambientLight" . (.2 .2 .2))
+					  ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
+					  ("lightIntensity" . (.8 .8 .8)))))))
+
 
 
 ;; Interesting note: the normals are the same as the vertices.    
@@ -187,10 +195,10 @@
 		   :parent nil
 		   :shader-program (get-generic-single-color-shader)
 		   :indexes indices
-		   :attributes `(("v" . ,verts))
-		   :uniforms `(("M" . :model)
-			       ("P" . :projection)
-			       ("color" . (1 1 1 1))))))
+		   :attributes (copy-list `(("v" . ,verts)))
+		   :uniforms (copy-list `(("M" . :model)
+					  ("P" . :projection)
+					  ("color" . (1 1 1 1)))))))
 
 
 (defun get-box-vertex-normal-texture-and-index-buffers ()
@@ -298,10 +306,10 @@
 		   :parent nil
 		   :shader-program (get-generic-single-color-shader)
 		   :indexes indices
-		   :attributes `(("v" . ,verts))
-		   :uniforms `(("M" . :model)
-			       ("P" . :projection)
-			       ("color" . (1 1 1 1))))))
+		   :attributes (copy-list `(("v" . ,verts)))
+		   :uniforms (copy-list `(("M" . :model)
+					  ("P" . :projection)
+					  ("color" . (1 1 1 1)))))))
 
 
 (defun get-cylinder-vertex-normal-and-index-buffers (sides)
@@ -412,18 +420,18 @@
 		   :parent nil
 		   :shader-program (get-generic-single-diffuse-light-shader)
 		   :indexes indices
-		   :attributes `(("v" . ,verts)
-				 ("n" . ,normals)
-				 ("c" . (1.0 1.0 1.0 1.0))
-				 ("tc1" . ,tex)) ;;,(or texture-coordinate-buffer '(0 0))))
-		   :uniforms `(("M" . :model)
-			       ("P" . :projection)
-			       ("N" . :normal)
-			       ("t1" . ,(or texture (get-identity-texture)))
-			       ("ambientLight" . (.2 .2 .2))
-			       ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
-			       ("lightIntensity" . (.8 .8 .8))))))
-
+		   :attributes (copy-list `(("v" . ,verts)
+					    ("n" . ,normals)
+					    ("c" . (1.0 1.0 1.0 1.0))
+					    ("tc1" . ,tex))) ;;,(or texture-coordinate-buffer '(0 0))))
+		   :uniforms (copy-list `(("M" . :model)
+					  ("P" . :projection)
+					  ("N" . :normal)
+					  ("t1" . ,(or texture (get-identity-texture)))
+					  ("ambientLight" . (.2 .2 .2))
+					  ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
+					  ("lightIntensity" . (.8 .8 .8)))))))
+  
 ;; :attributes `(("v" . ,verts)
 ;; 	      ("n" . ,normals))
 ;; :uniforms `(("M" . :model)
