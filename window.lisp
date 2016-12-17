@@ -491,7 +491,12 @@ working while cepl runs"
                     *generic-single-diffuse-light-animation-shader* nil
                     *generic-single-diffuse-light-shader* nil
                     *generic-single-diffuse-light-per-vertex-color* nil
-                    *default-texture* nil))))))))
+                    *default-texture* nil)
+
+	      (maphash (lambda (k v)
+		    (unload v))		    
+		  *generic-shader-hash-table*)
+	      (setf *generic-shader-hash-table* (make-hash-table)))))))))
 
 (defun uninit ()
   (with-main
