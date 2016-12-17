@@ -100,7 +100,7 @@
 					       ("N" . :normal)
 					       ("t1" . ,(or texture (get-identity-texture)))
 					       ("ambientLight" . (.2 .2 .2))
-					       ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
+					       ("lightDirection" . (0.5772705 -0.5772705 -0.5772705))
 					       ("lightIntensity" . (.8 .8 .8)))))))
     (when bones
       (setf (uniform entity "bones") bones
