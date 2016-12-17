@@ -401,8 +401,52 @@
 	    (make-instance 'index-buffer 
 			   :data (loop for i from 0 below (* 3 2 w h)
 				    collect i))
+	    (make-instance 'buffer :data (apply #'concatenate 'vector (reverse normals)))
 	    (make-instance 'buffer :stride 2 :data (apply #'concatenate 'vector (reverse tex-coords)))))))
 
+
+(defun make-heightmap-entity (height-map w h &optional texture)
+  (multiple-value-bind (verts indices normals tex) (heightmap->buffers height-map w h)
+    
+    (make-instance 'clinch:entity
+		   :parent nil
+		   :shader-program (get-generic-single-diffuse-light-shader)
+		   :indexes indices
+		   :attributes `(("v" . ,verts)
+				 ("n" . ,normals)
+				 ("c" . (1.0 1.0 1.0 1.0))
+				 ("tc1" . ,tex)) ;;,(or texture-coordinate-buffer '(0 0))))
+		   :uniforms `(("M" . :model)
+			       ("P" . :projection)
+			       ("N" . :normal)
+			       ("t1" . ,(or texture (get-identity-texture)))
+			       ("ambientLight" . (.2 .2 .2))
+			       ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
+			       ("lightIntensity" . (.8 .8 .8))))))
+
+;; :attributes `(("v" . ,verts)
+;; 	      ("n" . ,normals))
+;; :uniforms `(("M" . :model)
+;; 	    ("P" . :projection)
+;; 	    ("color" . (1 1 1 1))))))
+
+;; (make-instance 'clinch:entity
+;; 	       :parent parent
+;; 	       :shader-program (cond (shader-program shader-program)
+;; 					      (bones (get-generic-single-diffuse-light-animation-shader))
+;; 					      (t (get-generic-single-diffuse-light-shader)))
+;; 			:indexes index-buffer
+;; 			:attributes `(("v" . ,vertex-buffer)
+;; 				      ("n" . ,normal-buffer)
+;; 				      ("c" . ,(or vertex-color-buffer '(1.0 1.0 1.0 1.0)))
+;; 				      ("tc1" . ,(or texture-coordinate-buffer '(0 0))))
+;; 			:uniforms `(("M" . :model)
+;; 				    ("P" . :projection)
+;; 				    ("N" . :normal)
+;; 				    ("t1" . ,(or texture (get-identity-texture)))
+;; 				    ("ambientLight" . (.2 .2 .2))
+;; 				    ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
+;; 				    ("lightIntensity" . (.8 .8 .8))))))
 
     
 ;; (setf diamond '(#(0.0  1.0 0.0) #(-0.70710677 0.0 0.70710677) #(0.70710677 0.0 0.70710677)

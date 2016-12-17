@@ -118,5 +118,20 @@
 							(directory-namestring
 							 (asdf:system-relative-pathname :clinch "clinch.asd"))
 							"shaders/generic-single-diffuse-light-per-vertex-color.frag")))))))
-			   
 
+(defun get-generic-single-color-shader ()
+  (let ((shader (gethash 'generic-single-color *generic-shader-hash-table*)))
+    (if (and shader (program shader)) shader
+	(setf (gethash 'generic-single-color *generic-shader-hash-table*)
+	      (make-instance 'clinch:shader-program
+			     :name "generic-single-color-shader"
+			     :vertex-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-color-shader.vert"))
+			   :fragment-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-color-shader.frag")))))))
