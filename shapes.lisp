@@ -431,7 +431,88 @@
 					  ("ambientLight" . (.2 .2 .2))
 					  ("lightDirection" . (0.5772705 -0.5772705 -0.5772705))
 					  ("lightIntensity" . (.8 .8 .8)))))))
+
+
+
+(defun make-dummy-entity (num-points triangles &key texture)
   
+    (! (let ((indexes (make-instance 'index-buffer :count (* triangles 3)))
+	     (points  (make-instance 'buffer :count (* num-points 3)))
+	     (normals (make-instance 'buffer :count (* num-points 3)))
+	     (tex-coords (make-instance 'buffer :count (* num-points 2))))
+
+        (make-instance 'clinch:entity
+		   :parent nil
+		   :shader-program (get-generic-single-diffuse-light-shader)
+		   :indexes indexes
+		   :attributes (copy-list `(("v" . ,points)
+					    ("n" . ,normals)
+					    ("c" . (1.0 1.0 1.0 1.0))
+					    ("tc1" . ,tex-coords)))
+		   :uniforms (copy-list `(("M" . :model)
+					  ("P" . :projection)
+					  ("N" . :normal)
+					  ("t1" . ,(or texture (get-identity-texture)))
+					  ("ambientLight" . (.2 .2 .2))
+					  ("lightDirection" . (0.5772705 -0.5772705 -0.5772705))
+					  ("lightIntensity" . (.8 .8 .8))))))))
+
+(defmethod delete-entity ((this entity) &key)
+
+  (map nil #'unload (attributes this))
+  ;;(map nil #'unload (uniforms this))
+  (unload (indexes this))
+  (unload this)
+  nil)
+
+(defun set-point (arr num x y z)
+  (setf (elt arr (+ num 0)) x)
+  (setf (elt arr (+ num 1)) y)
+  (setf (elt arr (+ num 2)) z))
+
+(defmacro average-vectors (&rest v)
+  `(map 'list (lambda (x)
+		(/ x 4))
+	(map 'list #'+
+	     ,@v)))
+	    
+
+(defun set-square (arr w h x y index v n tc)
+  ;; Each square needs 4 heights.
+  ;; the heights are given x and y (z really) locations
+  ;; And a 5th one is made from the average....
+  (let* ((bl (+ x (* y w)))
+	 (br (1+ bl))
+	 (tl (+ bl w))
+	 (tr (1+ tl)))
+
+    
+    ))
+
+(defun tst (e arr w h &key texture)
+  (let* ((squares (* (1- w) (1- h)))
+	 (triangles (* squares 4))
+	 (num-points (* triangles 3))
+	 (indexes)
+	 (points)
+	 (normals)
+	 (tex-coords))
+	
+    ;; So processing can be done in another thread...    
+    (! 
+      ;;(setf e (make-dummy-entity num-points triangles))
+      (setf indexes (pullg (indexes e))
+	    points  (pullg (attribute e "v"))
+	    normals (pullg (attribute e "n"))
+	    tex-coords (pullg (attribute e "tc1"))))
+
+    ;; Now create the data...
+    (loop for x from 0 below (length arr) 
+       do (setf (elt points (* x 3)) 
+		(elt arr x)))))
+
+
+
 ;; :attributes `(("v" . ,verts)
 ;; 	      ("n" . ,normals))
 ;; :uniforms `(("M" . :model)

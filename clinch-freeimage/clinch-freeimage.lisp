@@ -135,10 +135,17 @@
 	    a)))
 
 (defun load-height-map (path)
-  (freeimage:with-loaded-32bit-map (path
+  (freeimage:with-loaded-24bit-map (path
 				    :bitvar bits 
 				    :widthvar w 
 				    :heightvar h)
-    (cons (cons w h)
-	  (loop for x from 0 below (* w h 4) by 4
-	     collect (cffi:mem-aref bits :unsigned-char x)))))
+    (values
+     
+     (loop for x from 0 below (* w h 3) by 3
+	append (multiple-value-bind (a b)
+		   (floor (/ x 3) w)
+		 (list (float b)
+		       (/ (cffi:mem-aref bits :unsigned-char x) 
+			  255.0)
+		       (float a))))
+     w h)))

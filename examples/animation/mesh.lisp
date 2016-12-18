@@ -207,7 +207,7 @@
 
   ;;(get-keyframe animation (mod time (run-length animation)))
 
-    (ode:physics-step *world* *space*)
+  ;;(ode:physics-step *world* *space*)
 
   ;;(update (node ao))
   ;;(update skelly)
