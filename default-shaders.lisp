@@ -135,3 +135,24 @@
 							(directory-namestring
 							 (asdf:system-relative-pathname :clinch "clinch.asd"))
 							"shaders/generic-single-color-shader.frag")))))))
+
+(defmacro define-default-shader (name)
+  (let ((sym (intern (string-upcase (princ-to-string name))))
+	(func (intern (string-upcase (concatenate 'string "get-" (princ-to-string name)))))
+	(str (string-downcase (princ-to-string name))))
+    `(defun ,func ()
+       (let ((shader (gethash ',name *generic-shader-hash-table*)))
+	 (if (and shader (program shader)) shader
+	     (setf (gethash ',name *generic-shader-hash-table*)
+		   (make-instance 'shader-program
+				  :name ,str
+				  :vertex-shader (alexandria:read-file-into-string
+						  (concatenate 'string 
+							       (directory-namestring
+								(asdf:system-relative-pathname :clinch "clinch.asd"))
+							       (concatenate 'string "shaders/" ,str ".vert"))
+				  :fragment-shader (alexandria:read-file-into-string
+						    (concatenate 'string 
+								 (directory-namestring
+								  (asdf:system-relative-pathname :clinch "clinch.asd"))
+							       (concatenate 'string "shaders/" ,str ".vert")))))))))))
