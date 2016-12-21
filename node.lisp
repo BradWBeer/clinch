@@ -82,7 +82,7 @@ Shortcut is !s."))
   (:documentation "Multiplies nodes and matrix transforms."))
 
 (defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix (parent *root*))
-  "Creats a node with optional translation (vector3), rotation (quaterion) and translation (vector3). Can also use another node or matrix to set its values. If a node and another value is give, the other value is used starting with the matrix."
+  "Creates a node with optional translation (vector3), rotation (quaterion) and scaling (vector3). Can also use another node or matrix to set its value. If a node and another value is give, the other value is used starting with the matrix."
 
   (if matrix
       (multiple-value-bind (tr r s) (decompose-transform matrix)
@@ -177,7 +177,6 @@ Shortcut is !s."))
       (loop for i in (children this)
       	 if (typep i 'entity)
       	 do (render i :parent current-transform :projection projection)))
-
     ))
 
 (defmethod render ((this list) &key parent (projection *projection*))

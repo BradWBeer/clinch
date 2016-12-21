@@ -347,7 +347,7 @@
 			
 	      
 
-(defun random-heightfield (w h &optional (max 1) (x-offset (/ (1- w) -2)) (y-offset (/ (1- h) -2)))
+(defun random-heightfield (w h)
   (make-array (* w h 3)
 	      :element-type 'single-float
 	      :initial-contents 
@@ -355,9 +355,9 @@
 			   (coerce x 'single-float))
 		   (loop for i from 0 below w
 		      append (loop for j from 0 below h
-				append (list (+ i x-offset)
-					     (* max (/ (random 1000) 1000))
-					     (+ j y-offset)))))))
+				append (list j
+					     (/ (random 1000) 1000)
+					     i))))))
 
 
 (defun heightmap->buffers (arr w h)
@@ -475,7 +475,58 @@
 		(/ x 4))
 	(map 'list #'+
 	     ,@v)))
-	    
+
+(defun get-point-or-vert (arr x y w h)
+  (cond ((< x 0)  nil)
+	((>= x w) nil)
+	((< y 0)  nil)
+	((>= y h) nil)
+	(t (let ((pos (* 3 (+ x (* y w)))))
+	     
+	     (v! (elt arr (+ pos 0))
+		 (elt arr (+ pos 1))
+		 (elt arr (+ pos 2)))))))
+
+
+
+(defun get-square-normal (arr x y w h)
+  (list (clinch::get-point-or-vert arr 0 0 10 10) 
+	(clinch::get-point-or-vert arr 1 0 10 10) 
+	(clinch::get-point-or-vert arr 1 1 10 10) 
+	(clinch::get-point-or-vert arr 0 1 10 10)))
+ 
+
+(defun make-normal-array (arr w h)
+  (labels ((get-horz-normal (arr x y w h)
+	     (let* ((mid (clinch::get-point-or-vert arr x y w h))
+		    (tmp (v3:- (or (clinch::get-point-or-vert arr (1+ x) y w h) mid)
+			       (or (clinch::get-point-or-vert arr (1- x) y w h) mid))))
+	       (v3:normalize 
+		(v! (- (elt tmp 1)) (elt tmp 0) 0.0))))
+	   (get-vert-normal (arr x y w h)
+	     (let* ((mid (clinch::get-point-or-vert arr x y w h))
+		    (tmp (v3:- (or (clinch::get-point-or-vert arr x (1+ y) w h) mid)
+			       (or (clinch::get-point-or-vert arr x (1- y) w h) mid))))
+	       (v3:normalize 
+		(v! 0.0 (elt tmp 2) (- (elt tmp 1))))))
+	   (get-plus-normal (arr x y w h)
+	     (v3:normalize 
+	      (v3:/s 
+	       (v3:+ (clinch::get-horz-normal arr x y w h)
+		     (clinch::get-vert-normal arr x y w h))
+	       2.0))))
+
+  (loop for x from 0 below 10
+     append (loop for y from 0 below 10 
+	       append (coerce (clinch::get-plus-normal arr y x w h) 'list)))))
+
+
+(defun set-middle-points (arr w h)
+  (loop 
+     for x from 0 below (1- w)
+     append (loop for y from 0 below (1- h)
+	       collect (list (+ x .5) 0 (+ y .5)))))
+		     
 
 (defun set-square (arr w h x y index v n tc)
   ;; Each square needs 4 heights.

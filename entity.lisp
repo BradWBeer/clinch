@@ -92,6 +92,18 @@
 	      (setf uni (acons name new-value uni))))))
   new-value)
 
+(defmacro multiple-attribute-bind (args this &body body)
+  `(symbol-macrolet 
+       ,(loop for (var attr) in args
+	   collect `(,var (attribute ,this ,attr)))
+     ,@body))
+
+(defmacro multiple-uniform-bind (args this &body body)
+  `(symbol-macrolet 
+       ,(loop for (var attr) in args
+	   collect `(,var (uniform ,this ,attr)))
+     ,@body))
+
 (defun convert-non-buffer (this value &key projection parent)
   (cond ((eql value :projection) (or projection (m4:identity)))
 	((eql value :Model)      (or parent (m4:identity)))
