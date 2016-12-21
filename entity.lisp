@@ -102,7 +102,7 @@
 	((eql value :projection-1) (m4:affine-inverse projection))
 	((eql value :skeleton) (bone-buffer (bones this)))
 	((eql value :bone-ids)  (bone-id-buffer (bones this)))
-	((eql value :bone-widths) (weights-buffer (bones this)))
+	((eql value :bone-weights) (weights-buffer (bones this)))
 	((eql value :normal) (typecase parent
 			       (node
 				(m4:to-mat3 
