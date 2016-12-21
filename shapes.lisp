@@ -488,57 +488,68 @@
 		 (elt arr (+ pos 2)))))))
 
 
-
-(defun get-square-normal (arr x y w h)
-  (list (clinch::get-point-or-vert arr 0 0 10 10) 
-	(clinch::get-point-or-vert arr 1 0 10 10) 
-	(clinch::get-point-or-vert arr 1 1 10 10) 
-	(clinch::get-point-or-vert arr 0 1 10 10)))
- 
-
-(defun make-normal-array (arr w h)
-  (labels ((get-horz-normal (arr x y w h)
-	     (let* ((mid (clinch::get-point-or-vert arr x y w h))
-		    (tmp (v3:- (or (clinch::get-point-or-vert arr (1+ x) y w h) mid)
-			       (or (clinch::get-point-or-vert arr (1- x) y w h) mid))))
-	       (v3:normalize 
-		(v! (- (elt tmp 1)) (elt tmp 0) 0.0))))
-	   (get-vert-normal (arr x y w h)
-	     (let* ((mid (clinch::get-point-or-vert arr x y w h))
-		    (tmp (v3:- (or (clinch::get-point-or-vert arr x (1+ y) w h) mid)
-			       (or (clinch::get-point-or-vert arr x (1- y) w h) mid))))
-	       (v3:normalize 
-		(v! 0.0 (elt tmp 2) (- (elt tmp 1))))))
-	   (get-plus-normal (arr x y w h)
-	     (v3:normalize 
-	      (v3:/s 
-	       (v3:+ (clinch::get-horz-normal arr x y w h)
-		     (clinch::get-vert-normal arr x y w h))
-	       2.0))))
-
-  (loop for x from 0 below 10
-     append (loop for y from 0 below 10 
-	       append (coerce (clinch::get-plus-normal arr y x w h) 'list)))))
+(defun get-middle-square-and-normal (arr x y w h)
+  (let* ((bl (get-point-or-vert arr x y w h))
+	 (br (get-point-or-vert arr (1+ x) y w h))
+	 (tl (get-point-or-vert arr x (1+ y) w h))
+	 (tr (get-point-or-vert arr (1+ x) (1+ y) w h))
+	 (center (v3:/s (v3:+ (v3:+ (v3:+ bl br) tl) tr)
+			4.0))
+	 (bl- (v3:- bl center))
+	 (br- (v3:- br center))
+	 (tl- (v3:- tl center))
+	 (tr- (v3:- tr center)))
+    (values
+     (v3:normalize
+      (reduce #'v3:+ 
+	      (list (v3:cross br- bl-)
+		    (v3:cross bl- tl-)
+		    (v3:cross tl- tr-)
+		    (v3:cross tr- br-))))
+     center)))
 
 
-(defun set-middle-points (arr w h)
-  (loop 
-     for x from 0 below (1- w)
-     append (loop for y from 0 below (1- h)
-	       collect (list (+ x .5) 0 (+ y .5)))))
+(defun get-middle-squares-and-normals (arr w h)
+  (let ((tmp (loop for y from 0 below (1- h)
+		append (loop for x from 0 below (1- w)
+			  collect (multiple-value-bind (a b) 
+				      (get-middle-square-and-normal arr x y w h)
+				    (list a b (list (/ (+ .5 x) (1- w))
+						    (/ (+ .5 y) (1- h)))))))))
+    (values (map 'list #'second tmp)  ;; vertexes
+	    (map 'list #'first tmp)   ;; normals 
+	    (map 'list #'third tmp))));; tex-coords 
+	    
+
+(defun get-height-node-normal (arr x y w h)
+
+  (let ((c (get-point-or-vert arr x y w h)))
+    (labels ((get-vec-or-none (x y)
+	       (let ((p (get-point-or-vert arr x y w h)))
+		 (when p 
+		   (v3:- p c))))
+	     (cross-x (a b)
+	       (if (and a b)
+		   (v3:cross a b)
+		   (v! 0 0 0))))
+      
+      (let ((l (get-vec-or-none (1- x) y))
+	    (r (get-vec-or-none (1+ x) y))
+	    (b (get-vec-or-none x (1- y)))
+	    (top  (get-vec-or-none x (1+ y))))
+	
+	(v3:normalize 
+	 (reduce #'v3:+ (list 
+			 (cross-x l top)
+			 (cross-x b l)
+			 (cross-x r b)
+			 (cross-x top r))))))))
+
+(defun get-height-node-normals (arr w h)
+  (loop for y from 0 below h
+       append (loop for x from 0 below w
+		 collect (get-height-node-normal arr x y w h))))
 		     
-
-(defun set-square (arr w h x y index v n tc)
-  ;; Each square needs 4 heights.
-  ;; the heights are given x and y (z really) locations
-  ;; And a 5th one is made from the average....
-  (let* ((bl (+ x (* y w)))
-	 (br (1+ bl))
-	 (tl (+ bl w))
-	 (tr (1+ tl)))
-
-    
-    ))
 
 (defun tst (e arr w h &key texture)
   (let* ((squares (* (1- w) (1- h)))

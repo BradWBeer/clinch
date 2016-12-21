@@ -92,13 +92,13 @@
 	      (setf uni (acons name new-value uni))))))
   new-value)
 
-(defmacro multiple-attribute-bind (args this &body body)
+(defmacro with-attributes (args this &body body)
   `(symbol-macrolet 
        ,(loop for (var attr) in args
 	   collect `(,var (attribute ,this ,attr)))
      ,@body))
 
-(defmacro multiple-uniform-bind (args this &body body)
+(defmacro with-uniforms (args this &body body)
   `(symbol-macrolet 
        ,(loop for (var attr) in args
 	   collect `(,var (uniform ,this ,attr)))
