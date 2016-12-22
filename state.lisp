@@ -15,12 +15,12 @@
   ;; (gl:depth-range 0.0 1.0))
 
 
-(defun get-or-set-up-enabled-state (name enable)
-  (multiple-value-bind (value found?) (gethash name *render-states*)
-    (if found? 
-	(unless (eql enable value)
-	  (!gl:enable 
+;; (defun get-or-set-up-enabled-state (name enable)
+;;   (multiple-value-bind (value found?) (gethash name *render-states*)
+;;     (if found? 
+;; 	(unless (eql enable value)
+;; 	  (!gl:enable 
 	
 
-(defun !enable (value)
+;; (defun !enable (value)
   
