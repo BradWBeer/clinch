@@ -119,6 +119,58 @@
 			  usage)
 	 (setf loaded? nil))))))
 
+(defmethod resize-buffer ((this buffer) size)
+  ;; size in entries...a point would be 3 floats.
+  (with-slots ((type    type)
+	       (id      id)
+	       (vcount  vertex-count)
+	       (target  target)
+	       (stride  stride)
+	       (usage   usage)
+	       (loaded? loaded))  this
+    
+    (when id
+
+      (let ((new-id))
+
+	(! (setf new-id (car (gl:gen-buffers 1)))
+	   (when new-id
+	     
+	     (gl:bind-buffer new-id :copy-write-buffer)
+	     (%gl:Buffer-Data target
+			      ;;(size-in-bytes this)
+			    ;; figure out the way to do sizes...
+			    (cffi:null-pointer)
+			    usage)
+	   (bind this :copy-read-buffer)
+	   ;; need to min the lengths in bytes...
+	   (gl:copy-buffer-sub-data :copy-read-buffer :copy-write-buffer 0 0 (size-in-bytes this))
+
+	   (gl:delete-buffers (list (id this)))
+	   (setf id new-id)
+	   (setf vcount size)
+	   (gl:bind-buffer target id)	  
+	   )
+	  ;; glBindBuffer           (GL_COPY_READ_BUFFER, other.m_indexBuffer);
+	  ;; glGetBufferParameteriv (GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &size);
+
+	  ;; glBindBuffer           (GL_COPY_WRITE_BUFFER, m_indexBuffer);
+	  ;; glBufferData           (GL_COPY_WRITE_BUFFER, size, nullptr, GL_STATIC_DRAW);
+
+	  ;; glCopyBufferSubData    (GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, size);
+	  
+	 (trivial-garbage:cancel-finalization this)
+	 (remove-uncollected this)
+	 
+	 (trivial-garbage:finalize this
+				   (let ((id-value id)
+					 (key (key this)))
+				     (lambda ()
+				       
+				       (remhash key *uncollected*)
+				       (sdl2:in-main-thread (:background t)
+							    (gl:delete-buffers (list id-value))))))
+  )
 
 (defmethod data-from-pointer ((this buffer) pointer)
   (bind this)
@@ -129,10 +181,10 @@
   (unbind this))
 
 
-(defmethod bind ((this buffer) &key index offset length)
+(defmethod bind ((this buffer) &key index offset length target)
   "Wrapper around glBindBuffer. Binds this buffer for use."
   (if (or offset length)
-      (cl-opengl-bindings:bind-buffer-range  (target this) 
+      (cl-opengl-bindings:bind-buffer-range  (or target (target this))
 					     (or index 0)
 					     (id this)
 					     (or offset 0)

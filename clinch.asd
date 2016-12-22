@@ -19,6 +19,7 @@
 	       (:file "clinch")
 	       (:file "transform")
 	       (:file "node")
+	       (:file "state")
 	       (:file "shaders")
 	       (:file "shader-program")
 	       (:file "default-shaders")
