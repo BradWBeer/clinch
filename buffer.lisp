@@ -135,30 +135,31 @@
 
 	(! (setf new-id (car (gl:gen-buffers 1)))
 	   (when new-id
-	     
-	     (gl:bind-buffer new-id :copy-write-buffer)
-	     (%gl:Buffer-Data target
-			      ;;(size-in-bytes this)
-			    ;; figure out the way to do sizes...
-			    (cffi:null-pointer)
-			    usage)
-	   (bind this :copy-read-buffer)
-	   ;; need to min the lengths in bytes...
-	   (gl:copy-buffer-sub-data :copy-read-buffer :copy-write-buffer 0 0 (size-in-bytes this))
+	     (let ((new-size  (* (cffi:foreign-type-size (qtype this)) size (stride this))))
+	       
+	       (gl:bind-buffer (target this) new-id)
+	       (%gl:Buffer-Data target
+				new-size
+				(cffi:null-pointer)
+				usage)
+	       
+	       (cffi:with-foreign-object (p :int) 
+		 (!
+		   (gl:bind-buffer target new-id)
+		   (%gl:get-buffer-parameter-iv :array-buffer :buffer-size p))
+		 (print (cffi:mem-aref p :int)))
 
+	       
+	       (gl:bind-buffer :copy-write-buffer new-id)
+	       (bind this :target :copy-read-buffer)
+	       ;; ;; 	   ;; need to min the lengths in bytes...
+	       (%gl:copy-buffer-sub-data :copy-read-buffer :copy-write-buffer 0 0 (min (size-in-bytes this) new-size))
+	      
 	   (gl:delete-buffers (list (id this)))
 	   (setf id new-id)
 	   (setf vcount size)
-	   (gl:bind-buffer target id)	  
-	   )
-	  ;; glBindBuffer           (GL_COPY_READ_BUFFER, other.m_indexBuffer);
-	  ;; glGetBufferParameteriv (GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &size);
-
-	  ;; glBindBuffer           (GL_COPY_WRITE_BUFFER, m_indexBuffer);
-	  ;; glBufferData           (GL_COPY_WRITE_BUFFER, size, nullptr, GL_STATIC_DRAW);
-
-	  ;; glCopyBufferSubData    (GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, size);
-	  
+	   (gl:bind-buffer target id))))
+	   
 	 (trivial-garbage:cancel-finalization this)
 	 (remove-uncollected this)
 	 
@@ -169,16 +170,7 @@
 				       
 				       (remhash key *uncollected*)
 				       (sdl2:in-main-thread (:background t)
-							    (gl:delete-buffers (list id-value))))))
-  )
-
-(defmethod data-from-pointer ((this buffer) pointer)
-  (bind this)
-  (%gl:Buffer-Data (target this)
-		   (size-in-bytes this)
-		   pointer
-		   (usage this))
-  (unbind this))
+							    (gl:delete-buffers (list id-value))))))))))
 
 
 (defmethod bind ((this buffer) &key index offset length target)
@@ -190,6 +182,14 @@
 					     (or offset 0)
 					     (or length (- (vertex-count this) (or offset 0))))
       (gl:bind-buffer (target this) (id this))))
+
+(defmethod query-buffer-size ((this buffer) &key)
+  (cffi:with-foreign-object (p :int) 
+    (!
+      (bind this)
+      (%gl:get-buffer-parameter-iv :array-buffer :buffer-size p))
+    (cffi:mem-aref p :int)))
+
 
 (defmethod unbind ((this buffer) &key)
   "Wrapper around glBindBuffer with buffer 0, or no buffer."

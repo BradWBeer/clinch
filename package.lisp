@@ -103,7 +103,7 @@
    
    #:shader-source #:program #:shader-compile #:frag-shader #:vert-shader #:attributes #:with-attributes #:uniforms #:with-uniforms #:use-shader-program #:get-uniform-id #:get-attribute-id #:attach-uniform #:unload #:bind-static-values-to-attribute
    
-   #:buffer #:index-buffer #:id #:qtype #:usage #:stride #:vertex-count #:target #:loaded #:get-size #:size-in-bytes #:bind-buffer-to-vertex-array #:bind-buffer-to-attribute-array #:draw-with-index-buffer #:draw-with-ranged-index-buffer #:map-buffer #:unmap-buffer #:unload #:with-mapped-buffer #:get-buffer-data
+   #:buffer #:index-buffer #:id #:qtype #:usage #:stride #:vertex-count #:target #:loaded #:get-size #:size-in-bytes #:query-buffer-size #:resize-buffer #:bind-buffer-to-vertex-array #:bind-buffer-to-attribute-array #:draw-with-index-buffer #:draw-with-ranged-index-buffer #:map-buffer #:unmap-buffer #:unload #:with-mapped-buffer #:get-buffer-data
    
    #:texture #:tex-id #:width #:height #:data-format #:stride #:target #:bind #:map-buffer #:unmap-buffer #:bind-sampler  #:unload #:bind-with-pbo #:unbind-with-pbo #:with-temporary-pbo #:set-texture-color #:get-default-texture #:get-identity-texture
    #:transform #:make-vector #:transform-point #:transform-points #:ray-triangle-intersect? #:make-matrix #:degrees->radians #:radians->degrees #:d->r #:r->d #:qtype #:transform #:transform->list #:m* #:transpose #:determinate #:scale #:translate #:rotate #:make-orthogonal-transform #:make-frustum-transform  #:make-perspective-transform #:unproject #:get-screen-direction #:data-from-pointer #:make-pbo-for-texture #:make-quad #:make-quad-for-texture #:make-quad-and-texture
