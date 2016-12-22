@@ -130,7 +130,6 @@
 	       (loaded? loaded))  this
     
     (when id
-
       (let ((new-id))
 
 	(! (setf new-id (car (gl:gen-buffers 1)))
@@ -143,15 +142,9 @@
 				(cffi:null-pointer)
 				usage)
 	       
-	       (cffi:with-foreign-object (p :int) 
-		 (!
-		   (gl:bind-buffer target new-id)
-		   (%gl:get-buffer-parameter-iv :array-buffer :buffer-size p))
-		 (print (cffi:mem-aref p :int)))
-
-	       
 	       (gl:bind-buffer :copy-write-buffer new-id)
 	       (bind this :target :copy-read-buffer)
+	       
 	       ;; ;; 	   ;; need to min the lengths in bytes...
 	       (%gl:copy-buffer-sub-data :copy-read-buffer :copy-write-buffer 0 0 (min (size-in-bytes this) new-size))
 	      
@@ -160,17 +153,17 @@
 	   (setf vcount size)
 	   (gl:bind-buffer target id))))
 	   
-	 (trivial-garbage:cancel-finalization this)
-	 (remove-uncollected this)
-	 
-	 (trivial-garbage:finalize this
-				   (let ((id-value id)
-					 (key (key this)))
-				     (lambda ()
-				       
-				       (remhash key *uncollected*)
-				       (sdl2:in-main-thread (:background t)
-							    (gl:delete-buffers (list id-value))))))))))
+	(trivial-garbage:cancel-finalization this)
+	(remove-uncollected this)
+	
+	(trivial-garbage:finalize this
+				  (let ((id-value id)
+					(key (key this)))
+				    (lambda ()
+				      
+				      (remhash key *uncollected*)
+				      (sdl2:in-main-thread (:background t)
+					(gl:delete-buffers (list id-value))))))))))
 
 
 (defmethod bind ((this buffer) &key index offset length target)
@@ -181,7 +174,7 @@
 					     (id this)
 					     (or offset 0)
 					     (or length (- (vertex-count this) (or offset 0))))
-      (gl:bind-buffer (target this) (id this))))
+      (gl:bind-buffer (or target (target this)) (id this))))
 
 (defmethod query-buffer-size ((this buffer) &key)
   (cffi:with-foreign-object (p :int) 
