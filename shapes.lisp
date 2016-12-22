@@ -434,28 +434,30 @@
 
 
 
-(defun make-dummy-entity (num-points triangles &key texture)
-  
-    (! (let ((indexes (make-instance 'index-buffer :count (* triangles 3)))
-	     (points  (make-instance 'buffer :count (* num-points 3)))
-	     (normals (make-instance 'buffer :count (* num-points 3)))
-	     (tex-coords (make-instance 'buffer :count (* num-points 2))))
-
-        (make-instance 'clinch:entity
-		   :parent nil
-		   :shader-program (get-generic-single-diffuse-light-shader)
-		   :indexes indexes
-		   :attributes (copy-list `(("v" . ,points)
-					    ("n" . ,normals)
-					    ("c" . (1.0 1.0 1.0 1.0))
-					    ("tc1" . ,tex-coords)))
-		   :uniforms (copy-list `(("M" . :model)
-					  ("P" . :projection)
-					  ("N" . :normal)
-					  ("t1" . ,(or texture (get-identity-texture)))
-					  ("ambientLight" . (.2 .2 .2))
-					  ("lightDirection" . (0.5772705 -0.5772705 -0.5772705))
-					  ("lightIntensity" . (.8 .8 .8))))))))
+(defun make-height-map-entity (arr x y &key texture)
+  (multiple-value-bind (iarr varr narr tarr)
+      (clinch::make-height-map-arrays arr x y)
+    (! 
+      (let ((indexes (make-instance 'index-buffer :data iarr))
+	     (points  (make-instance 'buffer :data varr))
+	     (normals (make-instance 'buffer :data narr))
+	     (tex-coords (make-instance 'buffer :data tarr)))
+	 
+	 (make-instance 'clinch:entity
+			:parent nil
+			:shader-program (get-generic-single-diffuse-light-shader)
+			:indexes indexes
+			:attributes (copy-list `(("v" . ,points)
+						 ("n" . ,normals)
+						 ("c" . (1.0 1.0 1.0 1.0))
+						 ("tc1" . ,tex-coords)))
+			:uniforms (copy-list `(("M" . :model)
+					       ("P" . :projection)
+					       ("N" . :normal)
+					       ("t1" . ,(or texture (get-identity-texture)))
+					       ("ambientLight" . (.2 .2 .2))
+					       ("lightDirection" . (0.5772705 -0.5772705 -0.5772705))
+					       ("lightIntensity" . (.8 .8 .8)))))))))
 
 (defmethod delete-entity ((this entity) &key)
 
@@ -475,6 +477,10 @@
 		(/ x 4))
 	(map 'list #'+
 	     ,@v)))
+
+(defun flatten-list-of-arrays (lst)
+  (loop for i in lst
+       append (coerce i 'list)))
 
 (defun get-point-or-vert (arr x y w h)
   (cond ((< x 0)  nil)
@@ -516,9 +522,9 @@
 				      (get-middle-square-and-normal arr x y w h)
 				    (list a b (list (/ (+ .5 x) (1- w))
 						    (/ (+ .5 y) (1- h)))))))))
-    (values (map 'list #'second tmp)  ;; vertexes
-	    (map 'list #'first tmp)   ;; normals 
-	    (map 'list #'third tmp))));; tex-coords 
+    (values (flatten-list-of-arrays (map 'list #'second tmp))  ;; vertexes
+	    (flatten-list-of-arrays (map 'list #'first tmp))   ;; normals 
+	    (flatten-list-of-arrays (map 'list #'third tmp)))));; tex-coords 
 	    
 
 (defun get-height-node-normal (arr x y w h)
@@ -537,141 +543,61 @@
 	    (r (get-vec-or-none (1+ x) y))
 	    (b (get-vec-or-none x (1- y)))
 	    (top  (get-vec-or-none x (1+ y))))
-	
-	(v3:normalize 
-	 (reduce #'v3:+ (list 
-			 (cross-x l top)
-			 (cross-x b l)
-			 (cross-x r b)
-			 (cross-x top r))))))))
+	(coerce 
+	 (v3:normalize 
+	  (reduce #'v3:+ (list 
+			  (cross-x l top)
+			  (cross-x b l)
+			  (cross-x r b)
+			  (cross-x top r))))
+	 'list)))))
 
 (defun get-height-node-normals (arr w h)
   (loop for y from 0 below h
        append (loop for x from 0 below w
-		 collect (get-height-node-normal arr x y w h))))
-		     
+		 append (get-height-node-normal arr x y w h))))
 
-(defun tst (e arr w h &key texture)
-  (let* ((squares (* (1- w) (1- h)))
-	 (triangles (* squares 4))
-	 (num-points (* triangles 3))
-	 (indexes)
-	 (points)
-	 (normals)
-	 (tex-coords))
-	
-    ;; So processing can be done in another thread...    
-    (! 
-      ;;(setf e (make-dummy-entity num-points triangles))
-      (setf indexes (pullg (indexes e))
-	    points  (pullg (attribute e "v"))
-	    normals (pullg (attribute e "n"))
-	    tex-coords (pullg (attribute e "tc1"))))
+(defun get-tex-coords (w h)
+  (loop for y from 0 to 1 by (/ (1- h))
+       append (loop for x from 0 to 1 by (/ (1- w))
+		   append (list (float x) (float y)))))
 
-    ;; Now create the data...
-    (loop for x from 0 below (length arr) 
-       do (setf (elt points (* x 3)) 
-		(elt arr x)))))
+(defun make-height-map-quad (x y w h)
+  (let* ((quad (+ x (* y w)))
+	 (offset (* w h))
+	 (c (+ quad offset 1))
+	 (bl quad)
+	 (br (1+ quad))
+	 (tl (+ bl w))
+	 (tr (1+ tl)))
+    (list c bl br
+	  c br tr
+	  c tr tl
+	  c tl bl)))
+     
 
 
+(defun make-height-map-indexes (w h)
+  (loop 
+     for y from 0 below (1- h)
+     append (loop for x from 0 below (1- w)
+		 append (make-height-map-quad x y w h))))
 
-;; :attributes `(("v" . ,verts)
-;; 	      ("n" . ,normals))
-;; :uniforms `(("M" . :model)
-;; 	    ("P" . :projection)
-;; 	    ("color" . (1 1 1 1))))))
+(defun test-indexes (e w h)
+  (let ((i (clinch::make-height-map-indexes w h)))
+    (pushg (indexes e) (make-array (length i) :element-type '(UNSIGNED-BYTE 32) :initial-contents i))))
 
-;; (make-instance 'clinch:entity
-;; 	       :parent parent
-;; 	       :shader-program (cond (shader-program shader-program)
-;; 					      (bones (get-generic-single-diffuse-light-animation-shader))
-;; 					      (t (get-generic-single-diffuse-light-shader)))
-;; 			:indexes index-buffer
-;; 			:attributes `(("v" . ,vertex-buffer)
-;; 				      ("n" . ,normal-buffer)
-;; 				      ("c" . ,(or vertex-color-buffer '(1.0 1.0 1.0 1.0)))
-;; 				      ("tc1" . ,(or texture-coordinate-buffer '(0 0))))
-;; 			:uniforms `(("M" . :model)
-;; 				    ("P" . :projection)
-;; 				    ("N" . :normal)
-;; 				    ("t1" . ,(or texture (get-identity-texture)))
-;; 				    ("ambientLight" . (.2 .2 .2))
-;; 				    ("lightDirection" . (0.5772705 0.5772705 -0.5772705))
-;; 				    ("lightIntensity" . (.8 .8 .8))))))
-
-    
-;; (setf diamond '(#(0.0  1.0 0.0) #(-0.70710677 0.0 0.70710677) #(0.70710677 0.0 0.70710677)
-;; 		#(0.0  1.0 0.0) #(0.9659259 0.0 0.25881892) #(0.25881892 0.0 -0.9659259)
-;; 		#(0.0  1.0 0.0) #(-0.25881928 0.0 -0.9659258) #(-0.9659258 0.0 0.25881928)
-;; 		#(0.0 -1.0 0.0) #(-0.70710677 0.0 0.70710677) #(0.70710677 0.0 0.70710677)
-;; 		#(0.0 -1.0 0.0) #(0.9659259 0.0 0.25881892) #(0.25881892 0.0 -0.9659259)
-;; 		#(0.0 -1.0 0.0) #(-0.25881928 0.0 -0.9659258) #(-0.9659258 0.0 0.25881928)))
- 
-;; (let ((i '(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17)))
-;;   (make-array (length i) :initial-contents i))
-
-;; (defun subdivide (vectors indexes)
-;;   (let ((midpoint (midpoint vectors)))
-;;     (values (list (nth 0 vectors)
-;; 		  (nth 1 vectors)
-;; 		  (nth 2 vectors)
-;; 		  midpoint)
-;; 	    '((0 1 3) (1 2 3) (2 0 3)))))
-
-;; ;; returns indexes, vertexes, normals, and texcoords in values
-;; (defun make-sphere (radius rings sectors)
-
-;;   (let ((vertices  (make-array (* rings sectors 3)))
-;; 	(normals   (make-array (* rings sectors 3)))
-;; 	(texcoords (make-array (* rings sectors 2)))
-;; 	(indices   (make-array (* rings sectors 6)))
-;; 	(slice-r (/ (1- rings)))
-;; 	(slice-s (/ (1- sectors))))
-
-;;     (loop for r from 0 to (1- rings)
-;;        do (loop for s from 0 to (1- sectors)
-
-;; 	     for y = (sin (+ (/ pi -2)
-;; 			     (* pi r slice-r)))
-
-;; 	     for x = (* (cos (* pi 2 s slice-s))
-;; 			(sin (* pi r slice-r)))
-
-;; 	     for z =  (* (sin (* 2 pi s slice-s))
-;; 			 (sin (* pi r slice-r)))
-
-;; 	     do (let* ((triangle (+ (* r sectors) s))
-;; 		       (3t (* 3 triangle))
-;; 		       (2t (* 2 triangle))
-;; 		       (6t (* 6 triangle)))
-
-;; 		  (when (and (< (abs x) .01)
-;; 			     (< (abs y) .01)
-;; 			     (< (abs z) .01))
-
-;; 		    (format t "~A ~A was all zeros (~A ~A ~A)~%" r s x y z))
-
-;; 		  (setf (aref vertices (+ 3t 0)) (* radius x)
-;; 			(aref vertices (+ 3t 1)) (* radius y)
-;; 			(aref vertices (+ 3t 2)) (* radius z)
-
-;; 			(aref normals (+ 3t 0)) x
-;; 			(aref normals (+ 3t 1)) y
-;; 			(aref normals (+ 3t 2)) z
-
-;; 			(aref texcoords (+ 2t 0)) (* s slice-s)
-;; 			(aref texcoords (+ 2t 1)) (* r slice-r)
-
-;; 			(aref indices (+ 6t 0)) (+ (* r sectors) s)
-;; 			(aref indices (+ 6t 1)) (+ (* r sectors) s 1)
-;; 			(aref indices (+ 6t 2)) (+ (* (1+ r) sectors) s 1)
-
-;; 			(aref indices (+ 6t 3)) (+ (* r sectors) s)
-;; 			(aref indices (+ 6t 4)) (+ (* (1+ r) sectors) s 1)
-;; 			(aref indices (+ 6t 5)) (+ (* (1+ r) sectors) s)))))
+(defun make-height-map-arrays (arr w h)
+	   (let ((v1 (coerce arr 'list))
+		 (n1 (clinch::get-height-node-normals arr w h))
+		 (t1 (clinch::get-tex-coords w h))
+		 (len (+ (* w h) (* (1- w) (1- h)))))
+	     (multiple-value-bind (v2 n2 t2)
+		 (clinch::get-middle-squares-and-normals arr w h)
+	       (values (make-array (* (1- w) (1- h) 4 3) :initial-contents (make-height-map-indexes w h)) 
+		       (make-array (* len 3) :initial-contents (append v1 v2))
+		       (make-array (* len 3) :initial-contents (append n1 n2))
+		       (make-array (* len 2) :initial-contents (append t1 t2))))))
+	     
 
 
-;;     (values (coerce indices 'list)
-;; 	    (coerce vertices 'list)
-;; 	    (coerce normals 'list)
-;; 	    (coerce texcoords 'list))))
