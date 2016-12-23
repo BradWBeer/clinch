@@ -302,20 +302,38 @@
 	(%gl:get-buffer-sub-data (target this)
 				 (or offset 0)
 				 (or size full-length)
-				 p)))
-    arr))
+				 p))
+      (if (eql (qtype this) :unsigned-int)
+	  (let ((ret (make-array (get-size this) :element type :unsigned-int)))
+	    (loop for i from 0 below (get-size this)
+	       do (setf (elt ret i) 
+			(cffi:mem-aref p :unsigned-int i)))
+	    ret)
+	  arr))))
 
 (defmethod pushg ((this buffer) (data array) &key)
   "Sets the buffer data from a vector array."
-  (cffi:with-pointer-to-vector-data (p data)
-    (!
-      (bind this)
-      (%gl:Buffer-Data (target this)
-		       (size-in-bytes this)
-		       p
-		       (usage this))
-      (setf (loaded? this) t)))
-  data)
+  (if (eq (qtype this) :unsigned-int)
+      (cffi:with-foreign-object (p :unsigned-int (length data))
+	(loop for i from 0 below (length data)
+	     do (setf (cffi:mem-aref p :unsigned-int i) 
+		      (elt data i)))
+	(!
+	 (bind this)
+	 (%gl:Buffer-Data (target this)
+			  (size-in-bytes this)
+			  p
+			  (usage this))
+	 (setf (loaded? this) t)))
+      (cffi:with-pointer-to-vector-data (p data)
+	(!
+	 (bind this)
+	 (%gl:Buffer-Data (target this)
+			  (size-in-bytes this)
+			  p
+			  (usage this))
+	 (setf (loaded? this) t))))
+      data)
 
 (defmethod (setf !>) ((data array) (this buffer))
   (pushg this data))
