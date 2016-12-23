@@ -523,15 +523,15 @@
   (let* ((quad (+ x (* y (1- w))))
 	 (offset (* w h))
 	 (c (+ quad offset))
-	 (bl quad)
-	 (br (1+ quad))
+	 (bl (+ (* y w) x))
+	 (br (1+ bl))
 	 (tl (+ bl w))
 	 (tr (1+ tl)))
-    (print (list quad ));;c bl br tl tr))
+    (print (list quad c bl br tl tr))
     (list (v! c bl br)
 	  (v! c br tr)
-	   (v! c tr tl)
-	   (v! c tl bl))))
+	  (v! c tr tl)
+	  (v! c tl bl))))
      
 
 
