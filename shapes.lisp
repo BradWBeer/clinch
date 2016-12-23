@@ -349,6 +349,8 @@
 
 (defun random-heightfield (w h)
   (make-array (* w h 3)
+	      :adjustable t
+	      :fill-pointer t
 	      :element-type 'single-float
 	      :initial-contents 
 	      (map 'list (lambda (x)
@@ -360,83 +362,12 @@
 					     i))))))
 
 
-(defun heightmap->buffers (arr w h)
-  (let ((tx (/ (1- w)))
-	(ty (/ (1- h)))
-	(points)
-	(normals)
-	(tex-coords))
-    
-  (labels ((get-point (x)
-	     (let ((start (* 3 x)))
-	       (subseq arr start (+ 3 start))))
-	   
-	   (make-triangle (a b c)
-	     (let ((n (v3:normalize 
-		       (v3:cross (v3:- b a) (v3:- c a)))))
-	       (values (concatenate 'vector a b c)
-		       (concatenate 'vector n n n))))
-
-	   (add-triangle (a)
-	     (multiple-value-bind (p n)
-		 (apply #'make-triangle 
-			(map 'list #'get-point a))
-	        (push p points)
-	        (push n normals)))
-
-	   (add-tc (x y)
-	     (push (v! (* tx x) (* ty y)) tex-coords)
-	     (push (v! (* tx (1+ x)) (* ty y)) tex-coords)
-	     (push (v! (* tx x) (* ty (1+ y))) tex-coords)
-
-	     (push (v! (* tx (1+ x)) (* ty y)) tex-coords)
-	     (push (v! (* tx (1+ x)) (* ty (1+ y))) tex-coords)
-	     (push (v! (* tx x) (* ty (1+ y))) tex-coords)))
-	     
-    (loop for i from 0 below (1- w)
-       do (loop for j from 0 below (1- h)
-	     for a1 = (+ j (* w i))
-	     for a2 = (1+ a1)
-	     for b1 = (+ w a1)
-	     for b2 = (1+ b1)
-	       
-	     do (progn (add-triangle (list a1 a2 b1))
-		       (add-triangle(list a2 b2 b1))
-		       (add-tc i j))))
-	
-				
-    (values (make-instance 'buffer :data (apply #'concatenate 'vector (reverse points)))
-	    (make-instance 'index-buffer 
-			   :data (loop for i from 0 below (* 3 2 w h)
-				    collect i))
-	    (make-instance 'buffer :data (apply #'concatenate 'vector (reverse normals)))
-	    (make-instance 'buffer :stride 2 :data (apply #'concatenate 'vector (reverse tex-coords)))))))
-
-
-(defun make-heightmap-entity (height-map w h &optional texture)
-  (multiple-value-bind (verts indices normals tex) (heightmap->buffers height-map w h)
-    
-    (make-instance 'clinch:entity
-		   :parent nil
-		   :shader-program (get-generic-single-diffuse-light-shader)
-		   :indexes indices
-		   :attributes (copy-list `(("v" . ,verts)
-					    ("n" . ,normals)
-					    ("c" . (1.0 1.0 1.0 1.0))
-					    ("tc1" . ,tex))) ;;,(or texture-coordinate-buffer '(0 0))))
-		   :uniforms (copy-list `(("M" . :model)
-					  ("P" . :projection)
-					  ("N" . :normal)
-					  ("t1" . ,(or texture (get-identity-texture)))
-					  ("ambientLight" . (.2 .2 .2))
-					  ("lightDirection" . (0.5772705 -0.5772705 -0.5772705))
-					  ("lightIntensity" . (.8 .8 .8)))))))
 
 
 
 (defun make-height-map-entity (arr x y &key texture)
   (multiple-value-bind (iarr varr narr tarr)
-      (clinch::make-height-map-arrays arr x y)
+
     (! 
       (let ((indexes (make-instance 'index-buffer :data iarr))
 	     (points  (make-instance 'buffer :data varr))
@@ -467,137 +398,193 @@
   (unload this)
   nil)
 
-(defun set-point (arr num x y z)
-  (setf (elt arr (+ num 0)) x)
-  (setf (elt arr (+ num 1)) y)
-  (setf (elt arr (+ num 2)) z))
-
-(defmacro average-vectors (&rest v)
-  `(map 'list (lambda (x)
-		(/ x 4))
-	(map 'list #'+
-	     ,@v)))
-
-(defun flatten-list-of-arrays (lst)
-  (loop for i in lst
-       append (coerce i 'list)))
 
 (defun get-point-or-vert (arr x y w h)
+  
   (cond ((< x 0)  nil)
 	((>= x w) nil)
 	((< y 0)  nil)
 	((>= y h) nil)
 	(t (let ((pos (* 3 (+ x (* y w)))))
-	     
 	     (v! (elt arr (+ pos 0))
 		 (elt arr (+ pos 1))
 		 (elt arr (+ pos 2)))))))
 
 
-(defun get-middle-square-and-normal (arr x y w h)
-  (let* ((bl (get-point-or-vert arr x y w h))
-	 (br (get-point-or-vert arr (1+ x) y w h))
-	 (tl (get-point-or-vert arr x (1+ y) w h))
-	 (tr (get-point-or-vert arr (1+ x) (1+ y) w h))
-	 (center (v3:/s (v3:+ (v3:+ (v3:+ bl br) tl) tr)
-			4.0))
-	 (bl- (v3:- bl center))
-	 (br- (v3:- br center))
-	 (tl- (v3:- tl center))
-	 (tr- (v3:- tr center)))
-    (values
-     (v3:normalize
-      (reduce #'v3:+ 
-	      (list (v3:cross br- bl-)
-		    (v3:cross bl- tl-)
-		    (v3:cross tl- tr-)
-		    (v3:cross tr- br-))))
-     center)))
+(defun append-v3-to-array (arr v)
+  
+  (map nil (lambda (a)
+	     (vector-push-extend a arr))
+       v)
+  arr)
+		
+
+(defun get-square-corners (arr x y w h)
+  (list
+   (clinch::get-point-or-vert arr x y w h)
+   (clinch::get-point-or-vert arr (1+ x) y w h)
+   (clinch::get-point-or-vert arr x (1+ y) w h)
+   (clinch::get-point-or-vert arr (1+ x) (1+ y) w h)))
 
 
-(defun get-middle-squares-and-normals (arr w h)
-  (let ((tmp (loop for y from 0 below (1- h)
-		append (loop for x from 0 below (1- w)
-			  collect (multiple-value-bind (a b) 
-				      (get-middle-square-and-normal arr x y w h)
-				    (list a b (list (/ (+ .5 x) (1- w))
-						    (/ (+ .5 y) (1- h)))))))))
-    (values (flatten-list-of-arrays (map 'list #'second tmp))  ;; vertexes
-	    (flatten-list-of-arrays (map 'list #'first tmp))   ;; normals 
-	    (flatten-list-of-arrays (map 'list #'third tmp)))));; tex-coords 
-	    
+(defun get-cross-corners (arr x y w h)
+  (list
+   (clinch::get-point-or-vert arr (1- x) y w h)
+   (clinch::get-point-or-vert arr (1+ x) y w h)
+   (clinch::get-point-or-vert arr x (1- y) w h)
+   (clinch::get-point-or-vert arr x (1+ y) w h)))
 
-(defun get-height-node-normal (arr x y w h)
 
-  (let ((c (get-point-or-vert arr x y w h)))
-    (labels ((get-vec-or-none (x y)
-	       (let ((p (get-point-or-vert arr x y w h)))
-		 (when p 
-		   (v3:- p c))))
-	     (cross-x (a b)
-	       (if (and a b)
-		   (v3:cross a b)
-		   (v! 0 0 0))))
+
+(defun get-middle-of-squares (arr w h)
+  (setf out (make-array 0 :fill-pointer t :adjustable t :element-type :float))
+  (loop for i from 0 below (1- h)
+     do (loop for j from 0 below (1- w)
+	   do (progn
+		(append-v3-to-array out
+				    (v3:/S (reduce #'v3:+ (get-square-corners arr j i w h))
+					   4.0)))))
+  out)
+
+(defun get-middle-square-normal (arr x y w h) 
+  (let* ((corners (get-square-corners arr x y w h))
+	 (bl (first corners))
+	 (br (second corners))
+	 (tl (third corners))
+	 (tr (fourth corners)))
+	     
+    (v3:normalize 
+     (reduce #'v3:+ (list 
+		     (cross-x bl tl)
+		     (cross-x br bl)
+		     (cross-x tr br)
+		     (cross-x tl tr))))))
+
+
+(defun get-middle-square-normals (arr w h) 
+  (let ((out 
+	 (setf out (make-array 0 :fill-pointer t :adjustable t :element-type :float))))
+  (loop for y from 0 below (1- h)
+       do (loop for x from 0 below (1- w)
+	       do (progn 
+		    (append-v3-to-array out 
+				      (get-middle-square-normal arr x y w h)))))
+  out))
+
+(defun cross-x (a b)
+  (if (and a b)
+      (v3:cross a b)
+      (v! 0 0 0)))
       
-      (let ((l (get-vec-or-none (1- x) y))
-	    (r (get-vec-or-none (1+ x) y))
-	    (b (get-vec-or-none x (1- y)))
-	    (top  (get-vec-or-none x (1+ y))))
-	(coerce 
-	 (v3:normalize 
-	  (reduce #'v3:+ (list 
-			  (cross-x l top)
-			  (cross-x b l)
-			  (cross-x r b)
-			  (cross-x top r))))
-	 'list)))))
+(defun get-cross-square-normal (arr x y w h)
+  (let* ((corners (get-cross-corners arr x y w h))
+	 (l (first corners))
+	 (r (second corners))
+	 (bottom (third corners))
+	 (top (fourth corners)))
+    
+    (v3:normalize 
+     (reduce #'v3:+ (list 
+		      (cross-x l top)
+		      (cross-x top r)
+		      (cross-x bottom r)
+		      (cross-x l bottom))))))
 
-(defun get-height-node-normals (arr w h)
-  (loop for y from 0 below h
-       append (loop for x from 0 below w
-		 append (get-height-node-normal arr x y w h))))
+(defun get-cross-square-normals (arr w h)
+  (let ((out
+	 (setf out (make-array 0 :fill-pointer t :adjustable t :element-type :float))))
+    (loop for y from 0 below h
+       do (loop for x from 0 below w
+	     do (progn
+		  (append-v3-to-array out
+				      (get-cross-square-normal arr x y w h)))))
+    out))
+
+
 
 (defun get-tex-coords (w h)
-  (loop for y from 0 to 1 by (/ (1- h))
-       append (loop for x from 0 to 1 by (/ (1- w))
-		   append (list (float x) (float y)))))
+  (setf arr (make-array 0 :fill-pointer t :adjustable t :element-type :float))
+  (loop for y from 0 below h
+       do (loop for x from 0 below w
+  	     do (progn 
+  		  (vector-push-extend (float x) arr)
+  		  (vector-push-extend (float y) arr))))
+  
+  (loop for y from .5 below (1- h) by 1
+     do (loop for x from .5 below (1- w) by 1
+	   do (progn 
+		(vector-push-extend (float x) arr)
+		(vector-push-extend (float y) arr))))
+  arr)
+
 
 (defun make-height-map-quad (x y w h)
-  (let* ((quad (+ x (* y w)))
+  ;;(print (list x y))
+  (let* ((quad (+ x (* y (1- w))))
 	 (offset (* w h))
-	 (c (+ quad offset 1))
+	 (c (+ quad offset))
 	 (bl quad)
 	 (br (1+ quad))
 	 (tl (+ bl w))
 	 (tr (1+ tl)))
-    (list c bl br
-	  c br tr
-	  c tr tl
-	  c tl bl)))
+    (print (list quad ));;c bl br tl tr))
+    (list (v! c bl br)
+	  (v! c br tr)
+	   (v! c tr tl)
+	   (v! c tl bl))))
      
 
 
 (defun make-height-map-indexes (w h)
-  (loop 
-     for y from 0 below (1- h)
-     append (loop for x from 0 below (1- w)
-		 append (make-height-map-quad x y w h))))
+  (let ((out (make-array 0 :fill-pointer t :adjustable t :element-type :int)))
+    (loop
+	 with test = 0
+       for y from 0 below (1- h)
+       append (loop for x from 0 below (1- w)
+		 do (progn (print (list x y (incf test)))
+			   (map nil (lambda (a)
+				      (append-v3-to-array out (map 'vector #'rationalize a)))
+				(make-height-map-quad x y w h)))))
+       out))
 
-(defun test-indexes (e w h)
-  (let ((i (clinch::make-height-map-indexes w h)))
-    (pushg (indexes e) (make-array (length i) :element-type '(UNSIGNED-BYTE 32) :initial-contents i))))
 
 (defun make-height-map-arrays (arr w h)
-	   (let ((v1 (coerce arr 'list))
-		 (n1 (clinch::get-height-node-normals arr w h))
-		 (t1 (clinch::get-tex-coords w h))
-		 (len (+ (* w h) (* (1- w) (1- h)))))
-	     (multiple-value-bind (v2 n2 t2)
-		 (clinch::get-middle-squares-and-normals arr w h)
-	       (values (make-array (* (1- w) (1- h) 4 3) :initial-contents (make-height-map-indexes w h)) 
-		       (make-array (* len 3) :initial-contents (append v1 v2))
-		       (make-array (* len 3) :initial-contents (append n1 n2))
-		       (make-array (* len 2) :initial-contents (append t1 t2))))))
+  (let ((middles (clinch::get-middle-of-squares arr w h))
+	(normals (clinch::get-cross-square-normals arr w h))
+	(m-norms (clinch::get-middle-square-normals arr w h))
+	(tex (clinch::get-tex-coords w h))
+	(index (clinch::make-height-map-indexes w h)))
+    
+    (values 
+     index
+     (concatenate 'vector arr middles)
+     (concatenate 'vector normals m-norms)
+     tex)))
+
+(defun make-height-map-entity (arr x y &key texture)
+  (multiple-value-bind (iarr varr narr tarr) (clinch::make-height-map-arrays arr x y)
+      
+    (! 
+      (let ((indexes (make-instance 'index-buffer :data iarr))
+	     (points  (make-instance 'buffer :data varr))
+	     (normals (make-instance 'buffer :data narr))
+	     (tex-coords (make-instance 'buffer :data tarr)))
+	 
+	 (make-instance 'clinch:entity
+			:parent nil
+			:shader-program (get-generic-single-diffuse-light-shader)
+			:indexes indexes
+			:attributes (copy-list `(("v" . ,points)
+						 ("n" . ,normals)
+						 ("c" . (1.0 1.0 1.0 1.0))
+						 ("tc1" . ,tex-coords)))
+			:uniforms (copy-list `(("M" . :model)
+					       ("P" . :projection)
+					       ("N" . :normal)
+					       ("t1" . ,(or texture (get-identity-texture)))
+					       ("ambientLight" . (.2 .2 .2))
+					       ("lightDirection" . (0.5772705 -0.5772705 -0.5772705))
+					       ("lightIntensity" . (.8 .8 .8)))))))))
 	     
 
 
