@@ -286,7 +286,7 @@ Shortcut is !s."))
 	(v (gensym)))
     
     `(let ((,tthis ,this)
-	   (,v (v! ,w ,x ,y, z)))
+	   (,v (q:from-axis-angle (v! ,x ,y ,z) (d->r ,w))))
        (if ,in-place
 	   (setf (rotation ,tthis) ,v)
 	   (rotate ,tthis ,v)))))

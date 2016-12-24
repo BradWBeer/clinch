@@ -3,6 +3,7 @@
 (ql:quickload :clinch)
 (ql:quickload :clinch-freeimage)
 (ql:quickload :clinch-classimp)
+(use-package :clinch)
 
 (defparameter scene-path
   "/home/warweasle/work/external/assimp/test/models/BLEND/HUMAN.blend")
