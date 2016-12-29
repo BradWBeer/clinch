@@ -92,6 +92,18 @@
 	      (setf uni (acons name new-value uni))))))
   new-value)
 
+(defmacro with-attributes (args this &body body)
+  `(symbol-macrolet 
+       ,(loop for (var attr) in args
+	   collect `(,var (attribute ,this ,attr)))
+     ,@body))
+
+(defmacro with-uniforms (args this &body body)
+  `(symbol-macrolet 
+       ,(loop for (var attr) in args
+	   collect `(,var (uniform ,this ,attr)))
+     ,@body))
+
 (defun convert-non-buffer (this value &key projection parent)
   (cond ((eql value :projection) (or projection (m4:identity)))
 	((eql value :Model)      (or parent (m4:identity)))
@@ -102,7 +114,7 @@
 	((eql value :projection-1) (m4:affine-inverse projection))
 	((eql value :skeleton) (bone-buffer (bones this)))
 	((eql value :bone-ids)  (bone-id-buffer (bones this)))
-	((eql value :bone-widths) (weights-buffer (bones this)))
+	((eql value :bone-weights) (weights-buffer (bones this)))
 	((eql value :normal) (typecase parent
 			       (node
 				(m4:to-mat3 
@@ -117,6 +129,7 @@
 (defmethod render ((this entity) &key parent (projection *projection*))
   "Renders the entity (mesh).
     :parent Sets the parent for the :model"
+ 
   (when (enabled this)
     (with-accessors ((shader-program shader-program)) this
       (when shader-program 

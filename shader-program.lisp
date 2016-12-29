@@ -278,6 +278,7 @@
 	(let ((f (case type
 		   (:float #'gl:uniformf)
 		   (:float-vec3 #'gl:uniformf)
+		   (:float-vec4 #'gl:uniformf)
 		   (:int #'gl:uniformi)
 		   (:SAMPLER-2D #'gl:uniformi)
 		   (:FLOAT-MAT4 #'gl:uniform-matrix-4fv)

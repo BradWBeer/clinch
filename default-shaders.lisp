@@ -3,11 +3,7 @@
 
 (in-package #:clinch)
 
-(defparameter *generic-single-texture-shader* nil)
-(defparameter *generic-solid-phong-shader* nil)
-(defparameter *generic-single-diffuse-light-animation-shader* nil)
-(defparameter *generic-single-diffuse-light-shader* nil)
-(defparameter *generic-single-diffuse-light-per-vertex-color* nil)
+(defparameter *generic-shader-hash-table* (make-hash-table))
 
 (defun get-generic-single-texture-shader ()
   "Creates/returns a shader-program which blits a texture to an entity.
@@ -18,10 +14,10 @@
    Attributes:
     v: Vertexes
     tc1: texture coordinates"
-    
-  (if (and *generic-single-texture-shader* (program *generic-single-texture-shader*))
-      *generic-single-texture-shader*
-      (setf *generic-single-texture-shader*
+
+  (let ((shader (gethash 'generic-single-texture-shader *generic-shader-hash-table*)))
+  (if (and shader (program shader)) shader
+      (setf (gethash 'generic-single-texture-shader *generic-shader-hash-table*)
 	    (make-instance 'clinch:shader-program
 			   :name "generic-single-texture-shader"
 			   :vertex-shader (alexandria:read-file-into-string
@@ -33,13 +29,7 @@
 					     (concatenate 'string 
 							  (directory-namestring
 							   (asdf:system-relative-pathname :clinch "clinch.asd"))
-							  "shaders/generic-single-texture-shader.frag"))
-			   :uniforms '(("P" :matrix)
-				       ("M" :matrix)
-				       ("t1" :int))
-			   :attributes '(("tc1" :float)
-					 ("v" :float))))))
-
+							  "shaders/generic-single-texture-shader.frag")))))))
 
 (defun get-generic-solid-phong-shader ()
   "Creates/returns a shader-program which uses simple phong shading with a single color.
@@ -52,10 +42,10 @@
     color: color of object
    Attributes:
     v: Vertexes"
-    
-  (if (and *generic-solid-phong-shader* (program *generic-solid-phong-shader*))
-      *generic-solid-phong-shader*
-      (setf *generic-solid-phong-shader*
+
+  (let ((shader (gethash 'generic-solid-phong-shader *generic-shader-hash-table*)))
+    (if (and shader (program shader)) shader
+      (setf (gethash 'generic-solid-phong-shader *generic-shader-hash-table*)
 	    (make-instance 'clinch:shader-program
 			   :name "generic-solid-phong-shader"
 			   :vertex-shader (alexandria:read-file-into-string
@@ -67,20 +57,13 @@
 					     (concatenate 'string 
 							  (directory-namestring
 							   (asdf:system-relative-pathname :clinch "clinch.asd"))
-							  "shaders/generic-solid-phong-shader.frag"))
-			   :uniforms '(("P" :matrix)
-				       ("M" :matrix)
-				       ("ambientLight" :float)
-				       ("lightDirection" :float)
-				       ("lightIntensity" :float)
-				       ("color" :float))
-			   :attributes '(("v" :float))))))
+							  "shaders/generic-solid-phong-shader.frag")))))))
 
 
 (defun get-generic-single-diffuse-light-shader ()
-  (if (and *generic-single-diffuse-light-shader* (program *generic-single-diffuse-light-shader*))
-      *generic-single-diffuse-light-shader*
-      (setf *generic-single-diffuse-light-shader*
+  (let((shader (gethash 'generic-single-diffuse-light-shader *generic-shader-hash-table*)))
+  (if (and shader (program shader)) shader
+      (setf (gethash 'generic-single-diffuse-light-shader *generic-shader-hash-table*)
 	    (make-instance 'clinch:shader-program
 			   :name "generic-single-diffuse-light-shader"
 			   :vertex-shader (alexandria:read-file-into-string
@@ -92,27 +75,15 @@
 					   (concatenate 'string 
 							(directory-namestring
 							 (asdf:system-relative-pathname :clinch "clinch.asd"))
-							"shaders/generic-single-diffuse-light-shader.frag"))			   
-			   :uniforms '(("M" :matrix)
-				       ("N" :matrix)
-				       ("P" :matrix)
-				       ("t1" :int)
-				       ("ambientLight" :float)
-				       ("lightDirection" :float)
-				       ("lightIntensity" :float))
-				       
-			   :attributes '(("v" :float)
-					 ("n" :float)
-					 ("c" :float)
-					 ("tc1" :float))))))
+							"shaders/generic-single-diffuse-light-shader.frag")))))))
 
 
 (defun get-generic-single-diffuse-light-animation-shader ()
-  (if (and *generic-single-diffuse-light-animation-shader* (program *generic-single-diffuse-light-animation-shader*))
-      *generic-single-diffuse-light-animation-shader*
-      (setf *generic-single-diffuse-light-animation-shader*
+  (let ((shader (gethash 'generic-single-diffuse-light-animation-shader *generic-shader-hash-table*)))
+  (if (and shader (program shader)) shader
+      (setf (gethash 'generic-single-diffuse-light-animation-shader *generic-shader-hash-table*)
 	    (make-instance 'clinch:shader-program
-			   :name "test-shader"
+			   :name "generic-single-diffuse-light-animation-shader"
 			   :vertex-shader (alexandria:read-file-into-string
 					   (concatenate 'string 
 							(directory-namestring
@@ -122,34 +93,16 @@
 					   (concatenate 'string 
 							(directory-namestring
 							 (asdf:system-relative-pathname :clinch "clinch.asd"))
-							"shaders/generic-single-diffuse-light-animation-shader.frag"))
-			   
-			   :uniforms '(("M" :matrix)
-				       ("N" :matrix)
-				       ("P" :matrix)
-				       ("t1" :int)
-				       ("ambientLight" :float)
-				       ("lightDirection" :float)
-				       ("lightIntensity" :float)
-				       ("bones" :matrix)
-				       )
-				       
-			   :attributes '(("v" :float)
-					 ("n" :float)
-					 ("c" :float)
-					 ("tc1" :float)
-					 ("boneIDs" :int)
-					 ("weights" :float))))))
-
+							"shaders/generic-single-diffuse-light-animation-shader.frag")))))))
 
 
 (defun get-generic-single-diffuse-light-per-vertex-color-shader ()
-  (if (and *generic-single-diffuse-light-per-vertex-color* (program *generic-single-diffuse-light-per-vertex-color*))
-      *generic-single-diffuse-light-per-vertex-color*
-      (setf *generic-single-diffuse-light-per-vertex-color*
-	    (make-instance 'clinch:shader-program
-			   :name "test-shader"
-			   :vertex-shader (alexandria:read-file-into-string
+  (let ((shader (gethash 'generic-single-diffuse-light-per-vertex-color *generic-shader-hash-table*)))
+    (if (and shader (program shader)) shader
+	(setf (gethash 'generic-single-diffuse-light-per-vertex-color *generic-shader-hash-table*)
+	      (make-instance 'clinch:shader-program
+			     :name "generic-single-diffuse-light-per-vertex-color-shader"
+			     :vertex-shader (alexandria:read-file-into-string
 					   (concatenate 'string 
 							(directory-namestring
 							 (asdf:system-relative-pathname :clinch "clinch.asd"))
@@ -158,6 +111,42 @@
 					   (concatenate 'string 
 							(directory-namestring
 							 (asdf:system-relative-pathname :clinch "clinch.asd"))
-							"shaders/generic-single-diffuse-light-per-vertex-color.frag"))))))
-			   
+							"shaders/generic-single-diffuse-light-per-vertex-color.frag")))))))
 
+(defun get-generic-single-color-shader ()
+  (let ((shader (gethash 'generic-single-color *generic-shader-hash-table*)))
+    (if (and shader (program shader)) shader
+	(setf (gethash 'generic-single-color *generic-shader-hash-table*)
+	      (make-instance 'clinch:shader-program
+			     :name "generic-single-color-shader"
+			     :vertex-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-color-shader.vert"))
+			   :fragment-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-color-shader.frag")))))))
+
+(defmacro define-default-shader (name)
+  (let ((sym (intern (string-upcase (princ-to-string name))))
+	(func (intern (string-upcase (concatenate 'string "get-" (princ-to-string name)))))
+	(str (string-downcase (princ-to-string name))))
+    `(defun ,func ()
+       (let ((shader (gethash ',name *generic-shader-hash-table*)))
+	 (if (and shader (program shader)) shader
+	     (setf (gethash ',name *generic-shader-hash-table*)
+		   (make-instance 'shader-program
+				  :name ,str
+				  :vertex-shader (alexandria:read-file-into-string
+						  (concatenate 'string 
+							       (directory-namestring
+								(asdf:system-relative-pathname :clinch "clinch.asd"))
+							       (concatenate 'string "shaders/" ,str ".vert"))
+				  :fragment-shader (alexandria:read-file-into-string
+						    (concatenate 'string 
+								 (directory-namestring
+								  (asdf:system-relative-pathname :clinch "clinch.asd"))
+							       (concatenate 'string "shaders/" ,str ".vert")))))))))))
