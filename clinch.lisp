@@ -307,6 +307,22 @@ in the topological ordering (i.e., the first value)."
 	       do (setf llst (when llst (cdr llst))))))
 
 
+(defun get-triangle-normal (a b c)
+  (v3:normalize 
+   (v3:cross 
+    (v3:- b a) 
+    (v3:- c a))))
 
+(defmacro make-3f-buffer (&rest data)
+  `(make-instance 'buffer
+		  :stride 3
+		  :data (map 'list (lambda (x)
+				     (coerce x 'single-float))
+			     (concatenate 'list ,@data))))
+(defmacro make-2f-buffer (&rest data)
+	   `(make-instance 'buffer
+			   :stride 2
+			   :data (map 'list (lambda (x)
+					      (coerce x 'single-float))
+				      (concatenate 'list ,@data))))
 
-  
