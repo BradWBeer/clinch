@@ -5,20 +5,24 @@
 
 (defun make-triangle (a b c &optional parent shader-program texture color)
   (let ((normal (get-triangle-normal a b c)))
+
     (make-instance 'entity
 		   :parent parent
 		   :shader-program (or shader-program (get-generic-single-diffuse-light-shader))
-		   :indexes (make-instance 'index-buffer :data '(0 1 2 0 2 3))
+		   
+		   :indexes (make-instance 'index-buffer :data '(0 1 2))
+		   
 		   :attributes (copy-list `(("v" . ,(make-3f-buffer a b c))
 					    ("n" . ,(make-3f-buffer normal normal normal))
 					    ("tc1" . ,(make-2f-buffer '(0 0) '(0 0) '(0 0)))))
+		  
 		   :uniforms (copy-list `(("M" . :model)
 					  ("P" . :projection)
 					  ("t1" . ,(or texture (get-identity-texture)))
-					  ("c" . ,(or color (1.0 1.0 1.0 1.0)))
+					  ("c" . ,(or color '(1.0 1.0 1.0 1.0)))
 					  ("ambientLight" . (.2 .2 .2))
 					  ("lightDirection" . (0.5772705 -0.5772705 -0.5772705))
-					  ("lightIntensity" . (.8 .8 .8)))))))  
+					  ("lightIntensity" . (.8 .8 .8)))))))
 
 
 (defun make-quad-indices ()
