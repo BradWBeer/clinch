@@ -1,6 +1,4 @@
 (ql:quickload :clinch)
-(ql:quickload :clinch-cairo)
-(ql:quickload :clinch-pango) 
 (ql:quickload :clinch-freeimage)
 (ql:quickload :sdl2-mixer)
 
