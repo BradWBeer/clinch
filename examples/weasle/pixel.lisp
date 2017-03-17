@@ -2,8 +2,13 @@
 (ql:quickload :clinch-cairo)
 (ql:quickload :clinch-pango) 
 (ql:quickload :clinch-freeimage)
+(ql:quickload :sdl2-mixer)
 
 (use-package :clinch)
+
+;; Every channel's volume starts out at maximum according to the manual
+(defparameter *current-volume* 128)
+(defparameter *sound-effect* nil)
 
 (defconstant +max-axis+ 32767)
 (defparameter +axis-dead-zone+ .40)
@@ -11,7 +16,7 @@
 
 (defparameter *weasle* nil)
 (defparameter *weasle-node* nil)
-(defparameter *weasle-max-velocity* 3)
+(defparameter *weasle-max-velocity* 300) ;; in pixels/second
 
 (defparameter *key-watch-list*
   '(:scancode-left
@@ -42,6 +47,11 @@
 ;; Next runs one time before the next on-idle.
 (clinch:defevent clinch:*next* ()
 
+    (sdl2-mixer:init :ogg)
+    (sdl2-mixer:open-audio 22050 :s16sys 1 1024)
+    (sdl2-mixer:allocate-channels 1)
+    (setf *sound-effect* (sdl2-mixer:load-wav (asdf:system-relative-pathname 'clinch "examples/weasle/sample.ogg")))
+
   ;; Enable a few opengl features. 
   ;; (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d :cull-face)
 
@@ -53,8 +63,9 @@
 
   (setf *weasle-node* (make-instance 'node))
   (setf *weasle*
-	(make-quad-for-image "/home/warweasle/work/lisp/weasle.png"
+	(make-quad-for-image (namestring (asdf:system-relative-pathname 'clinch "examples/weasle/weasle.png"))
 			     :height 180
+			     :width 129
 			     :parent *weasle-node*))
 
   (add-child *root* *weasle-node*))
@@ -73,9 +84,9 @@
 				 (if down  (v!  0 -1 0) (v! 0 0 0))
 				 (if left  (v! -1  0 0) (v! 0 0 0))
 				 (if right (v!  1  0 0) (v! 0 0 0)))))
-		    (float *weasle-max-velocity*)))
+		    (float (* *delta-ticks* *weasle-max-velocity* 1/1000)))))
 	(translate *weasle-node*
-		   (v3:*s (calculate-joysticks) (float *weasle-max-velocity*))))))
+		   (v3:*s (calculate-joysticks) (float (* *delta-ticks* *weasle-max-velocity* 1/1000))))))
      
 ;; render
 
@@ -112,7 +123,7 @@
 (clinch:defevent clinch:*on-mouse-wheel-move* (win mouse x y ts)
   (format t "win=~A mouse=~A x=~A y=~A ts=~A~%" win mouse x y ts)
   
-  (!S *root* (+ 1 (/ y 10)) (+ 1 (/ y 10)) 1))
+  (!S *weasle-node* (+ 1 (/ y 10)) (+ 1 (/ y 10)) 1))
 
 (defun calculate-joysticks ()
   (let ((sum (v! 0 0 0)))
@@ -139,29 +150,10 @@
 	      nil))))
 
 
-  ;; (when (zerop controller-id)
-  ;;   (let ((pos (float (/ position +max-axis+))))
-  ;;     (case axis-id
-
-  ;; 	(5 nil)
-  ;; 	(4 nil)
-  ;; 	(3 (setf (aref +joystick-1+ 1) (- pos)))
-  ;; 	(2 (setf (aref +joystick-1+ 0) pos))
-  ;; 	(1 (setf (aref +joystick-2+ 1) (- pos)))
-  ;; 	(0 (setf (aref +joystick-2+ 0) pos))
-  ;; 	(t (format t "axis: ~A ~A~%" axis-id pos))))))
-
-;; (defevent *on-controller-button-down* (controller-id button ts)
-;;   (when (= button 10)
-;;     (let ((anna (entity-value :anna :body))
-;; 	  (ring (entity-value :ring :body)))
-
-;;       (setf (squirl:body-position ring) (squirl:body-position anna))
-;;       (setf (squirl:body-velocity ring)
-;; 	    (+
-;; 	     (squirl:body-velocity (entity-value :anna :body))
-;; 	     (* 1500 (v->complex (v2:normalize (entity-value :anna :direction)))))))))
-
+(defevent *on-controller-button-down* (controller-id button ts)
+  (sdl2-mixer:play-channel 0 *sound-effect* 0)
+  (format t "controller=~A button=~A ts=~A~%" controller-id button ts)
+  )
 
 
 (init)
