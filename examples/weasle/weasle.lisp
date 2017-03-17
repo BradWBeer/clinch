@@ -109,7 +109,7 @@
 ;; zoom in and out
 (clinch:defevent clinch:*on-mouse-wheel-move* (win mouse x y ts)
 
-  ;; !S == (scale *weasle-node* ....)
+  ;; !S == (scale *weasle-node* (v! ....))
   (!S *weasle-node* (+ 1 (/ y 10)) (+ 1 (/ y 10)) 1))
 
 
