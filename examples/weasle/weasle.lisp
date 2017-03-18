@@ -21,6 +21,9 @@
 ;; Keyboard handling
 (defparameter *key-state* nil)
 
+;; Start clinch...
+(init)
+
 (defun add-to-key-state (scancode)
   (unless (member scancode *key-state*)
     (push scancode *key-state*)))
@@ -108,9 +111,6 @@
 ;; Button click handler
 (defevent *on-controller-button-down* (controller-id button ts)
   (sdl2-mixer:play-channel 0 *sound-effect* 0))
-
-;; Start clinch...
-(init)
 
 ;; Like an init function
 ;; Next runs one time before the next on-idle.

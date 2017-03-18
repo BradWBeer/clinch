@@ -15,6 +15,10 @@
 		   :qtype  :unsigned-char)))
 
 (defgeneric make-quad-for-image (tex-data &key width height center parent))
+
+(defmethod make-quad-for-image ((path pathname) &key width height (center :center) (parent *root*))
+  (make-quad-for-image (namestring path) :width width  :height height :center center :parent parent))
+
 (defmethod make-quad-for-image ((path string) &key width height (center :center) (parent *root*))
   (let ((texture (make-texture-from-file path :width width :height height)))
     (values (make-quad (width texture)
