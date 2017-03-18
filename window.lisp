@@ -95,7 +95,8 @@
     (gl:clear :color-buffer-bit :depth-buffer-bit)
     (clinch:render *root* :projection *ortho-projection*)
     (when *entity*
-      (clinch:render *entity* :projection *ortho-projection*))))
+      (clinch:render *entity* :projection *ortho-projection*)))
+  "The default on-idle handler. Mapped as both a function and a variable.")
 
 (defun *default-on-idle* () 
   (funcall *default-on-idle*))

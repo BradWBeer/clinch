@@ -6,8 +6,11 @@
 (defparameter *root* nil
   "The default root node.")
 
-(defparameter v0 (v! 0 0 0))
-(defparameter vi (v! 1 1 1))
+(defparameter v0 (v! 0 0 0)
+  "A shortcut for the zero vector.")
+
+(defparameter vi (v! 1 1 1)
+  "A shortcut to the identity vector")
 
 (defclass node ()
   ((name :accessor name
