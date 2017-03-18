@@ -59,6 +59,7 @@
    #:*viewport*
    #:*node*
    #:*ticks* #:*delta-ticks*
+   #:*default-on-idle*
    #:*next*
    #:*on-window-size-changed*
    #:*on-window-resized*

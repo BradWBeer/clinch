@@ -89,12 +89,19 @@
   "Called when there are no pending events. Take no arguments.
    Default can be overridden.")
 
-(clinch:defevent clinch:*on-idle* ()
+(defparameter *default-on-idle* 
+  (lambda ()
+  
+    (gl:clear :color-buffer-bit :depth-buffer-bit)
+    (clinch:render *root* :projection *ortho-projection*)
+    (when *entity*
+      (clinch:render *entity* :projection *ortho-projection*))))
 
-  (gl:clear :color-buffer-bit :depth-buffer-bit)
-  (clinch:render *root* :projection *ortho-projection*)
-  (when *entity*
-    (clinch:render *entity* :projection *ortho-projection*)))
+(defun *default-on-idle* () 
+  (funcall *default-on-idle*))
+
+(defevent clinch:*on-idle* ()
+  (*default-on-idle*))
 
 (defparameter *on-quit* nil
   "Called when clinch is about to exit. Take no arguments.")

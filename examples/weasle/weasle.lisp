@@ -59,10 +59,8 @@
 (clinch:defevent clinch:*on-idle* ()
 
   (move-weasle)
-
-  (gl:clear :color-buffer-bit :depth-buffer-bit)
-  (clinch:render *root* :projection *ortho-projection*))
-
+  (*default-on-idle*))
+  
 ;; Key press handler
 (defevent *on-key-down* (win keysym state ts)
   (add-to-key-state (sdl2:scancode keysym))
@@ -78,7 +76,6 @@
 
   ;; !S == (scale *weasle-node* (v! ....))
   (!S *weasle-node* (+ 1 (/ y 10)) (+ 1 (/ y 10)) 1))
-
 
 (defun calculate-joysticks ()
   (let ((sum (v! 0 0 0)))
