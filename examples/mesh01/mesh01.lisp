@@ -7,7 +7,7 @@
 
 (defparameter scene-path
   (asdf:system-relative-pathname 'clinch 
-				 "examples/assets/chicken/chickenV3.dae"))
+				 "examples/assets/3d/chicken/chickenV3.dae"))
 
 (defparameter *node* nil)
 (defparameter *projection* nil)

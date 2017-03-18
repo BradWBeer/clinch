@@ -67,7 +67,7 @@
 	 (concatenate 'string 
 		      (directory-namestring
 		       (asdf:system-relative-pathname :clinch "clinch.asd"))
-		      "examples/Tutorial05/lambda.png")))
+		      "examples/assets/img/lambda.png")))
 
   (setf (clinch:uniform *quad-mesh* "t1") *texture*)
   

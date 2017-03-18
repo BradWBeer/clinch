@@ -12,8 +12,8 @@
 ;; 	   "/home/warweasle/work/tools/assimp/test/models/X/test_cube_compressed.x")
 
 (defparameter scene-path
-  "/home/warweasle/work/tools/assimp/test/models/X/Testwuson.X")
-;;(defparameter scene-path "/home/warweasle/work/external/assimp/test/models/MD2/sydney.md2")
+  (asdf:system-relative-pathname 'clinch 
+				 "examples/assets/3d/Testwuson.X"))
 
 (defparameter *node* nil)
 (defparameter *projection* nil)

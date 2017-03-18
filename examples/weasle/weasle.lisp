@@ -111,7 +111,7 @@
   (sdl2-mixer:init :ogg)
   (sdl2-mixer:open-audio 22050 :s16sys 1 1024)
   (sdl2-mixer:allocate-channels 1)
-  (setf *sound-effect* (sdl2-mixer:load-wav (asdf:system-relative-pathname 'clinch "examples/weasle/sample.ogg")))
+  (setf *sound-effect* (sdl2-mixer:load-wav (asdf:system-relative-pathname 'clinch "examples/assets/sound/sample.ogg")))
 
   ;; Enable a few opengl features. 
   (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d :cull-face)
@@ -128,6 +128,6 @@
 	(with-new-node ()
 	  ;; Load an image, resize it, and connect it to its node.
 	  (setf *weasle*
-		(make-quad-for-image (namestring (asdf:system-relative-pathname 'clinch "examples/weasle/weasle.png"))
+		(make-quad-for-image (namestring (asdf:system-relative-pathname 'clinch "examples/assets/img/weasle.png"))
 				     :height 180
 				     :width 129)))))
