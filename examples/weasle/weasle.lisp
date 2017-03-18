@@ -32,39 +32,6 @@
 (defun key-down? (scancode)
   (member scancode *key-state*))
 
-;; Like an init function
-;; Next runs one time before the next on-idle.
-(clinch:defevent clinch:*next* ()
-
-  ;; Set up sdl2-mixer
-  (sdl2-mixer:init :ogg)
-  (sdl2-mixer:open-audio 22050 :s16sys 1 1024)
-  (sdl2-mixer:allocate-channels 1)
-  (setf *sound-effect* (sdl2-mixer:load-wav (asdf:system-relative-pathname 'clinch "examples/weasle/sample.ogg")))
-
-  ;; Enable a few opengl features. 
-  (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d :cull-face)
-
-  ;; Set the blending mode. 
-  (%gl:blend-func :src-alpha :one-minus-src-alpha)
-  (gl:polygon-mode :front-and-back :fill)
-
-  ;; Only sets the color, doesn't clear anything
-  (gl:clear-color .5 .5 .5 0)
-
-  ;; Create a node to position the weasle sprite.
-  (setf *weasle-node* (make-instance 'node))
-
-  ;; Load an image, resize it, and connect it to its node.
-  (setf *weasle*
-	(make-quad-for-image (namestring (asdf:system-relative-pathname 'clinch "examples/weasle/weasle.png"))
-			     :height 180
-			     :width 129
-			     :parent *weasle-node*))
-
-  ;; Add node to root node so it's rendered.
-  (add-child *root* *weasle-node*))
-
 ;; Logic which combines keyboard and joystick input...it's buggy.
 ;; The (v3: functions are in rtg-math and deal with 3 value vectors.
 (defun move-weasle ()
@@ -95,7 +62,9 @@
 
 ;; Key press handler
 (defevent *on-key-down* (win keysym state ts)
-  (add-to-key-state (sdl2:scancode keysym)))
+  (add-to-key-state (sdl2:scancode keysym))
+  (when (eql :scancode-space (sdl2:scancode keysym))
+    (sdl2-mixer:play-channel 0 *sound-effect* 0)))
 
 ;; Key up handler
 (defevent *on-key-up* (win keysym state ts)
@@ -142,3 +111,35 @@
 
 ;; Start clinch...
 (init)
+
+;; Like an init function
+;; Next runs one time before the next on-idle.
+(!
+  ;; Set up sdl2-mixer
+  (sdl2-mixer:init :ogg)
+  (sdl2-mixer:open-audio 22050 :s16sys 1 1024)
+  (sdl2-mixer:allocate-channels 1)
+  (setf *sound-effect* (sdl2-mixer:load-wav (asdf:system-relative-pathname 'clinch "examples/weasle/sample.ogg")))
+
+  ;; Enable a few opengl features. 
+  (gl:enable :blend :depth-test :line-smooth :point-smooth :texture-2d :cull-face)
+
+  ;; Set the blending mode. 
+  (%gl:blend-func :src-alpha :one-minus-src-alpha)
+  (gl:polygon-mode :front-and-back :fill)
+
+  ;; Only sets the color, doesn't clear anything
+  (gl:clear-color .5 .5 .5 0)
+
+  ;; Create a node to position the weasle sprite.
+  (setf *weasle-node* (make-instance 'node))
+
+  ;; Load an image, resize it, and connect it to its node.
+  (setf *weasle*
+	(make-quad-for-image (namestring (asdf:system-relative-pathname 'clinch "examples/weasle/weasle.png"))
+			     :height 180
+			     :width 129
+			     :parent *weasle-node*))
+
+  ;; Add node to root node so it's rendered.
+  (add-child *root* *weasle-node*))

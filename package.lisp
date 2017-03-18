@@ -95,6 +95,7 @@
    #:shader-program #:name
 
    #:get-generic-single-color-shader
+   #:get-generic-per-vertex-color-shader
    #:get-generic-solid-phong-shader
    #:get-generic-single-texture-shader
    #:get-generic-single-diffuse-light-shader

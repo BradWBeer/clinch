@@ -130,6 +130,42 @@
 							 (asdf:system-relative-pathname :clinch "clinch.asd"))
 							"shaders/generic-single-color-shader.frag")))))))
 
+(defun get-generic-per-vertex-color-shader ()
+  (let ((shader (gethash 'generic-per-vertex-color *generic-shader-hash-table*)))
+    (if (and shader (program shader)) shader
+	(setf (gethash 'generic-per-vertex-color *generic-shader-hash-table*)
+	      (make-instance 'clinch:shader-program
+			     :name "generic-per-vertex-color-shader"
+			     :vertex-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-per-vertex-color-shader.vert"))
+			   :fragment-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-per-vertex-color-shader.frag")))))))
+(defun get-generic-single-color-shader ()
+  (let ((shader (gethash 'generic-single-color *generic-shader-hash-table*)))
+    (if (and shader (program shader)) shader
+	(setf (gethash 'generic-single-color *generic-shader-hash-table*)
+	      (make-instance 'clinch:shader-program
+			     :name "generic-single-color-shader"
+			     :vertex-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-color-shader.vert"))
+			   :fragment-shader (alexandria:read-file-into-string
+					   (concatenate 'string 
+							(directory-namestring
+							 (asdf:system-relative-pathname :clinch "clinch.asd"))
+							"shaders/generic-single-color-shader.frag")))))))
+
+
+
+
 (defmacro define-default-shader (name)
   (let ((sym (intern (string-upcase (princ-to-string name))))
 	(func (intern (string-upcase (concatenate 'string "get-" (princ-to-string name)))))

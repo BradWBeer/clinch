@@ -92,7 +92,7 @@
 (clinch:defevent clinch:*on-idle* ()
 
   (gl:clear :color-buffer-bit :depth-buffer-bit)
-  (clinch:render *root* :projection *projection*)
+  (clinch:render *root* :projection *ortho-projection*)
   (when *entity*
     (clinch:render *entity* :projection *ortho-projection*)))
 
@@ -428,7 +428,6 @@ working while cepl runs"
       (with-main
         (let ((*standard-output* local-stdout)
               (*standard-input* local-input))
-          (setf *running* t)
           (print-sdl-version)
           (unless *inited*
             (sdl2:with-everything (:window
@@ -478,7 +477,8 @@ working while cepl runs"
                     *texture* nil
                     *ticks* (sdl2:get-ticks)
                     *delta-ticks* *ticks*
-                    *root* (make-instance 'node :translation (v! 0 0 -100)))
+                    *root* (make-instance 'node :translation (v! 0 0 -100))
+		    *running* t)
               (main-loop win gl-context width height asynchronous)
               (unload-all-uncollected)
               (setf *root* nil

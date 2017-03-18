@@ -53,13 +53,19 @@
 
 (defmacro ! (&body body)
   "Runs body in main thread for safe OpenGL calls. Waits for return value."
-  `(sdl2:in-main-thread ()
-     ,@body))
+  `(progn 
+     (unless *running*
+       (loop until *running* do (bordeaux-threads:thread-yield)))
+     (sdl2:in-main-thread ()
+       ,@body)))
 
 (defmacro !! (&body body)
   "Runs body in main thread for safe OpenGL calls. Returns immediately."
-  `(sdl2:in-main-thread (:background t)
-     ,@body))
+  `(progn 
+     (unless *running*
+       (loop until *running* do (bordeaux-threads:thread-yield)))
+     (sdl2:in-main-thread (:background t)
+       ,@body)))
 
 (defgeneric unload (this &key) 
   (:documentation "Unloads an opengl object. Does nothing for non-opengl objects."))
