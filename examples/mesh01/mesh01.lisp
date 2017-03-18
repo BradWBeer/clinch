@@ -6,7 +6,8 @@
 (use-package :clinch)
 
 (defparameter scene-path
-  "/home/warweasle/work/external/assimp/test/models/BLEND/HUMAN.blend")
+  (asdf:system-relative-pathname 'clinch 
+				 "examples/assets/chicken/chickenV3.dae"))
 
 (defparameter *node* nil)
 (defparameter *projection* nil)
