@@ -81,9 +81,11 @@ Shortcut is !s."))
 (defgeneric n* (this that &key)
   (:documentation "Multiplies nodes and matrix transforms."))
 
-(defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix (parent *root*))
+(defmethod initialize-instance :after ((this node) &key translation rotation scale copy matrix (parent *node*))
   "Creates a node with optional translation (vector3), rotation (quaterion) and scaling (vector3). Can also use another node or matrix to set its value. If a node and another value is give, the other value is used starting with the matrix."
 
+  (when parent (add-child parent this))
+  
   (if matrix
       (multiple-value-bind (tr r s) (decompose-transform matrix)
 	(setf (translation this) tr
@@ -358,6 +360,25 @@ Shortcut is !s."))
     (if new-node
 	(make-instance 'node :matrix matrix)
 	matrix)))
+
+(defmacro with-node ((node) &body body)
+  "A wrapper which sets and unsets the current *node* object."
+  (let ((old (gensym)))
+    `(let ((,old (or *node* *root*))
+	   (*node* ,node))
+       (unwind-protect
+	    (progn ,@body)))))
+
+(defmacro with-new-node ((&optional parent) &body body)
+  "A wrapper which creates a new node and set it as current."
+  (let ((old (gensym)))
+    `(let ((,old (or *node* *root*))
+	   (*node* (make-instance 'node :parent (or ,parent *root*))))
+       (values
+	*node* 
+	(unwind-protect
+	     (progn ,@body))))))
+
 
 (defmethod traverse-node ((this node))
   "Not yet implemented."

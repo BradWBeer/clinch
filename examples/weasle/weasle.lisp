@@ -73,11 +73,6 @@
 (defevent *on-key-up* (win keysym state ts)
   (remove-from-key-state (sdl2:scancode keysym)))
 
-;; Window resize handler
-;; I didn't want to change the projection so I do nothing...not default behavior.
-(clinch:defevent clinch:*on-window-resized* (win width height ts)
-  )
-
 ;; zoom in and out
 (clinch:defevent clinch:*on-mouse-wheel-move* (win mouse x y ts)
 
@@ -132,14 +127,10 @@
   (gl:clear-color .5 .5 .5 0)
 
   ;; Create a node to position the weasle sprite.
-  (setf *weasle-node* (make-instance 'node))
-
-  ;; Load an image, resize it, and connect it to its node.
-  (setf *weasle*
-	(make-quad-for-image (namestring (asdf:system-relative-pathname 'clinch "examples/weasle/weasle.png"))
-			     :height 180
-			     :width 129
-			     :parent *weasle-node*))
-
-  ;; Add node to root node so it's rendered.
-  (add-child *root* *weasle-node*))
+  (setf *weasle-node* 
+	(with-new-node ()
+	  ;; Load an image, resize it, and connect it to its node.
+	  (setf *weasle*
+		(make-quad-for-image (namestring (asdf:system-relative-pathname 'clinch "examples/weasle/weasle.png"))
+				     :height 180
+				     :width 129)))))

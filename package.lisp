@@ -53,10 +53,11 @@
    #:*root*
    #:*window*
    #:*context*
-   #:fbo*
+   #:*fbo*
    #:*projection*
    #:*ortho-projection*
    #:*viewport*
+   #:*node*
    #:*ticks* #:*delta-ticks*
    #:*next*
    #:*on-window-size-changed*
@@ -116,7 +117,7 @@
    #:update 
    #:texture-animation #:get-current-frame
 
-   #:node #:children #:changed? #:render #:traverse-node
+   #:node #:children #:changed? #:render #:traverse-node #:with-node #:with-new-node
 
    #:enabled
    #:make-foreign-array #:make-identity-matrix #:list->matrix #:copy-foreign-array #:fill-foreign-array #:cached-matrix #:matrix #:get-current-matrix #:update-current-matrix #:read-gl-matrix #:get-current-gl-matrix #:use-matrix #:save-matrix  #:print-node-data #:m*m #:mT #:det #:m-1 

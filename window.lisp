@@ -478,10 +478,12 @@ working while cepl runs"
                     *ticks* (sdl2:get-ticks)
                     *delta-ticks* *ticks*
                     *root* (make-instance 'node :translation (v! 0 0 -100))
+		    *node* *root*
 		    *running* t)
               (main-loop win gl-context width height asynchronous)
               (unload-all-uncollected)
               (setf *root* nil
+		    *node* nil
                     *entity* nil
                     *texture* nil
                     *running* nil

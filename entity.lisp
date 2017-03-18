@@ -49,7 +49,7 @@
     :shader-program sets the shader program.
     :enabled sets if this entity will render."
   (when parent (if (eq parent t)
-		   (add-child *root* this)
+		   (add-child *node* this)
 		   (add-child parent this))))
 
 (defmethod (setf shader-program) (new-value (this entity))

@@ -6,6 +6,7 @@
 ;; global variables. Not exported. 
 (defparameter *window* nil
   "Global window object.")
+
 (defparameter *context* nil
   "Global Opengl Contex object.")
 
@@ -23,6 +24,9 @@
 
 (defparameter *ortho-projection* nil
   "An automatically generated orthogonal projection for the window. Pixel to pixel.")
+
+(defparameter *node* nil
+  "Current default node.")
 
 (defparameter *texture* nil
   "The current texture. Defaults to the window's overlay.")
