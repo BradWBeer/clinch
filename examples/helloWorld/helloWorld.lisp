@@ -7,6 +7,6 @@
 (init :init-controllers nil)
 
 (! (fast-draw () 
-     (pango:print-text '("span" nil
-			 ("span" (("font_desc" "Century Schoolbook L Roman bold 75") ("fgcolor" "#0000FF"))
-			  "Hello World")))))
+     (print-text '("span" nil
+		   ("span" (("font_desc" "Monospace bold 75") ("fgcolor" "#0000FF"))
+		    "Hello World")))))
