@@ -41,23 +41,23 @@
 	     :initarg  :children))
   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and is not required by Clinch."))
 
-(defgeneric !reset (this)
+(defgeneric reset (this)
   (:documentation "Resets a node to default. Position 0, rotation 0 and scale of 1. 
 Shortcut is !0."))
-(defgeneric !reset-translation (this)
+(defgeneric reset-translation (this)
   (:documentation "Resets a node's translation to 0,0,0.
 Shortcut is !t0"))
-(defgeneric !reset-rotation (this)
+(defgeneric reset-rotation (this)
   (:documentation "Resets a node's rotation to 1,0,0,0.
 Shortcut is !r0"))
-(defgeneric !reset-scaling (this)
+(defgeneric reset-scaling (this)
   (:documentation "Resets a node's scaling to 1,1,1.
 Shortcut is !s0"))
 
-(clone-function !reset !0)
-(clone-function !reset-translation !t0)
-(clone-function !reset-rotation !r0)
-(clone-function !reset-scaling !s0)
+(clone-function reset !0)
+(clone-function reset-translation !t0)
+(clone-function reset-rotation !r0)
+(clone-function reset-scaling !s0)
 
 (defgeneric (setf translation) (val this))
 (defgeneric (setf rotation) (val this))
@@ -105,7 +105,7 @@ Shortcut is !s."))
 			       vi))))	
 
 
-(defmethod !reset ((this node))
+(defmethod reset ((this node))
   "Resets the node."
   (setf (translation this) v0)
   (setf (rotation this)    (q:identity))
@@ -116,15 +116,15 @@ Shortcut is !s."))
   (setf (slot-value this 's-matrix) nil)
   (setf (slot-value this 'transform) nil))
 
-(defmethod !reset-translation ((this node))
+(defmethod reset-translation ((this node))
   (setf (slot-value this 't-matrix) nil
 	(translation this) v0))
 
-(defmethod !reset-rotation ((this node))
+(defmethod reset-rotation ((this node))
   (setf (slot-value this 'r-matrix) nil
 	(rotation this) (q:identity)))
 
-(defmethod !reset-scaling ((this node))
+(defmethod reset-scaling ((this node))
   (setf (slot-value this 's-matrix) nil
 	(scaling this) vi))
 
