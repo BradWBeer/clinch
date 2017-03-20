@@ -114,19 +114,23 @@ Shortcut is !s."))
   (setf (slot-value this 'r-matrix) nil)
   (setf (slot-value this 's-matrix) nil)
   (setf (slot-value this 's-matrix) nil)
-  (setf (slot-value this 'transform) nil))
+  (setf (slot-value this 'transform) nil)
+  this)
 
 (defmethod reset-translation ((this node))
   (setf (slot-value this 't-matrix) nil
-	(translation this) v0))
+	(translation this) v0)
+  this)
 
 (defmethod reset-rotation ((this node))
   (setf (slot-value this 'r-matrix) nil
-	(rotation this) (q:identity)))
+	(rotation this) (q:identity))
+  this)
 
 (defmethod reset-scaling ((this node))
   (setf (slot-value this 's-matrix) nil
-	(scaling this) vi))
+	(scaling this) vi)
+  this)
 
 
 (defmethod print-object ((this node) s)
@@ -294,7 +298,8 @@ Shortcut is !s."))
 	   (,v (q:from-axis-angle (v! ,x ,y ,z) (d->r ,w))))
        (if ,in-place
 	   (setf (rotation ,tthis) ,v)
-	   (rotate ,tthis ,v)))))
+	   (rotate ,tthis ,v))
+       ,tthis)))
 
 (defmethod translate ((this node) trans &key (modify t))
   "Translate the node. Takes a vector3."
@@ -311,7 +316,8 @@ Shortcut is !s."))
 	   (,v (v! ,x ,y, z)))
        (if ,in-place
 	   (setf (translation ,tthis) ,v)
-	   (translate ,tthis ,v)))))
+	   (translate ,tthis ,v))
+       ,tthis)))
 
 (defmethod scale ((this node) size &key (modify t))
   "Scales a node. Takes a vector3."
@@ -319,6 +325,7 @@ Shortcut is !s."))
       (setf (scaling this) 
 	    (v:* size (scaling this)))
       (v:* size (scaling this))))
+    
 
 (defmacro !s (this x y z &optional in-place)
   (let ((tthis (gensym))
@@ -328,7 +335,8 @@ Shortcut is !s."))
 	   (,v (v! ,x ,y, z)))
        (if ,in-place
 	   (setf (scaling ,tthis) ,v)
-	   (scale ,tthis ,v)))))
+	   (scale ,tthis ,v))
+       ,tthis)))
 
 
 (defmethod n* ((this node) (that node) &key new-node)
