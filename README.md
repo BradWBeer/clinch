@@ -93,7 +93,7 @@ They use Pixel Buffer Object to make texture reading and writing faster. It's a 
 
 ### Shaders
 
-Shaders are the compiled output from text-based source code. Clinch supports vertex, fragment and geometry shaders.
+Shaders are the compiled output from text-based source code. Clinch supports vertex, fragment and geometry shaders. Several default shaders are included for most common 
 
 ### Shader Programs
 
