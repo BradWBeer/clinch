@@ -5,7 +5,7 @@
 
 Clinch is a simple, yet powerful 3d game engine for Lisp. 
 
-Clinch is a usable but still under development. It will become a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp, 3D, shaders, 2d vector graphics, richtext support, 3d physics and much more.
+Clinch core is nearing a stable release with 0.8. Is a stable and fast workhorse tool for developing games, visualizations and productivity software. I have plans for a graphical shell which incorporates the strengths of Lisp, 3D, shaders, 2d vector graphics, richtext support, 3d physics and much more. Currently, using it with the REPL is similar to unix editors like ed and sed.
 
 ### Features
 
@@ -20,6 +20,15 @@ Clinch is a usable but still under development. It will become a stable and fast
 * Load plug-ins for more functionality. [Done]
 
 
+### Features in Active Development
+
+* Automatic interactive garbage collection of OpenGL resources.
+
+* Intelligent rendering, only updating items which have changed and are currently in use.
+
+* Automatic dependancy tracking between objects.
+
+
 ### Clinch Plug-ins:
 
 * 3d physics with joints and motors using the ODE physics engine. [Done]
@@ -30,15 +39,13 @@ Clinch is a usable but still under development. It will become a stable and fast
 
 * Integration with fonts and text positioning with Pango. [Done]
 
-* 3D asset importing using ClassImp. [Current Development]
+* 3D asset importing using ClassImp. [Done]
 
 * Animate textures. [Done] 
 
-* Animate 3D objects. [Current Development]
+* Animate 3D objects. [Unstable]
 
 * 2D physics [Experimental]
-
-* 3D GUI [Current Development]
 
 ## Design Goals
 
@@ -58,7 +65,7 @@ Clinch does not try to wrap other libraries inside the Clinch namespace. This ke
 
 ### Flexible
 
-Clinch does not inflict any particular design onto its client applications. It can be easily modified to create a specific engine. It uses plugins to minimize it's own overhead.
+Clinch uses the SDL2 game engine and strives for "sane" default functionality. However most functionality can be overridden. All events can be replaced, if necessary. This system allows the user to quickly "put pixels on the screen" without removing functionality or power.
 
 ## Architecture
 
@@ -66,7 +73,7 @@ Although Clinch can be used as a complete engine, most parts of Clinch are indep
 
 ### Transforms
 
-A transform is a 4x4 matrix which is used to hold and apply a C array of 16 floating values. CL-game-math is used as the default linear algebra library and its arrays may be passed to the shader. There are funcions for creating various projection matrices. Math functions are supplied through the rtg-math package.
+Clinch uses the rtg-math library. Most of this is "hidden" inside node objects but most functionality will still use raw rtg-math arrays. 
 
 ### Nodes
 

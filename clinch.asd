@@ -17,6 +17,7 @@
   :components ((:file "package")
 	       (:file "threads")
 	       (:file "clinch")
+	       (:file "gc")
 	       (:file "transform")
 	       (:file "node")
 	       (:file "shaders")

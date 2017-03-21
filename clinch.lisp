@@ -34,6 +34,11 @@
 (defparameter *entity* nil
   "The current entity")
 
+(defun safer-read ()
+  (with-standard-io-syntax
+    (let ((*read-eval* nil))
+      (read ))))
+
 ;; not currently using these
 (defparameter *current-shader-attributes*
   #+(or ccl ecl) (make-hash-table :test 'eq)
@@ -44,16 +49,6 @@
   #-(or ccl ecl) (trivial-garbage:make-weak-hash-table :test 'eq))
 
 (defparameter *shaders->shader-programs* (make-hash-table))
-
-(defparameter *uncollected*
-  #+(or ccl ecl) (make-hash-table :test 'eq)
-  #-(or ccl ecl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
-  "Weak hash of loaded OpenGL objects.")
-
-(defparameter *dependents*  
-  #+(or ccl ecl) (make-hash-table :test 'eq)
-  #-(or ccl ecl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
-  "Weak hash of OpenGL objects waiting to be unloaded by another.")
 
 (defmacro ! (&body body)
   "Runs body in main thread for safe OpenGL calls. Waits for return value."
@@ -70,52 +65,6 @@
        (loop until *running* do (bordeaux-threads:thread-yield)))
      (sdl2:in-main-thread (:background t)
        ,@body)))
-
-(defgeneric unload (this &key) 
-  (:documentation "Unloads an opengl object. Does nothing for non-opengl objects."))
-
-(defmethod unload ((this t) &key))
-
-(defun add-uncollected (this)
-  "Adds item to list of loaded OpenGL objects."
-  (setf (gethash (key this) *uncollected*) this))
-
-(defun remove-uncollected (this)
-  "Removes item from list of loaded OpenGL objects. Does NOT call unload."
-  (remhash (key this) *uncollected*))
-
-(defun unload-all-uncollected ()
-  "Unloads all loaded OpenGL objects."
-  (loop for key being the hash-keys of *uncollected*
-     do (unload (gethash key *uncollected*))))
-
-;; Internal dependance tracking functions
-(defun unload-dependent (this dependent)
-  (let* ((deps (gethash (key this) *dependents*))
-	 (k (key dependent)))
-    (when (member k deps)
-      (unload dependent)
-      (setf (gethash (key this) *dependents*)
-	    (remove k (gethash (key this) *dependents*))))))
-
-(defun add-dependent (this dependent)
-  (setf (gethash (key this) *dependents*)
-	(cons (key dependent)
-	      (gethash this *dependents*)))
-  dependent)
-
-(defun remove-dependent (this dependent)
-  (setf (gethash this *dependents*)
-	(remove dependent
-		(gethash this *dependents*))))
-  
-(defun unload-all-dependants (this)
-  (map nil (lambda (key)
-	     (let ((val (gethash key *uncollected*)))
-	       (when val
-		 (unload val))))
-       (gethash this *dependents*))
-  (remhash this *dependents*))
 
 (defun normalize-for-3D (m)
   (m4:*s m (aref m 15)))
