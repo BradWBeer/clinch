@@ -1,0 +1,205 @@
+
+* Clinch, an overview.
+
+Clinch is a 2d and 3d game engine for common lisp.
+Clinch started out as a simple lisp wrapper over OpenGL but has grown to include many useful features for game making.
+These include shaders, image loading, animations, mesh loading, event handling, rich text, vector drawing, and more. 
+
+However, at its heart, is made for repl based editing.
+It's a tool for quickly getting things on screen where they can easily be manipulated. 
+It can be used as a stand alone game engine; it wouldn't be much use if it couldn't. 
+Lisp supports powerful run time inspection and interaction. 
+Clinch is made to take advantage of Lisp's special abilities. 
+
+This tutorial came from a discussion where I explained a few of my tutorials. 
+I realized I had documented everything fairly well and I had carefully crafted my examples but I didn't explain why things are arranged like they are.
+This will be your guide to using, and understanding, clinch. 
+And you might, just like I did, learn to appreciate Lisp just a little more.
+
+* An Editor?
+
+I didn't realize this for a while, but Clinch is an editor. 
+Even without anything except an empty window, it's still an editor.
+As long as you have a repl, you can view, modify and create content.
+And since I didn't realize I was creating an editor, I took a similar direction to other editors: ed, vi, sed, etc.
+Oddly, this works very well for multimedia. 
+
+The problem any graphical editor of any real power is complexity. 
+If the GUI does everything possible, then the GUI is horribly complex. 
+Every editor decides which features are most important, but they can not do everything.
+
+Unless it includes a programming language. 
+
+Some editors use plugins. 
+Others have a "scripting" language. 
+Clinch uses the repl to modify things.
+
+From the repl you have access to everything. 
+Every function, variable, objects, method, etc. 
+But sometimes things are hard to type.
+I found myself typeing the same things hundreds of times so I made shortcuts.
+These shortcuts become powerful tools for interactive development, but it distanced me from my users.
+Because now they didn't understand how it worked or what the interface is.
+
+* Concepts
+
+** Math Functions
+
+There is one "shortcut" which doesn't follow the rules, but it's so important I keep it:
+
+* (v! a b c d ...) - Create a vector. 
+
+Vectors are the most useful type in computer graphics. 
+Having a quick way to make them simplifies everything. 
+This one "command" can make vectors of any length, but you will normally need 2, 3 or 4. 
+
+This isn't actually from clinch, but rather from the rtg-math (real time game math) library. 
+Math functions are easy to find with the following: 
+
+** (v: ...)  - General vector functions
+** (v3: ...) - Triple vector functions
+** (v4: ...) - Quadruple vector functions
+
+** (M: ...)  - General matrix function.
+** (M3: ...) - 3x3 matrix functions.  
+** (M4: ...) - 4x4 matrix functions.
+
+** (q: ...)  - Quadterniuns functions.  
+
+* Commands 
+
+A command starts with '!'. 
+Well, the shorcuts do and they look a lot like commands. 
+Every command also has a long, descriptive, function name.
+
+Clinch is multithreaded but has a single thread which can read and write to the GPU.
+Most of Clinch's functions know enough to use that thread for their work, but sometimes you will need to specify it.
+Shortcuts '!' and '!!' send code to the main thread.
+
+** (! ....)  - Execute code inside main thread and return values when finished. (sdl2:in-main-thread () ...)
+** (!! ....) - Execute code inside main thread asynchronously. Does not return a value. (sdl2:in-main-thread (:background t) ...)
+
+One of the most common commands is moving nodes in a 3D space. 
+Nodes are wrappers around 4x4 matrix transforms. 
+They can (and should) have children such as other nodes and entities (things that get drawn on screen).
+To manipulate them I have the following commands: 
+
+** (!t node x y z)   - Translate the node. (translate node (v! x y z)) 
+** (!r node a b c d) - Rotate the node with quaternioun. (rotate node (v! a b c d))
+** (!s node x y z)   - Scale the node. (scale node (v! x y z)
+
+Putting true at the end '(!s 1 2 3 t)' will set the node to that value instead of adding it to its current position.
+
+Sometimes you want to reset your node to the identity (do noting) matrix: 
+
+** (!0 node)  - Reset the node to identity. (reset-node node)
+** (!t0 node) - Reset node's translation only. (reset-translation node)
+** (!r0 node) - Reset node's rotation only. (reset-rotation node)
+** (!s0 node) - Reset node's scaling only. (reset-scaling node)
+
+
+* GPU Data 
+
+OpenGL keeps data in two places: 
+
+** On the CPU
+** On the GPU
+
+To move data back and forth between CPU and GPU Clinch has the pullg and pushg functions. 
+
+** (!> object) - Pull object's GPU data.
+** (!< object data) - Push data to GPU object.
+
+These case be used with Clinch's buffers, textures and shader programs. 
+The only exception is you can not pushg to a shader program.
+
+Things that are kept on the GPU have to be created and deleted.
+Most libraries and tools try to hide this from you.
+Clinch embraceses it. 
+
+
+* Nodes 
+
+If you are familiar with linear algebra, nodes are the transforms. 
+They are just wrappers around the data and the various operations.
+
+They can also have children. 
+If you render using clinch:render method, then it will pass itself to its children so they can compile their operations. 
+Therefore, if you rotate the parent node, all other nodes will also rotate.
+
+Clinch always has the *root* node, which is rendered by default. 
+
+
+
+* Entities
+
+Entities are what tie all of Clinch together. 
+Entities are the only things that are rendered.
+They encapsulate the idea of drawing. 
+They hold several different types of data and send it to the shader-program which will create output.
+
+Unless you want something special, you shouldn't need to worry about them other than to understand what they do.
+If you use Clinch's built in functionality, you should just get an entity from somewhere else, such as a load-* function.
+
+Clinch entities are usually positioned using nodes. 
+But you can put the same entity under multiple nodes to render it different places.
+So you only need one of each.
+
+
+
+They have few requirements: 
+
+** A Shader-Program
+** One or more GPU buffers.
+
+But that's the bare minimum. 
+It's much more likely you will have:
+
+** A Shader-Program
+** An Index-Buffer
+** Several Buffers.
+** Several static (or uniform) values.
+** One or more Textures.
+** Various transforms.
+
+
+
+
+* viewport
+** perspective
+*** node 
+**** entity
+***** shader-program
+****** vert-shader
+****** frag-shader
+***** buffer
+***** index-buffer
+***** texture 
+****** pixel-buffer
+****** cairo-context 
+***** window (camera variant)
+**** node->
+
+* Containers: 
+ viewport
+ node
+ entity
+ 
+./shaders.lisp
+./framebuffer.lisp
+./texture-animation.lisp
+./default-shaders.lisp
+./shader-program.lisp
+./pixel-buffer.lisp
+./viewport.lisp
+./entity.lisp
+./window.lisp
+./threads.lisp
+./shapes.lisp
+./animation.lisp
+./node.lisp
+./transform.lisp
+./2d-node.lisp
+./texture.lisp
+./index-buffer.lisp
+./buffer.lisp

@@ -41,23 +41,23 @@
 	     :initarg  :children))
   (:documentation "A node class for creating hierarchies of objects. It caches calculations for speed. Not enough in itself, and is not required by Clinch."))
 
-(defgeneric !reset (this)
+(defgeneric reset (this)
   (:documentation "Resets a node to default. Position 0, rotation 0 and scale of 1. 
 Shortcut is !0."))
-(defgeneric !reset-translation (this)
+(defgeneric reset-translation (this)
   (:documentation "Resets a node's translation to 0,0,0.
 Shortcut is !t0"))
-(defgeneric !reset-rotation (this)
+(defgeneric reset-rotation (this)
   (:documentation "Resets a node's rotation to 1,0,0,0.
 Shortcut is !r0"))
-(defgeneric !reset-scaling (this)
+(defgeneric reset-scaling (this)
   (:documentation "Resets a node's scaling to 1,1,1.
 Shortcut is !s0"))
 
-(clone-function !reset !0)
-(clone-function !reset-translation !t0)
-(clone-function !reset-rotation !r0)
-(clone-function !reset-scaling !s0)
+(clone-function reset !0)
+(clone-function reset-translation !t0)
+(clone-function reset-rotation !r0)
+(clone-function reset-scaling !s0)
 
 (defgeneric (setf translation) (val this))
 (defgeneric (setf rotation) (val this))
@@ -105,7 +105,7 @@ Shortcut is !s."))
 			       vi))))	
 
 
-(defmethod !reset ((this node))
+(defmethod reset ((this node))
   "Resets the node."
   (setf (translation this) v0)
   (setf (rotation this)    (q:identity))
@@ -114,19 +114,23 @@ Shortcut is !s."))
   (setf (slot-value this 'r-matrix) nil)
   (setf (slot-value this 's-matrix) nil)
   (setf (slot-value this 's-matrix) nil)
-  (setf (slot-value this 'transform) nil))
+  (setf (slot-value this 'transform) nil)
+  this)
 
-(defmethod !reset-translation ((this node))
+(defmethod reset-translation ((this node))
   (setf (slot-value this 't-matrix) nil
-	(translation this) v0))
+	(translation this) v0)
+  this)
 
-(defmethod !reset-rotation ((this node))
+(defmethod reset-rotation ((this node))
   (setf (slot-value this 'r-matrix) nil
-	(rotation this) (q:identity)))
+	(rotation this) (q:identity))
+  this)
 
-(defmethod !reset-scaling ((this node))
+(defmethod reset-scaling ((this node))
   (setf (slot-value this 's-matrix) nil
-	(scaling this) vi))
+	(scaling this) vi)
+  this)
 
 
 (defmethod print-object ((this node) s)
@@ -294,7 +298,8 @@ Shortcut is !s."))
 	   (,v (q:from-axis-angle (v! ,x ,y ,z) (d->r ,w))))
        (if ,in-place
 	   (setf (rotation ,tthis) ,v)
-	   (rotate ,tthis ,v)))))
+	   (rotate ,tthis ,v))
+       ,tthis)))
 
 (defmethod translate ((this node) trans &key (modify t))
   "Translate the node. Takes a vector3."
@@ -311,7 +316,8 @@ Shortcut is !s."))
 	   (,v (v! ,x ,y, z)))
        (if ,in-place
 	   (setf (translation ,tthis) ,v)
-	   (translate ,tthis ,v)))))
+	   (translate ,tthis ,v))
+       ,tthis)))
 
 (defmethod scale ((this node) size &key (modify t))
   "Scales a node. Takes a vector3."
@@ -319,6 +325,7 @@ Shortcut is !s."))
       (setf (scaling this) 
 	    (v:* size (scaling this)))
       (v:* size (scaling this))))
+    
 
 (defmacro !s (this x y z &optional in-place)
   (let ((tthis (gensym))
@@ -328,7 +335,8 @@ Shortcut is !s."))
 	   (,v (v! ,x ,y, z)))
        (if ,in-place
 	   (setf (scaling ,tthis) ,v)
-	   (scale ,tthis ,v)))))
+	   (scale ,tthis ,v))
+       ,tthis)))
 
 
 (defmethod n* ((this node) (that node) &key new-node)
