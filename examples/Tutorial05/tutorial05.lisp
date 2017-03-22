@@ -114,7 +114,7 @@
   (case state
     ;; Left mouse button down: rotate.
     (1 (clinch:rotate *node*
-		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0)))
+		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0.0)))
     
     ;; Mouse wheel down: translate.
     (2 (clinch:translate *node* (clinch:v! (/ xrel 2) (/ yrel -2) 0)))))
