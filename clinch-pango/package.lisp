@@ -2,7 +2,7 @@
 
 (export 'print-text)
 (export 'print-raw-text)
-(export 'print-with-attributes)
+(export 'print-text-with-attributes)
 
 (export 'with-paragraph)
 (export 'position-text)
