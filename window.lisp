@@ -395,8 +395,9 @@ working while cepl runs"
 	   (cons (cons '*standard-output* *standard-output* )
 		 (cons (cons '*standard-input* *standard-input*)
 		       bordeaux-threads:*default-special-bindings*)))
-	(setf *startup-condition* (bordeaux-threads:make-condition-variable))
-	(bordeaux-threads:condition-wait *startup-condition* :timeout 10))
+	;;(setf *startup-condition* (bordeaux-threads:make-condition-variable))
+	;;(bordeaux-threads:condition-wait *startup-condition* :timeout 10)
+	)
 	
       (_init :asynchronous asynchronous
 	     :init-controllers init-controllers
@@ -494,7 +495,7 @@ working while cepl runs"
                     *root* (make-instance 'node :translation (v! 0 0 -100))
 		    *node* *root*
 		    *running* t)
-	      (bordeaux-threads:condition-notify *startup-condition*)
+	      ;;(bordeaux-threads:condition-notify *startup-condition*)
               (main-loop win gl-context width height asynchronous)
               (unload-all-uncollected)
               (setf *root* nil
