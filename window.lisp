@@ -55,7 +55,7 @@
   "Called when a key is pressed. Arguments (win keysym state ts)")
 (defparameter *on-key-up* nil
   "Called when a key is released. Arguments (win keysym state ts)")
-(defparameter *text-editing* nil
+(defparameter *on-text-editing* nil
   "Called when editing text.")
 (defparameter *on-text-input* nil
   "Call when text input happens.")
@@ -281,7 +281,7 @@ working while cepl runs"
 
     (:textediting
      (:window-id win :timestamp ts :text text)
-     (fire *text-editing* win text ts))
+     (fire *on-text-editing* win text ts))
 
     (:textinput
      (:window-id win :timestamp ts :text text)

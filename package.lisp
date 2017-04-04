@@ -90,7 +90,7 @@
    #:*on-controller-axis-move*
    #:*on-idle*
    #:*on-quit*
-   #:*text-editing*
+   #:*on-text-editing*
    #:*on-text-input*
 
    #:unload-all-uncollected
