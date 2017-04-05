@@ -19,6 +19,11 @@
 		  size)
 	      :initial-contents initial-contents :adjustable t :element-type 'character :fill-pointer t))
 
+(defun sref (seq position)
+  (cond ((null position) (aref seq 0))
+	((eq t position) (aref seq (1- (length seq))))
+	(t (aref seq position))))
+
 (defun spush (seq value)
   (vector-push-extend value seq)
   seq)
@@ -68,41 +73,26 @@
 
 (clinch:init :init-controllers nil)
 
-(! (gl:clear-color 1 1 1 1)
-   (sdl2:start-text-input))
-
+(!! (gl:clear-color 1 1 1 1)
+    (sdl2:start-text-input))
 
 (defun draw-buffer ()
   (fast-draw ()
     (clear-cairo-context)
-    (loop for (text . attr) in *text-buffer* 
-	 do (print-text-with-attributes text (append *default-attributes* attr)))))
+    (loop for (text . attr) being the elements of *text-buffer* 
+       do (print-text-with-attributes text (append *default-attributes* attr)))))
 
 (defun new-paragraph (text &optional attributes)
   (setf *text-buffer*
-	(append *text-buffer*
-		(list (cons text attributes))))
+	(spush *text-buffer*
+	       (cons (make-seq-string :initial-contents text)
+		     attributes)))
   (draw-buffer))
 
-;;(defun delete-paragraph (paragraph)
-  
-
-(defun insert-char (string char &optional (pos t))
-  (when (characterp char)
-      (setf char (princ-to-string char)))
-  
-  (cond ((null pos) (concatenate 'string char string))
-	((eq t pos) (concatenate 'string string char))
-	(t (concatenate 'string 
-			(subseq string 0 pos) 
-			char
-			(subseq string pos)))))
-
-
 (defun insert-char-into-paragraph (paragraph char &optional (pos t))
-  (setf (car (nth paragraph *text-buffer*))
-	(insert-char (car (nth paragraph *text-buffer*))
-		     char pos))
+  (sinsert 
+   (car (sref *text-buffer* paragraph))
+   char pos)
   (draw-buffer))
 
 (defun insert-at-caret (char)
