@@ -69,16 +69,13 @@
 
 (defparameter *default-attributes* '((:size 25)))
 (defparameter *text-buffer* nil)
-(defparameter *caret* nil)
+(defparameter *caret* '(t t))
 
 (clinch:init :init-controllers nil)
 
-(!! (gl:clear-color 1 1 1 1)
-    (sdl2:start-text-input))
-
 (defun draw-buffer ()
   (fast-draw ()
-    (clear-cairo-context)
+    (clear-cairo-context .5 .5 .5 0)
     (loop for (text . attr) being the elements of *text-buffer* 
        do (print-text-with-attributes text (append *default-attributes* attr)))))
 
@@ -95,6 +92,11 @@
    char pos)
   (draw-buffer))
 
+(defun delete-char-in-paragraph (&optional (paragraph t) (pos t))
+  (sdelete (car (sref *text-buffer* paragraph)) pos)
+  (draw-buffer))
+
+
 (defun insert-at-caret (char)
   (let ((p (car *caret*))
 	(pos (cdr *caret*)))
@@ -110,9 +112,32 @@
 	  (cond ((null pos) 1)
 		((eq t pos) t)
 		(t (1+ pos))))))    
-    
+
+
+
 (defevent *on-window-resized* (window width height ts)
   (draw-buffer))
 
+;; Key press handler
+(defevent *on-key-down* (win keysym state ts)
+  (format t "~A ~A ~A ~A~%" win (sdl2:scancode keysym) state ts)
+  (cond ((eql (sdl2:scancode keysym) :scancode-backspace)
+	 (delete-char-in-paragraph))))
+	 
+  
+  
+  ;; (add-to-key-state (sdl2:scancode keysym))
+  ;; (when (eql :scancode-space (sdl2:scancode keysym))
+  ;;   (sdl2-mixer:play-channel 0 *sound-effect* 0)))
+
+
+
 (defevent *on-text-input* (window char ts)
   (insert-at-caret (code-char char)))
+
+(! 
+  (setf *text-buffer* (make-seq))
+  (setf *caret* '(t . t))
+  (gl:clear-color 1 1 1 1)
+  (sdl2:start-text-input)
+  (draw-buffer))
