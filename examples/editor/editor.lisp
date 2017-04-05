@@ -4,6 +4,64 @@
 
 (use-package :clinch)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Useful functions for arrays (both strings and paragraph arrays)
+
+(defun make-seq (&key (size 0) initial-contents)
+  (make-array (if initial-contents 
+		  (length initial-contents)
+		  size)
+	      :initial-contents initial-contents :adjustable t :fill-pointer t))
+
+(defun make-seq-string (&key (size 0) initial-contents)
+  (make-array (if initial-contents 
+		  (length initial-contents)
+		  size)
+	      :initial-contents initial-contents :adjustable t :element-type 'character :fill-pointer t))
+
+(defun spush (seq value)
+  (vector-push-extend value seq)
+  seq)
+
+(defun spop (seq)
+  (unless (zerop (length seq))
+    (vector-pop seq))
+  seq)
+
+(defun slast (seq)
+  (aref seq 
+	(1- (length seq))))
+
+(defun sinsert (seq value &optional (position t))
+  (if (eq t position) 
+      (spush seq value)
+      (let ((p (if (null position) 0 position)))
+	(spush seq (slast seq))
+	(loop for i from (- (length seq) 3) downto p
+	   do (setf (aref seq (1+ i)) 
+		    (aref seq i)))
+	(setf (aref seq p) value)))
+  seq)
+
+(defun sreplace (seq value &optional (position t))
+  (setf (aref seq 
+	      (cond ((null position) 0)
+		    ((eq t position) (1- (length seq)))
+		    (t position)))
+	value)
+  seq)
+
+(defun sdelete (seq &optional (position t))
+  (if (eq t position) 
+      (spop seq)
+      (let ((p (if (null position) 0 position)))
+	(loop for i from p to (- (length seq) 2)
+	   do (setf (aref seq i)
+		    (aref seq (1+ i))))
+	(spop seq)))
+  seq)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defparameter *default-attributes* '((:size 25)))
 (defparameter *text-buffer* nil)
 (defparameter *caret* nil)
