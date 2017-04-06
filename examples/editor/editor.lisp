@@ -114,6 +114,23 @@
 		(t (1+ pos))))))    
 
 
+;; (defun delete-at-caret (char)
+;;   (let ((p (car *caret*))
+;; 	(pos (cdr *caret*)))
+;;     (delete-char-in-paragraph 
+;;      (cond ((null p) 0)
+;; 	   ((or (eq t p)
+;; 		(>= p (length *text-buffer*)))
+;; 	    (1- (length *text-buffer*)))
+;; 	   (t p))
+;;      char 
+;;      pos)
+;;     (setf (cdr *caret*)
+;; 	  (cond ((null pos) 1)
+;; 		((eq t pos) t)
+;; 		(t (1+ pos))))))    
+
+
 
 (defevent *on-window-resized* (window width height ts)
   (draw-buffer))
@@ -124,15 +141,7 @@
   (cond ((eql (sdl2:scancode keysym) :scancode-backspace)
 	 (delete-char-in-paragraph))))
 	 
-  
-  
-  ;; (add-to-key-state (sdl2:scancode keysym))
-  ;; (when (eql :scancode-space (sdl2:scancode keysym))
-  ;;   (sdl2-mixer:play-channel 0 *sound-effect* 0)))
-
-
-
-(defevent *on-text-input* (window char ts)
+  (defevent *on-text-input* (window char ts)
   (insert-at-caret (code-char char)))
 
 (! 
@@ -140,4 +149,5 @@
   (setf *caret* '(t . t))
   (gl:clear-color 1 1 1 1)
   (sdl2:start-text-input)
+  (new-paragraph "")
   (draw-buffer))
