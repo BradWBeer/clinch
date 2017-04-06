@@ -4,7 +4,6 @@
 (in-package #:clinch)
 
 ;;;; window.lisp
-(defparameter *startup-condition* nil)
 (defparameter *startup-lock* nil)
 
 (defmacro defevent (event args &body body)
@@ -368,6 +367,9 @@ working while cepl runs"
   "Creates Clinch's window in it's own thread.
  Use ! (wait and return a value from main thread) or
  Use !! (return immediately with a nil."
+
+  (setf *startup-lock* (bordeaux-threads:make-lock)
+	*running* nil)
   (if asynchronous
       (prog1 
 	  (bordeaux-threads:make-thread
@@ -437,17 +439,19 @@ working while cepl runs"
 		(double-buffer t)
 		(hidden nil)
 		(resizable t))
-  (unless *running*
+  (unless (or *running*
+	      (not (bordeaux-threads:acquire-lock *startup-lock* nil)))
+    
     (let ((local-stdout *standard-output*)
 	  (local-input *standard-input*))
       (with-main
-        (let ((*standard-output* local-stdout)
-              (*standard-input* local-input))
-          (print-sdl-version)
-          (unless *inited*
-            (sdl2:with-everything (:window
-                                   (win :w width :h height :title title
-                                        :flags (remove nil
+	  (let ((*standard-output* local-stdout)
+		(*standard-input* local-input))
+	    (print-sdl-version)
+	    (unless *inited*
+	      (sdl2:with-everything (:window
+				     (win :w width :h height :title title
+					  :flags (remove nil
                                                        `(:shown
                                                          :opengl
                                                          ,(when fullscreen
@@ -495,7 +499,8 @@ working while cepl runs"
                     *root* (make-instance 'node :translation (v! 0 0 -100))
 		    *node* *root*
 		    *running* t)
-	      ;;(bordeaux-threads:condition-notify *startup-condition*)
+	      (bordeaux-threads:release-lock *startup-lock*)
+	      (setf *startup-lock* nil)
               (main-loop win gl-context width height asynchronous)
               (unload-all-uncollected)
               (setf *root* nil

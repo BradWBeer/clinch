@@ -55,21 +55,31 @@
   #-(or ccl ecl) (trivial-garbage:make-weak-hash-table :weakness :key-or-value)
   "Weak hash of OpenGL objects waiting to be unloaded by another.")
 
+(defmacro wait-for-lock (lock seconds)
+  (let ((l (gensym "wait-for-lock")))
+    `(handler-case        
+	 (bordeaux-threads:with-timeout (,seconds)
+	   (let ((,l ,lock))
+	     (and ,l 
+		  (bordeaux-threads:with-lock-held (,l)
+		    t))))
+       (timeout () nil))))
+
 (defmacro ! (&body body)
   "Runs body in main thread for safe OpenGL calls. Waits for return value."
   `(progn 
-     (unless *running*
-       (loop until *running* do (bordeaux-threads:thread-yield)))
-     (sdl2:in-main-thread ()
-       ,@body)))
+     (unless (or *running*
+		 (wait-for-lock *startup-lock* 5))
+       (sdl2:in-main-thread ()
+			    ,@body))))
 
 (defmacro !! (&body body)
   "Runs body in main thread for safe OpenGL calls. Returns immediately."
   `(progn 
-     (unless *running*
-       (loop until *running* do (bordeaux-threads:thread-yield)))
-     (sdl2:in-main-thread (:background t)
-       ,@body)))
+     (unless (or *running*
+		 (wait-for-lock *startup-lock* 5))
+       (sdl2:in-main-thread (:background t)
+			    ,@body))))
 
 (defgeneric unload (this &key) 
   (:documentation "Unloads an opengl object. Does nothing for non-opengl objects."))
