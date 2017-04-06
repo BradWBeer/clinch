@@ -97,11 +97,11 @@
 		 *end-rotation*)
 	(setf (rotation *root*) (q:slerp *start-rotation*
 					 *end-rotation*
-					 pos)))
+					 (float pos))))
       (when (and *start-position* *end-position*)
 	(setf (translation *root*) (v:lerp *start-position*
 					   *end-position*
-					   pos)))))
+					   (float pos))))))
 	    
 
   
@@ -118,7 +118,7 @@
   (multiple-value-bind (rot pos)
       (get-position-for-slide i (length (loop for i from 0 to 5 collect i)) *slide-width*)
     (setf *start-rotation* (rotation *root*)
-	  *end-rotation* (q:from-fixed-angles 0 rot 0)
+	  *end-rotation* (q:from-fixed-angles 0.0 rot 0.0)
 	  *start-position* (translation *root*)
 	  *end-position* (v! 0 0 (- pos .5))
 	  *move-to-page* 0)
@@ -154,8 +154,8 @@
     ;; Left mouse button down: rotate.
     (1 (clinch:rotate *root*
 		      (if *vertical*
-			  (q:from-fixed-angles (clinch:degrees->radians (* *mouse-multiplier* yrel)) 0 0)
-			  (q:from-fixed-angles 0 (clinch:degrees->radians (* *mouse-multiplier* xrel)) 0))))
+			  (q:from-fixed-angles (clinch:degrees->radians (* *mouse-multiplier* yrel)) 0.0 0.0)
+			  (q:from-fixed-angles 0.0 (clinch:degrees->radians (* *mouse-multiplier* xrel)) 0.0))))
     
     ;; Mouse wheel down: translate.
     (2 (clinch:translate *root* (clinch:v! (/ xrel 300) (/ yrel -300) 0)))))
@@ -208,7 +208,7 @@
     (clinch:with-context-for-mapped-texture (:texture tex)
 	   (clear-cairo-context 0 0 0))
 
-    (rotate n1 (q:from-fixed-angles 0 deg 0))
+    (rotate n1 (q:from-fixed-angles 0.0 (float deg) 0.0))
     (!t n2 0 0 dist t)
     (add-child *root* n1)
     (add-child n1 n2)

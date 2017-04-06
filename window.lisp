@@ -4,6 +4,8 @@
 (in-package #:clinch)
 
 ;;;; window.lisp
+(defparameter *startup-condition* nil)
+(defparameter *startup-lock* nil)
 
 (defmacro defevent (event args &body body)
   "Creates and updates an event handler. Use this for all your *on-* events. It's just a nice wrapper around (setf event (lambda ..."
@@ -55,7 +57,7 @@
   "Called when a key is pressed. Arguments (win keysym state ts)")
 (defparameter *on-key-up* nil
   "Called when a key is released. Arguments (win keysym state ts)")
-(defparameter *text-editing* nil
+(defparameter *on-text-editing* nil
   "Called when editing text.")
 (defparameter *on-text-input* nil
   "Call when text input happens.")
@@ -281,7 +283,7 @@ working while cepl runs"
 
     (:textediting
      (:window-id win :timestamp ts :text text)
-     (fire *text-editing* win text ts))
+     (fire *on-text-editing* win text ts))
 
     (:textinput
      (:window-id win :timestamp ts :text text)
@@ -367,11 +369,12 @@ working while cepl runs"
  Use ! (wait and return a value from main thread) or
  Use !! (return immediately with a nil."
   (if asynchronous
-      (bordeaux-threads:make-thread
-       (lambda ()
-	 (_init :asynchronous asynchronous
-		:init-controllers init-controllers
-		:width width
+      (prog1 
+	  (bordeaux-threads:make-thread
+	   (lambda ()
+	     (_init :asynchronous asynchronous
+		    :init-controllers init-controllers
+		    :width width
 		:height height
 		:title title
 		:fullscreen fullscreen
@@ -387,11 +390,15 @@ working while cepl runs"
 		:double-buffer double-buffer
 		:hidden hidden
 		:resizable resizable))
-       :name "Main Clinch Thread"
-       :initial-bindings
-       (cons (cons '*standard-output* *standard-output* )
-	     (cons (cons '*standard-input* *standard-input*)
-		   bordeaux-threads:*default-special-bindings*)))
+	   :name "Main Clinch Thread"
+	   :initial-bindings
+	   (cons (cons '*standard-output* *standard-output* )
+		 (cons (cons '*standard-input* *standard-input*)
+		       bordeaux-threads:*default-special-bindings*)))
+	;;(setf *startup-condition* (bordeaux-threads:make-condition-variable))
+	;;(bordeaux-threads:condition-wait *startup-condition* :timeout 10)
+	)
+	
       (_init :asynchronous asynchronous
 	     :init-controllers init-controllers
 	     :width width
@@ -488,6 +495,7 @@ working while cepl runs"
                     *root* (make-instance 'node :translation (v! 0 0 -100))
 		    *node* *root*
 		    *running* t)
+	      ;;(bordeaux-threads:condition-notify *startup-condition*)
               (main-loop win gl-context width height asynchronous)
               (unload-all-uncollected)
               (setf *root* nil

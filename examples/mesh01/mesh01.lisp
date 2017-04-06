@@ -46,7 +46,7 @@
   ;;(format t "x:~A y:~A mouse:~A state:~A~%" x y mouse state)
   (case state
     (1 (clinch:rotate *node*
-		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0)))
+		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0.0)))
     
     (2 (clinch:translate *node* (clinch:v! (/ xrel 16) (/ yrel -16) 0)))))
 

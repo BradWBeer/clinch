@@ -27,8 +27,8 @@
         (cairo:move-to x-pos y-pos)))))
 
 
-(defmacro print-with-attributes (&rest args)
-  `(pango:print-with-attributes ,@args)) 
+(defmacro print-text-with-attributes (&rest args)
+  `(pango:print-text-with-attributes ,@args)) 
 
 (defmacro print-text (&rest args)
   `(pango:print-text ,@args)) 
