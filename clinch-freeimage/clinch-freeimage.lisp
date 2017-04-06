@@ -15,7 +15,11 @@
 		   :qtype  :unsigned-char)))
 
 (defgeneric make-quad-for-image (tex-data &key width height center parent))
-(defmethod make-quad-for-image ((path string) &key width height (center :center) (parent *root*))
+
+(defmethod make-quad-for-image ((path pathname) &key width height (center :center) (parent *node*))
+  (make-quad-for-image (namestring path) :width width  :height height :center center :parent parent))
+
+(defmethod make-quad-for-image ((path string) &key width height (center :center) (parent *node*))
   (let ((texture (make-texture-from-file path :width width :height height)))
     (values (make-quad (width texture)
 		       (height texture)
@@ -118,7 +122,7 @@
 
 ;; !!!! This is a temporary. I will change this to create an animation and then use an animator.  
 
-(defun make-animation-and-quad (path &key (parent clinch:*root*) width height (center :center) shader-program)
+(defun make-animation-and-quad (path &key (parent clinch:*node*) width height (center :center) shader-program)
   (let* ((a (load-animation path))
 	 (o (make-instance 'animator :animation a))
     	 (q (make-quad-for-texture (cdr (aref (frames a) 0))
@@ -134,18 +138,18 @@
 	    o
 	    a)))
 
-(defun load-height-map (path)
-  (freeimage:with-loaded-24bit-map (path
-				    :bitvar bits 
-				    :widthvar w 
-				    :heightvar h)
-    (values
+;; (defun load-height-map (path)
+;;   (freeimage:with-loaded-24bit-map (path
+;; 				    :bitvar bits 
+;; 				    :widthvar w 
+;; 				    :heightvar h)
+;;     (values
      
-     (loop for x from 0 below (* w h 3) by 3
-	append (multiple-value-bind (a b)
-		   (floor (/ x 3) w)
-		 (list (float b)
-		       (/ (cffi:mem-aref bits :unsigned-char x) 
-			  255.0)
-		       (float a))))
-     w h)))
+;;      (loop for x from 0 below (* w h 3) by 3
+;; 	append (multiple-value-bind (a b)
+;; 		   (floor (/ x 3) w)
+;; 		 (list (float b)
+;; 		       (/ (cffi:mem-aref bits :unsigned-char x) 
+;; 			  255.0)
+;; 		       (float a))))
+;;      w h)))

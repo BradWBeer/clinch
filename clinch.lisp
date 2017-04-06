@@ -6,6 +6,7 @@
 ;; global variables. Not exported. 
 (defparameter *window* nil
   "Global window object.")
+
 (defparameter *context* nil
   "Global Opengl Contex object.")
 
@@ -23,6 +24,9 @@
 
 (defparameter *ortho-projection* nil
   "An automatically generated orthogonal projection for the window. Pixel to pixel.")
+
+(defparameter *node* nil
+  "Current default node.")
 
 (defparameter *texture* nil
   "The current texture. Defaults to the window's overlay.")
@@ -53,13 +57,19 @@
 
 (defmacro ! (&body body)
   "Runs body in main thread for safe OpenGL calls. Waits for return value."
-  `(sdl2:in-main-thread ()
-     ,@body))
+  `(progn 
+     (unless *running*
+       (loop until *running* do (bordeaux-threads:thread-yield)))
+     (sdl2:in-main-thread ()
+       ,@body)))
 
 (defmacro !! (&body body)
   "Runs body in main thread for safe OpenGL calls. Returns immediately."
-  `(sdl2:in-main-thread (:background t)
-     ,@body))
+  `(progn 
+     (unless *running*
+       (loop until *running* do (bordeaux-threads:thread-yield)))
+     (sdl2:in-main-thread (:background t)
+       ,@body)))
 
 (defgeneric unload (this &key) 
   (:documentation "Unloads an opengl object. Does nothing for non-opengl objects."))

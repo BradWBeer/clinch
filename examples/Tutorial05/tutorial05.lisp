@@ -67,7 +67,7 @@
 	 (concatenate 'string 
 		      (directory-namestring
 		       (asdf:system-relative-pathname :clinch "clinch.asd"))
-		      "examples/Tutorial05/lambda.png")))
+		      "examples/assets/img/lambda.png")))
 
   (setf (clinch:uniform *quad-mesh* "t1") *texture*)
   
@@ -114,7 +114,7 @@
   (case state
     ;; Left mouse button down: rotate.
     (1 (clinch:rotate *node*
-		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0)))
+		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0.0)))
     
     ;; Mouse wheel down: translate.
     (2 (clinch:translate *node* (clinch:v! (/ xrel 2) (/ yrel -2) 0)))))

@@ -12,8 +12,8 @@
 ;; 	   "/home/warweasle/work/tools/assimp/test/models/X/test_cube_compressed.x")
 
 (defparameter scene-path
-  "/home/warweasle/work/tools/assimp/test/models/X/Testwuson.X")
-;;(defparameter scene-path "/home/warweasle/work/external/assimp/test/models/MD2/sydney.md2")
+  (asdf:system-relative-pathname 'clinch 
+				 "examples/assets/3d/Testwuson.X"))
 
 (defparameter *node* nil)
 (defparameter *projection* nil)
@@ -108,7 +108,7 @@
   ;;(format t "x:~A y:~A mouse:~A state:~A~%" x y mouse state)
   (case state
     (1 (clinch:rotate *node*
-		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0)))
+		      (q:from-fixed-angles (clinch:degrees->radians yrel) (clinch:degrees->radians xrel) 0.0)))
     
     (2 (clinch:translate *node* (clinch:v! (/ xrel 16) (/ yrel -16) 0)))))
 

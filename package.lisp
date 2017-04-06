@@ -53,11 +53,13 @@
    #:*root*
    #:*window*
    #:*context*
-   #:fbo*
+   #:*fbo*
    #:*projection*
    #:*ortho-projection*
    #:*viewport*
+   #:*node*
    #:*ticks* #:*delta-ticks*
+   #:*default-on-idle*
    #:*next*
    #:*on-window-size-changed*
    #:*on-window-resized*
@@ -88,13 +90,14 @@
    #:*on-controller-axis-move*
    #:*on-idle*
    #:*on-quit*
-   #:*text-editing*
+   #:*on-text-editing*
    #:*on-text-input*
 
    #:unload-all-uncollected
    #:shader-program #:name
 
    #:get-generic-single-color-shader
+   #:get-generic-per-vertex-color-shader
    #:get-generic-solid-phong-shader
    #:get-generic-single-texture-shader
    #:get-generic-single-diffuse-light-shader
@@ -115,7 +118,7 @@
    #:update 
    #:texture-animation #:get-current-frame
 
-   #:node #:children #:changed? #:render #:traverse-node
+   #:node #:children #:changed? #:render #:traverse-node #:with-node #:with-new-node
 
    #:enabled
    #:make-foreign-array #:make-identity-matrix #:list->matrix #:copy-foreign-array #:fill-foreign-array #:cached-matrix #:matrix #:get-current-matrix #:update-current-matrix #:read-gl-matrix #:get-current-gl-matrix #:use-matrix #:save-matrix  #:print-node-data #:m*m #:mT #:det #:m-1 
