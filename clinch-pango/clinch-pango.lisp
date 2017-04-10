@@ -24,7 +24,47 @@
              (y-pos (+ (* %y
                           (- y-end y-start))
                        y-start)))
-        (cairo:move-to x-pos y-pos)))))
+        (cairo:move-to x-pos y-pos)
+	(values (list xt yt wt ht)
+		(list x-pos y-pos))))))
+
+(defmacro print-text (text &key (width nil) (wrap :pango_wrap_word) (alignment :PANGO_ALIGN_LEFT))
+  "Print a block of text with markup."
+  `(with-paragraph (:width ,width :wrap ,wrap :alignment ,alignment)
+     (cairo:save)
+
+     (pango_layout_set_markup ,*layout* (xmls:toxml
+					 ,text) -1)
+     
+     (pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
+     (pango_cairo_show_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
+     (cairo:restore)
+     (unless (cairo:has-current-point) (cairo:move-to 0 0))
+     (cairo:rel-move-to 0 (nth-value 1 (get-layout-size ,*layout*)))))
+
+(defmacro print-text-with-attributes (text attributes &key (width nil) (wrap :pango_wrap_word) (alignment :pango_ALIGN_LEFT))
+  "Print a block of text with markup."
+  `(with-paragraph (:width ,width :wrap ,wrap :alignment ,alignment)
+     (cairo:save)
+     
+     (pango_layout_set_text *layout* ,text -1)
+     (with-attribute-list ()
+       (map nil 
+	    (lambda (a)
+	      (apply
+	       (cdr (assoc (car a) *alist-attributes*))
+	       (cdr a)))
+	    ,attributes)
+       
+       (pango_layout_set_attributes *layout* *attribute-list*)
+       (pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) *layout*)
+       
+       (pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
+       (pango_cairo_show_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
+       (cairo:restore)
+       (unless (cairo:has-current-point) (cairo:move-to 0 0))
+       (cairo:rel-move-to 0 (nth-value 1 (get-layout-size ,*layout*))))))
+
 
 
 (defmacro print-text-with-attributes (&rest args)
