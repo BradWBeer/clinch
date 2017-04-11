@@ -99,17 +99,16 @@
 		
 		(multiple-value-bind (strong weak) 
 		  (pango:get-cursor-pos pango::*layout* index)
-		  
 		  (let ((start-x (first strong))
-			(start-y (second strong))
-			(h (fourth strong)))
-		    ;;(cairo:save)
+		  	(start-y (second strong))
+		  	(h (fourth strong)))
+
+		    (cairo:save)
 		    (cairo:set-source-rgb 1 0 0) 
 		    (cairo:rel-move-to start-x start-y)
-		    (cairo:rel-line-to 0 h) 
-		    (cairo:stroke)
-		    (cairo:restore)
-		    ))))))))
+		    ;;   (cairo:rel-line-to 0 h) 
+		    ;;   (cairo:stroke)
+		    (cairo:restore)))))))))
 								     
 	    ;;(format t "~A~%" (multiple-value-list (pango:get-cursor-pos pango::*layout* (1- (length text)))))))))
 					      
