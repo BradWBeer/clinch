@@ -33,14 +33,15 @@
   `(with-paragraph (:width ,width :wrap ,wrap :alignment ,alignment)
      (cairo:save)
 
-     (pango_layout_set_markup ,*layout* (xmls:toxml
+     (pango::pango_layout_set_markup ,*layout* (xmls:toxml
 					 ,text) -1)
      
-     (pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
-     (pango_cairo_show_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
+     (pango::pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
+     (pango::pango_cairo_show_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
      (cairo:restore)
      (unless (cairo:has-current-point) (cairo:move-to 0 0))
-     (cairo:rel-move-to 0 (nth-value 1 (get-layout-size ,*layout*)))))
+     (cairo:rel-move-to 0 (nth-value 1 (pango::get-layout-size ,*layout*)))
+     (pango::get-layout-extents ,*layout*)))
 
 (defmacro print-text-with-attributes (text attributes &key (width nil) (wrap :pango_wrap_word) (alignment :pango_ALIGN_LEFT))
   "Print a block of text with markup."
@@ -63,7 +64,8 @@
        (pango_cairo_show_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
        (cairo:restore)
        (unless (cairo:has-current-point) (cairo:move-to 0 0))
-       (cairo:rel-move-to 0 (nth-value 1 (get-layout-size ,*layout*))))))
+       (cairo:rel-move-to 0 (nth-value 1 (get-layout-size ,*layout*)))
+       (pango::get-layout-extents ,*layout*))))
 
 
 
