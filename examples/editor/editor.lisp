@@ -126,20 +126,6 @@
    char pos)
   (draw-buffer))
 
-(defun delete-char-in-paragraph (&optional (paragraph t) (pos t))
-  (sdelete (car (sref *text-buffer* paragraph)) pos)
-  (draw-buffer))
-
-
-(defun insert-at-cursor (char)
-  (let ((p (car *cursor*))
-	(pos (cdr *cursor*)))
-    (incf (cdr *cursor*))
-    (insert-char-into-paragraph p char pos)))
-
-	  
-
-
 ;; (defun delete-at-cursor (char)
 ;;   (let ((p (car *cursor*))
 ;; 	(pos (cdr *cursor*)))
@@ -163,9 +149,22 @@
 ;; (defun Seq- (seq pos)
 ;;   (cond ((null pos) 
 
-(defun cursor-left ()
-  (setf (cdr *cursor*) (floor (1- (cdr *cursor*)) (length (sref *text-buffer* (car *cursor*)))))
+(defun delete-char-in-paragraph (&optional (paragraph t) (pos t))
+  (sdelete (car (sref *text-buffer* paragraph)) pos)
   (draw-buffer))
+
+
+(defun insert-at-cursor (char)
+  (let ((p (car *cursor*))
+	(pos (cdr *cursor*)))
+    (incf (cdr *cursor*))
+    (insert-char-into-paragraph p char pos)))
+
+
+(defun cursor-left ()
+  (when (> (cdr *cursor*) 0)
+    (decf (cdr *cursor*))
+    (draw-buffer)))
 
 (defun cursor-right ()
   (setf (cdr *cursor*) (ceiling (1+ (cdr *cursor*)) (length (sref *text-buffer* (car *cursor*)))))
