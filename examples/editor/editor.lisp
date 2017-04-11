@@ -19,6 +19,18 @@
 		  size)
 	      :initial-contents initial-contents :adjustable t :element-type 'character :fill-pointer t))
 
+(defun translate-cursor-to-index (seq cursor)
+  (cond ((null cursor) 0)
+	((eq t cursor) cursor)
+	(t (length seq))))
+
+(defun inc-cursor (seq cursor)
+  (cond ((null cursor) 1)
+	((eq t cursor) t)
+	((= cursor (1- (length seq))) t)
+	(t (1+ cursor))))
+
+
 (defun sref (seq position)
   (cond ((null position) (aref seq 0))
 	((eq t position) (aref seq (1- (length seq))))
@@ -38,9 +50,9 @@
 	(1- (length seq))))
 
 (defun sinsert (seq value &optional (position t))
-  (if (eq t position) 
+  (if (zerop position) 
       (spush seq value)
-      (let ((p (if (null position) 0 position)))
+      (let ((p position))
 	(spush seq (slast seq))
 	(loop for i from (- (length seq) 3) downto p
 	   do (setf (aref seq (1+ i)) 
@@ -57,9 +69,9 @@
   seq)
 
 (defun sdelete (seq &optional (position t))
-  (if (eq t position) 
+  (if (>= position (1- (length seq)))
       (spop seq)
-      (let ((p (if (null position) 0 position)))
+      (let ((p position))
 	(loop for i from p to (- (length seq) 2)
 	   do (setf (aref seq i)
 		    (aref seq (1+ i))))
@@ -78,14 +90,14 @@
     (clear-cairo-context .5 .5 .5 0)
     (loop for (text . attr) being the elements of *text-buffer* 
        do (pango::print-with-attributes (text) (append *default-attributes* attr)
-	    (let* ((index (length text)))
-		  
+	    (let* ((index (1+ (cdr *cursor*))))
+	      (format t "~S~%" *cursor*)
 	      (multiple-value-bind (strong weak) 
 		  (pango:get-cursor-pos pango::*layout* index)
 
-		(format t "~A~%" (multiple-value-list (pango:get-line-from-position pango::*layout* index)))
+		;;(format t "~A~%" (multiple-value-list (pango:get-line-from-position pango::*layout* index)))
 		
-		(format t "~S ~S~%" strong weak)
+		;;(format t "~S ~S~%" strong weak)
 		(let ((start-x (first weak))
 		      (start-y (second weak))
 		      (h (fourth weak)))
@@ -120,18 +132,9 @@
 (defun insert-at-cursor (char)
   (let ((p (car *cursor*))
 	(pos (cdr *cursor*)))
-    (insert-char-into-paragraph 
-     (cond ((null p) 0)
-	   ((or (eq t p)
-		(>= p (length *text-buffer*)))
-	    (1- (length *text-buffer*)))
-	   (t p))
-     char 
-     pos)
-    (setf (cdr *cursor*)
-	  (cond ((null pos) 1)
-		((eq t pos) t)
-		(t (1+ pos))))))    
+    (insert-char-into-paragraph p char pos)
+    (incf (cdr *cursor*))))
+	  
 
 
 ;; (defun delete-at-cursor (char)
@@ -158,16 +161,13 @@
 ;;   (cond ((null pos) 
 
 (defun cursor-left ()
-  (cond ((null (cdr *cursor*)) nil)
-	((eq t (cdr *cursor*)) (setf (cdr *cursor*)
-				     (1- (length (car (sref *text-buffer* (car *cursor*)))))))
-	((zerop (cdr *cursor*)) (setf (cdr *cursor*)
-				      t))
-	(t (setf (cdr *cursor*)
-		 (1- (cdr *cursor*))))))
+  (setf (cdr *cursor*) (floor (1- (cdr *cursor*)) (length (sref *text-buffer* (car *cursor*)))))
+  (draw-buffer))
 
 (defun cursor-right ()
-  )
+  (setf (cdr *cursor*) (ceiling (1+ (cdr *cursor*)) (length (sref *text-buffer* (car *cursor*)))))
+  (draw-buffer))
+
 
 (defun cursor-up ()
   )
@@ -176,8 +176,10 @@
   )
 
 (defun cursor-backspace ()
-  (sdelete (car (sref *text-buffer* (car *cursor*))) (cdr *cursor*))
-  (draw-buffer))
+  (when (> (cdr *cursor*) 0)
+    (sdelete (car (sref *text-buffer* (car *cursor*))) (cdr *cursor*))
+    (decf (cdr *cursor*))
+    (draw-buffer)))
 
 (defun cursor-delete () 
   )
@@ -188,14 +190,14 @@
 
 ;; Key press handler
 (defevent *on-key-down* (win keysym state ts)
-  (format t "~A ~A ~A ~A~%" win (sdl2:scancode keysym) state ts)
+  ;;(format t "~A ~A ~A ~A~%" win (sdl2:scancode keysym) state ts)
 
   (case (sdl2:scancode keysym)
     (:scancode-backspace 	 (cursor-backspace))
   ;;   (:scancode-return    	 (cursor-line-feed))
   ;;   (:scancode-delete   	 (cursor-delete))
-  ;;   (:scancode-left 	 (cursor-left))
-  ;;   (:scancode-right 	 (cursor-right))
+    (:scancode-left 	 (cursor-left))
+    (:scancode-right 	 (cursor-right))
   ;;   (:scancode-up 	 (cursor-up))
   ;;   (:scancode-down 	 (cursor-down))))
 
@@ -206,7 +208,7 @@
 
 (! 
   (setf *text-buffer* (make-seq))
-  (setf *cursor* '(t . t))
+  (setf *cursor* '(0 . 0))
   (gl:clear-color 1 1 1 1)
   (sdl2:start-text-input)
   (new-paragraph "")
