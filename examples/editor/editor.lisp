@@ -86,21 +86,23 @@
 (clinch:init :init-controllers nil)
 
 (defun draw-buffer ()
+
   (fast-draw ()
     (clear-cairo-context .5 .5 .5 0)
     (loop for (text . attr) being the elements of *text-buffer* 
        do (pango::print-with-attributes (text) (append *default-attributes* attr)
-	    (let* ((index (1+ (cdr *cursor*))))
-	      (format t "~S~%" *cursor*)
+	    (let* ((index  (cdr *cursor*)))
+	      
+	      (format t "~S vs ~S~%" *cursor* (length (car (sref *text-buffer* (car *cursor*)))))
 	      (multiple-value-bind (strong weak) 
 		  (pango:get-cursor-pos pango::*layout* index)
 
 		;;(format t "~A~%" (multiple-value-list (pango:get-line-from-position pango::*layout* index)))
-		
-		;;(format t "~S ~S~%" strong weak)
-		(let ((start-x (first weak))
-		      (start-y (second weak))
-		      (h (fourth weak)))
+		(format t "~S ~S~%" strong weak)
+		(let ((start-x (first strong))
+		      (start-y (second strong))
+		      (h (fourth strong)))
+		  (format t "(~S,~S) to (~S,~S)~%" start-x start-y start-x (+ start-y h)) 
 		  (cairo:save)
 		  (cairo:set-source-rgb 1 0 0) 
 		  (cairo:move-to start-x start-y)
@@ -132,8 +134,9 @@
 (defun insert-at-cursor (char)
   (let ((p (car *cursor*))
 	(pos (cdr *cursor*)))
-    (insert-char-into-paragraph p char pos)
-    (incf (cdr *cursor*))))
+    (incf (cdr *cursor*))
+    (insert-char-into-paragraph p char pos)))
+
 	  
 
 

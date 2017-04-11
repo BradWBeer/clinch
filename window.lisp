@@ -439,10 +439,14 @@ working while cepl runs"
 		(resizable t))
   (unless *running*
     (let ((local-stdout *standard-output*)
+	  (local-error-out *error-output*)
+	  (local-trace-out *trace-output*)
 	  (local-input *standard-input*))
       (with-main
         (let ((*standard-output* local-stdout)
-              (*standard-input* local-input))
+              (*standard-input* local-input)
+	      (*error-output* local-error-out)
+	      (*trace-output* local-trace-out))
           (print-sdl-version)
           (unless *inited*
             (sdl2:with-everything (:window
