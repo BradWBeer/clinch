@@ -43,29 +43,30 @@
      (cairo:rel-move-to 0 (nth-value 1 (pango::get-layout-size ,*layout*)))
      (pango::get-layout-extents ,*layout*)))
 
-(defmacro print-text-with-attributes (text attributes &key (width nil) (wrap :pango_wrap_word) (alignment :pango_ALIGN_LEFT))
+(defmacro with-print ((text attributes &key (width nil) (wrap :pango_wrap_word) (alignment :pango_ALIGN_LEFT)) &body body)
   "Print a block of text with markup."
-  `(with-paragraph (:width ,width :wrap ,wrap :alignment ,alignment)
+  `(pango:with-paragraph (:width ,width :wrap ,wrap :alignment ,alignment)
      (cairo:save)
      
-     (pango_layout_set_text *layout* ,text -1)
-     (with-attribute-list ()
+     (pango:pango_layout_set_text pango::*layout* ,text -1)
+     (pango:with-attribute-list ()
        (map nil 
 	    (lambda (a)
 	      (apply
-	       (cdr (assoc (car a) *alist-attributes*))
+	       (cdr (assoc (car a) pango::*alist-attributes*))
 	       (cdr a)))
 	    ,attributes)
        
-       (pango_layout_set_attributes *layout* *attribute-list*)
-       (pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) *layout*)
+       (pango:pango_layout_set_attributes pango::*layout* pango::*attribute-list*)
+       (pango:pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) pango::*layout*)
+
+       (prog1 ,@body
        
-       (pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
-       (pango_cairo_show_layout (slot-value cairo:*context* 'cairo::pointer) ,*layout*)
-       (cairo:restore)
-       (unless (cairo:has-current-point) (cairo:move-to 0 0))
-       (cairo:rel-move-to 0 (nth-value 1 (get-layout-size ,*layout*)))
-       (pango::get-layout-extents ,*layout*))))
+	 (pango:pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) ,pango::*layout*)
+	 (pango:pango_cairo_show_layout (slot-value cairo:*context* 'cairo::pointer) ,pango::*layout*)
+	 (cairo:restore)
+	 (unless (cairo:has-current-point) (cairo:move-to 0 0))
+	 (cairo:rel-move-to 0 (nth-value 1 (pango:get-layout-size ,pango::*layout*)))))))
 
 
 

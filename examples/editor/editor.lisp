@@ -86,39 +86,51 @@
 (clinch:init :init-controllers nil)
 
 (defun draw-buffer ()
-
+  
   (fast-draw ()
     (clear-cairo-context .5 .5 .5 0)
-    (loop for (text . attr) being the elements of *text-buffer* 
-       do (pango::print-with-attributes (text) (append *default-attributes* attr)
-	    (let* ((index  (cdr *cursor*)))
-	      
-	      (format t "~S vs ~S~%" *cursor* (length (car (sref *text-buffer* (car *cursor*)))))
-	      (multiple-value-bind (strong weak) 
+    (loop for (text . attr) being the elements of *text-buffer*
+       for i from 0
+       do (clinch::with-print (text (append *default-attributes* attr))
+	    (when (= i (car *cursor*))
+	      (let* ((index  (cdr *cursor*)))
+		
+		(format t "~A ~S vs ~S~%" i *cursor* (length (car (sref *text-buffer* (car *cursor*)))))
+		
+		(multiple-value-bind (strong weak) 
 		  (pango:get-cursor-pos pango::*layout* index)
-
-		;;(format t "~A~%" (multiple-value-list (pango:get-line-from-position pango::*layout* index)))
-		(format t "~S ~S~%" strong weak)
-		(let ((start-x (first strong))
-		      (start-y (second strong))
-		      (h (fourth strong)))
-		  (format t "(~S,~S) to (~S,~S)~%" start-x start-y start-x (+ start-y h)) 
-		  (cairo:save)
-		  (cairo:set-source-rgb 1 0 0) 
-		  (cairo:move-to start-x start-y)
-		  (cairo:rel-line-to 0 h) 
-		  (cairo:stroke)
-		  (cairo:restore))))))))
+		  
+		  (let ((start-x (first strong))
+			(start-y (second strong))
+			(h (fourth strong)))
+		    ;;(cairo:save)
+		    (cairo:set-source-rgb 1 0 0) 
+		    (cairo:rel-move-to start-x start-y)
+		    (cairo:rel-line-to 0 h) 
+		    (cairo:stroke)
+		    (cairo:restore)
+		    ))))))))
 								     
 	    ;;(format t "~A~%" (multiple-value-list (pango:get-cursor-pos pango::*layout* (1- (length text)))))))))
 					      
 
-(defun new-paragraph (text &optional attributes)
+(defun new-paragraph (text &optional attributes position)
   (setf *text-buffer*
-	(spush *text-buffer*
-	       (cons (make-seq-string :initial-contents text)
-		     attributes)))
-  (draw-buffer))
+	(if (or (null position)
+		(= position (1- (length *text-buffer*))))
+	    (progn 
+	      (setf (car *cursor*) (length *text-buffer*))
+	      (setf (cdr *cursor*) 0)
+	      (spush *text-buffer*
+		     (cons (make-seq-string :initial-contents text)
+			 attributes)))
+	    (progn
+	      (setf (cdr *cursor*) 0)
+	      (sinsert *text-buffer* 
+		       (cons (make-seq-string :initial-contents text)
+			     attributes) 
+		       (print (incf (car *cursor*))))))))
+	    
 
 (defun insert-char-into-paragraph (paragraph char &optional (pos t))
   (sinsert 
@@ -126,28 +138,10 @@
    char pos)
   (draw-buffer))
 
-;; (defun delete-at-cursor (char)
-;;   (let ((p (car *cursor*))
-;; 	(pos (cdr *cursor*)))
-;;     (delete-char-in-paragraph 
-;;      (cond ((null p) 0)
-;; 	   ((or (eq t p)
-;; 		(>= p (length *text-buffer*)))
-;; 	    (1- (length *text-buffer*)))
-;; 	   (t p))
-;;      char 
-;;      pos)
-;;     (setf (cdr *cursor*)
-;; 	  (cond ((null pos) 1)
-;; 		((eq t pos) t)
-;; 		(t (1+ pos))))))    
-
 
 (defevent *on-window-resized* (window width height ts)
   (draw-buffer))
 
-;; (defun Seq- (seq pos)
-;;   (cond ((null pos) 
 
 (defun delete-char-in-paragraph (&optional (paragraph t) (pos t))
   (sdelete (car (sref *text-buffer* paragraph)) pos)
@@ -167,7 +161,7 @@
     (draw-buffer)))
 
 (defun cursor-right ()
-  (setf (cdr *cursor*) (ceiling (1+ (cdr *cursor*)) (length (sref *text-buffer* (car *cursor*)))))
+  (setf (cdr *cursor*) (min (1+ (cdr *cursor*)) (length (car (sref *text-buffer* (car *cursor*))))))
   (draw-buffer))
 
 
@@ -186,9 +180,10 @@
 (defun cursor-delete () 
   )
 
-(defun cursor-line-feed () 
-  )
-
+(defun cursor-line-feed ()
+  (format t "Cursor line feed!~%");
+  (new-paragraph "")
+  (draw-buffer))
 
 ;; Key press handler
 (defevent *on-key-down* (win keysym state ts)
@@ -196,7 +191,7 @@
 
   (case (sdl2:scancode keysym)
     (:scancode-backspace 	 (cursor-backspace))
-  ;;   (:scancode-return    	 (cursor-line-feed))
+    (:scancode-return    	 (cursor-line-feed))
   ;;   (:scancode-delete   	 (cursor-delete))
     (:scancode-left 	 (cursor-left))
     (:scancode-right 	 (cursor-right))
