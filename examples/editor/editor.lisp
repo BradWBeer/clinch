@@ -198,19 +198,19 @@
 	     (sdelete (car (sref *text-buffer* (car *cursor*))) (cdr *cursor*))	   
 	   (draw-buffer))
     (when (< 0 (car *cursor*))
-      (unless (zerop (length (sref *text-buffer* (car *cursor*))))
-	(let ((first (car (sref *text-buffer* (1- (car *cursor*)))))
-	      (second (car (sref *text-buffer* (car *cursor*)))))
-	  (setf (car (aref *text-buffer* (1- (car *cursor*))))
-		(sconcat first second))
-	  (format t "NEED TO SCONCAT! ~A ~A~%" first second)))
-      
+      (let ((first (car (sref *text-buffer* (1- (car *cursor*)))))
+	    (second (car (sref *text-buffer* (car *cursor*)))))
+
+	(setf (car (aref *text-buffer* (1- (car *cursor*))))
+	      (sconcat first second))
+	
+	
 	;;   (setf target (sconcat target 
 	;; 			(car (sref *text-buffer* (car *cursor*)))))))
-      (sdelete *text-buffer* (car *cursor*))
-      (decf (car *cursor*))
-      (setf (cdr *cursor*) (length (car (sref *text-buffer* (car *cursor*)))))
-      (draw-buffer))))
+	(sdelete *text-buffer* (car *cursor*))
+	(decf (car *cursor*))
+	(setf (cdr *cursor*) (length first))
+	(draw-buffer)))))
 
 (defun cursor-delete () 
   )
