@@ -15,6 +15,20 @@
   (cairo:paint context)
   (cairo:restore context))
 
+
+(defmacro with-saved-point (() &body body)
+  (let ((x-var (gensym "with-saved-point"))
+	(y-var (gensym "with-saved-point")))
+    `(let ((,x-var)
+	   (,y-var))
+       (when (cairo:has-current-point) 
+	 (multiple-value-setq (,x-var ,y-var) (cairo:get-current-point)))
+       (unwind-protect 
+	    (progn ,@body)
+	 (when (and ,x-var ,y-var)
+	   (cairo:move-to ,x-var ,y-var))))))
+	 
+
 ;; working, but put need to group the calls which require the main thread for speed.
 (defmacro with-surface-for-mapped-texture ((&key texture pbo 
 					  (cairo-format :argb32)
