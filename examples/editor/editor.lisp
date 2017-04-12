@@ -84,9 +84,12 @@
 (defun sconcat (seq1 seq2)
   (make-seq-string :initial-contents (concatenate 'VECTOR seq1 seq2)))
 
-(defun ssplit (seq pos) 
-  (when (< pos (length seq))
-    (format t "split is called!~%")))
+(defun ssplit (seq pos)
+  (values 
+   (make-seq-string :initial-contents (subseq seq 0 pos)) 
+   (make-seq-string :initial-contents (subseq seq pos))))
+  
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -226,7 +229,13 @@
 
 (defun cursor-line-feed ()
   (format t "Cursor line feed!~%");
-  (new-line "")
+  (multiple-value-bind (first second) (ssplit (car (sref *text-buffer* (car *cursor*)))
+					      (cdr *cursor*))
+    (setf (car (sref *text-buffer* (car *cursor*)))
+	  first)
+    (sinsert *text-buffer* (list second) (1+ (car *cursor*)))
+    (incf (car *cursor*))
+    (setf (cdr *cursor*) 0))
   (draw-buffer))
 
 ;; Key press handler
