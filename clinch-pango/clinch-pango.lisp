@@ -62,7 +62,7 @@
 
        (prog1 ,@body
        
-	 (pango:pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) ,pango::*layout*)
+	 ;;(pango:pango_cairo_update_layout (slot-value cairo:*context* 'cairo::pointer) ,pango::*layout*)
 	 (pango:pango_cairo_show_layout (slot-value cairo:*context* 'cairo::pointer) ,pango::*layout*)
 	 (cairo:restore)
 	 (unless (cairo:has-current-point) (cairo:move-to 0 0))

@@ -88,6 +88,7 @@
 (defun draw-buffer ()
   
   (fast-draw ()
+    (cairo:move-to 0 0)
     (clear-cairo-context .5 .5 .5 0)
     (loop for (text . attr) being the elements of *text-buffer*
        for i from 0
@@ -95,20 +96,23 @@
 	    (when (= i (car *cursor*))
 	      (let* ((index  (cdr *cursor*)))
 		
-		(format t "~A ~S vs ~S~%" i *cursor* (length (car (sref *text-buffer* (car *cursor*)))))
+		;;(format t "~A ~S vs ~S~%" i *cursor* (length (car (sref *text-buffer* (car *cursor*)))))
 		
 		(multiple-value-bind (strong weak) 
 		  (pango:get-cursor-pos pango::*layout* index)
 		  (let ((start-x (first strong))
 		  	(start-y (second strong))
-		  	(h (fourth strong)))
-
+		  	(h (fourth strong))
+			(point (multiple-value-list (cairo:get-current-point))))
 		    (cairo:save)
 		    (cairo:set-source-rgb 1 0 0) 
 		    (cairo:rel-move-to start-x start-y)
-		    ;;   (cairo:rel-line-to 0 h) 
-		    ;;   (cairo:stroke)
-		    (cairo:restore)))))))))
+		    (cairo:rel-line-to 0 h) 
+		    (cairo:stroke)
+		    (cairo:restore)
+		    (cairo:move-to (car point) (cadr point))
+		    ;;(format t "p2 ~A~%" (multiple-value-list (cairo:get-current-point)))
+		    ))))))))
 								     
 	    ;;(format t "~A~%" (multiple-value-list (pango:get-cursor-pos pango::*layout* (1- (length text)))))))))
 					      
