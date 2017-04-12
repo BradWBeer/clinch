@@ -84,6 +84,10 @@
 (defun sconcat (seq1 seq2)
   (make-seq-string :initial-contents (concatenate 'VECTOR seq1 seq2)))
 
+(defun ssplit (seq pos) 
+  (when (< pos (length seq))
+    (format t "split is called!~%")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defparameter *default-attributes* '((:size 25)))
@@ -124,7 +128,7 @@
 	    ;;(format t "~A~%" (multiple-value-list (pango:get-cursor-pos pango::*layout* (1- (length text)))))))))
 					      
 
-(defun new-paragraph (text &optional attributes position)
+(defun new-line (text &optional attributes position)
   (setf *text-buffer*
 	(if (or (null position)
 		(= position (1- (length *text-buffer*))))
@@ -204,20 +208,25 @@
 	(setf (car (aref *text-buffer* (1- (car *cursor*))))
 	      (sconcat first second))
 	
-	
-	;;   (setf target (sconcat target 
-	;; 			(car (sref *text-buffer* (car *cursor*)))))))
 	(sdelete *text-buffer* (car *cursor*))
 	(decf (car *cursor*))
 	(setf (cdr *cursor*) (length first))
 	(draw-buffer)))))
 
-(defun cursor-delete () 
-  )
+(defun cursor-delete ()
+  (if (< (cdr *cursor*) (length (car (sref *text-buffer* (car *cursor*)))))
+      (progn (sdelete (car (sref *text-buffer* (car *cursor*))) (cdr *cursor*))
+	     (draw-buffer))
+      (when (< (car *cursor*) (1- (length *text-buffer*)))
+	(setf (car (sref *text-buffer* (car *cursor*)))
+	      (sconcat (car (sref *text-buffer* (car *cursor*)))
+		       (car (sref *text-buffer* (1+ (car *cursor*))))))
+	(sdelete *text-buffer* (1+ (car *cursor*)))
+	(draw-buffer))))
 
 (defun cursor-line-feed ()
   (format t "Cursor line feed!~%");
-  (new-paragraph "")
+  (new-line "")
   (draw-buffer))
 
 ;; Key press handler
@@ -227,7 +236,7 @@
   (case (sdl2:scancode keysym)
     (:scancode-backspace 	 (cursor-backspace))
     (:scancode-return    	 (cursor-line-feed))
-  ;;   (:scancode-delete   	 (cursor-delete))
+    (:scancode-delete   	 (cursor-delete))
     (:scancode-left 	 (cursor-left))
     (:scancode-right 	 (cursor-right))
   ;;   (:scancode-up 	 (cursor-up))
@@ -243,5 +252,5 @@
   (setf *cursor* '(0 . 0))
   (gl:clear-color 1 1 1 1)
   (sdl2:start-text-input)
-  (new-paragraph "")
+  (new-line "")
   (draw-buffer))
