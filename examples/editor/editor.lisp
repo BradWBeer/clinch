@@ -88,6 +88,7 @@
 
 (defparameter *default-attributes* '((:size 25)))
 (defparameter *text-buffer* nil)
+(defparameter *attribute-buffer* nil)
 (defparameter *cursor* '(t t))
 
 (clinch:init :init-controllers nil)
@@ -97,8 +98,9 @@
   (fast-draw ()
     (cairo:move-to 0 0)
     (clear-cairo-context .5 .5 .5 0)
-    (loop for (text . attr) being the elements of *text-buffer*
-       for i from 0
+    (loop for text being the elements of *text-buffer*
+       for    attr being the elements of *attribute-buffer*
+       for    i from 0
        do (clinch::with-print (text (append *default-attributes* attr))
 	    (when (= i (car *cursor*))
 	      (let* ((index  (cdr *cursor*)))
@@ -125,26 +127,26 @@
 					      
 
 (defun new-paragraph (text &optional attributes position)
-  (setf *text-buffer*
-	(if (or (null position)
-		(= position (1- (length *text-buffer*))))
-	    (progn 
-	      (setf (car *cursor*) (length *text-buffer*))
-	      (setf (cdr *cursor*) 0)
-	      (spush *text-buffer*
-		     (cons (make-seq-string :initial-contents text)
-			 attributes)))
-	    (progn
-	      (setf (cdr *cursor*) 0)
-	      (sinsert *text-buffer* 
-		       (cons (make-seq-string :initial-contents text)
-			     attributes) 
-		       (print (incf (car *cursor*))))))))
-	    
+  (if (or (null position)
+	  (= position (1- (length *text-buffer*))))
+      (progn 
+	(setf (car *cursor*) (length *text-buffer*))
+	(setf (cdr *cursor*) 0)
+	(spush *text-buffer*
+	       (make-seq-string :initial-contents text))
+	(spush *attribute-buffer* (make-seq :initial-contents attributes)))
+      (progn
+	(setf (cdr *cursor*) 0)
+	(sinsert *text-buffer* 
+		 (make-seq-string :initial-contents text))
+	(sinsert *attribute-buffer* 
+		 (make-seq :initial-contents attributes))
+	(print (incf (car *cursor*))))))
+
 
 (defun insert-char-into-paragraph (paragraph char &optional (pos t))
   (sinsert 
-   (car (sref *text-buffer* paragraph))
+   (sref *text-buffer* paragraph)
    char pos)
   (draw-buffer))
 
@@ -154,7 +156,7 @@
 
 
 (defun delete-char-in-paragraph (&optional (paragraph t) (pos t))
-  (sdelete (car (sref *text-buffer* paragraph)) pos)
+  (sdelete (sref *text-buffer* paragraph) pos)
   (draw-buffer))
 
 
@@ -169,20 +171,20 @@
   (if (zerop (cdr *cursor*))
       (unless (zerop (car *cursor*))
 	(decf (car *cursor*))
-	(setf (cdr *cursor*) (length (car (sref *text-buffer* (car *cursor*)))))
+	(setf (cdr *cursor*) (length (sref *text-buffer* (car *cursor*))))
 	(draw-buffer))
       (progn (decf (cdr *cursor*))
 	     (draw-buffer))))
 
 (defun cursor-right ()
   (if (= (cdr *cursor*) 
-	 (length (car (sref *text-buffer* (car *cursor*)))))
+	 (length (sref *text-buffer* (car *cursor*))))
       (when (< (car *cursor*) (1- (length *text-buffer*)))
 	(incf (car *cursor*))
 	(setf (cdr *cursor*) 0)
 	(draw-buffer))
       (progn 
-	(setf (cdr *cursor*) (min (1+ (cdr *cursor*)) (length (car (sref *text-buffer* (car *cursor*))))))
+	(setf (cdr *cursor*) (min (1+ (cdr *cursor*)) (length (sref *text-buffer* (car *cursor*)))))
 	(draw-buffer))))
 
 
@@ -195,13 +197,13 @@
 (defun cursor-backspace ()
   (if (> (cdr *cursor*) 0)
       (progn (decf (cdr *cursor*))
-	     (sdelete (car (sref *text-buffer* (car *cursor*))) (cdr *cursor*))	   
+	     (sdelete (sref *text-buffer* (car *cursor*)) (cdr *cursor*))	   
 	   (draw-buffer))
     (when (< 0 (car *cursor*))
-      (let ((first (car (sref *text-buffer* (1- (car *cursor*)))))
-	    (second (car (sref *text-buffer* (car *cursor*)))))
+      (let ((first (sref *text-buffer* (1- (car *cursor*))))
+	    (second (sref *text-buffer* (car *cursor*))))
 
-	(setf (car (aref *text-buffer* (1- (car *cursor*))))
+	(setf (aref *text-buffer* (1- (car *cursor*)))
 	      (sconcat first second))
 	
 	
@@ -240,6 +242,7 @@
 
 (! 
   (setf *text-buffer* (make-seq))
+  (setf *attribute-buffer* (make-seq))
   (setf *cursor* '(0 . 0))
   (gl:clear-color 1 1 1 1)
   (sdl2:start-text-input)
