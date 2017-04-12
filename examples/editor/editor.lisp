@@ -77,6 +77,13 @@
 		    (aref seq (1+ i))))
 	(spop seq)))
   seq)
+
+(defun sconcat-string (seq1 seq2)
+  (make-seq-string :initial-contents (concatenate '(VECTOR CHARACTER) seq1 seq2)))
+
+(defun sconcat (seq1 seq2)
+  (make-seq-string :initial-contents (concatenate 'VECTOR seq1 seq2)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defparameter *default-attributes* '((:size 25)))
@@ -159,13 +166,24 @@
 
 
 (defun cursor-left ()
-  (when (> (cdr *cursor*) 0)
-    (decf (cdr *cursor*))
-    (draw-buffer)))
+  (if (zerop (cdr *cursor*))
+      (unless (zerop (car *cursor*))
+	(decf (car *cursor*))
+	(setf (cdr *cursor*) (length (car (sref *text-buffer* (car *cursor*)))))
+	(draw-buffer))
+      (progn (decf (cdr *cursor*))
+	     (draw-buffer))))
 
 (defun cursor-right ()
-  (setf (cdr *cursor*) (min (1+ (cdr *cursor*)) (length (car (sref *text-buffer* (car *cursor*))))))
-  (draw-buffer))
+  (if (= (cdr *cursor*) 
+	 (length (car (sref *text-buffer* (car *cursor*)))))
+      (when (< (car *cursor*) (1- (length *text-buffer*)))
+	(incf (car *cursor*))
+	(setf (cdr *cursor*) 0)
+	(draw-buffer))
+      (progn 
+	(setf (cdr *cursor*) (min (1+ (cdr *cursor*)) (length (car (sref *text-buffer* (car *cursor*))))))
+	(draw-buffer))))
 
 
 (defun cursor-up ()
@@ -175,10 +193,24 @@
   )
 
 (defun cursor-backspace ()
-  (when (> (cdr *cursor*) 0)
-    (sdelete (car (sref *text-buffer* (car *cursor*))) (cdr *cursor*))
-    (decf (cdr *cursor*))
-    (draw-buffer)))
+  (if (> (cdr *cursor*) 0)
+      (progn (decf (cdr *cursor*))
+	     (sdelete (car (sref *text-buffer* (car *cursor*))) (cdr *cursor*))	   
+	   (draw-buffer))
+    (when (< 0 (car *cursor*))
+      (unless (zerop (length (sref *text-buffer* (car *cursor*))))
+	(let ((first (car (sref *text-buffer* (1- (car *cursor*)))))
+	      (second (car (sref *text-buffer* (car *cursor*)))))
+	  (setf (car (aref *text-buffer* (1- (car *cursor*))))
+		(sconcat first second))
+	  (format t "NEED TO SCONCAT! ~A ~A~%" first second)))
+      
+	;;   (setf target (sconcat target 
+	;; 			(car (sref *text-buffer* (car *cursor*)))))))
+      (sdelete *text-buffer* (car *cursor*))
+      (decf (car *cursor*))
+      (setf (cdr *cursor*) (length (car (sref *text-buffer* (car *cursor*)))))
+      (draw-buffer))))
 
 (defun cursor-delete () 
   )
