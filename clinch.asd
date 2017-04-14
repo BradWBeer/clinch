@@ -13,7 +13,10 @@
 	       #:trivial-channels
 	       #:sdl2
 	       #:rtg-math
-	       #:swank)
+
+	       ;; This is here to show swank
+	       ;; is an optional component.
+	       #+swank #:swank)
   :components ((:file "package")
 	       (:file "threads")
 	       (:file "clinch")
