@@ -95,6 +95,9 @@
 
 (defparameter *default-attributes* '((:size 25)))
 (defparameter *text-buffer* nil)
+
+(defparameter *buffer-text-ranges* nil)
+(defparameter *cursor-pixel-position* nil)
 (defparameter *cursor* '(t t))
 
 (clinch:init :init-controllers nil)
@@ -104,30 +107,46 @@
   (fast-draw ()
     (cairo:move-to 0 0)
     (clear-cairo-context .5 .5 .5 0)
-    (loop for (text . attr) being the elements of *text-buffer*
-       for i from 0
-       do (clinch::with-print (text (append *default-attributes* attr))
-	    (when (= i (car *cursor*))
-	      (let* ((index  (cdr *cursor*)))
+    (let ((lines-data nil))
+      (loop 
+	 for (text . attr) being the elements of *text-buffer*
+	 for i from 0
+	 do (clinch::with-print (text (append *default-attributes* attr))
+	      (let ((layout-data (pango::get-layout-lines-data pango::*layout*)))
+		(setf lines-data (cons layout-data lines-data))
 		
-		;;(format t "~A ~S vs ~S~%" i *cursor* (length (car (sref *text-buffer* (car *cursor*)))))
+		(when (= i (car *cursor*))
+		  (let* ((index  (cdr *cursor*)))
+		    
+		    (multiple-value-bind (strong weak) 
+			(pango:get-cursor-pos pango::*layout* index)
+		      ;;(format t "~A ~A~%" strong weak)
+		      
+		      (let ((start-x (first strong))
+			    (start-y (second strong))
+			    (h (fourth strong))
+			    (point (multiple-value-list (cairo:get-current-point))))
+
+			(setf *cursor-pixel-position* (map 'list #'+ strong point))
+			
+			(cairo:save)
+			
+			;; (cairo:set-source-rgba 0 0 0 .5)
+			;; (cairo:rectangle (first (car scrap)) 0 (third (car scrap)) (fourth (car scrap)))
+			;; (cairo:fill-path)
+			;; (cairo:move-to (car point) (cadr point))
+			
+			(cairo:set-source-rgb 1 0 0) 
+			(cairo:rel-move-to start-x start-y)
+			(cairo:rel-line-to 0 h) 
+			(cairo:stroke)
+			(cairo:restore)
+			(cairo:move-to (car point) (cadr point))
+			;;(format t "p2 ~A~%" (multiple-value-list (cairo:get-current-point)))
+			))))
+		(setf *buffer-text-ranges* (reverse lines-data))))))))
 		
-		(multiple-value-bind (strong weak) 
-		  (pango:get-cursor-pos pango::*layout* index)
-		  (let ((start-x (first strong))
-		  	(start-y (second strong))
-		  	(h (fourth strong))
-			(point (multiple-value-list (cairo:get-current-point))))
-		    (cairo:save)
-		    (cairo:set-source-rgb 1 0 0) 
-		    (cairo:rel-move-to start-x start-y)
-		    (cairo:rel-line-to 0 h) 
-		    (cairo:stroke)
-		    (cairo:restore)
-		    (cairo:move-to (car point) (cadr point))
-		    ;;(format t "p2 ~A~%" (multiple-value-list (cairo:get-current-point)))
-		    ))))))))
-								     
+								   
 	    ;;(format t "~A~%" (multiple-value-list (pango:get-cursor-pos pango::*layout* (1- (length text)))))))))
 					      
 
@@ -193,8 +212,38 @@
 	(draw-buffer))))
 
 
+(defun find-line-by-position (line pos)
+  (loop
+     for x from 0
+     for l in (nth line *buffer-text-ranges*)
+     when (and (>= pos (nth 8 l))
+	       (< pos (+ (nth 8 l) (nth 9 l))))
+     return (values x l)
+       finally (return (values x l))))
+
+(defun cursor-home ()
+  (multiple-value-bind (i line) (find-line-by-position (car *cursor*) (cdr *cursor*))
+    (setf (cdr *cursor*) 
+	  (nth 8 line)))
+  (draw-buffer))
+
+(defun cursor-end ()
+  (multiple-value-bind (i line) (find-line-by-position (car *cursor*) (cdr *cursor*))
+    (setf (cdr *cursor*) 
+	  (+ (nth 8 line) (nth 9 line))))
+  (draw-buffer))
+
+
 (defun cursor-up ()
+  
   )
+  ;; (let* ((p (car *cursor*))
+  ;; 	 (c (cdr *cursor*))
+  ;; 	 (cur-lines (nth p *buffer-text-ranges*)))
+    
+    
+      
+	
 
 (defun cursor-down ()
   )
@@ -246,6 +295,8 @@
     (:scancode-backspace 	 (cursor-backspace))
     (:scancode-return    	 (cursor-line-feed))
     (:scancode-delete   	 (cursor-delete))
+    (:scancode-home              (cursor-home))
+    (:scancode-end              (cursor-end))
     (:scancode-left 	 (cursor-left))
     (:scancode-right 	 (cursor-right))
   ;;   (:scancode-up 	 (cursor-up))
