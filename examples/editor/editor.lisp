@@ -102,7 +102,7 @@
 
 (clinch:init :init-controllers nil)
 
-(defun draw-buffer ()
+(defun draw-buffer (&key reposition-x)
   
   (fast-draw ()
     (cairo:move-to 0 0)
@@ -114,6 +114,19 @@
 	 do (clinch::with-print (text (append *default-attributes* attr))
 	      (let ((layout-data (pango::get-layout-lines-data pango::*layout*)))
 		(setf lines-data (cons layout-data lines-data))
+
+		(when (and reposition-x (car reposition-x))
+		  (let ((p (first reposition-x))
+			(l (second reposition-x))
+			(x (third  reposition-x)))
+		    (when (= i p)
+		      (setf (car *cursor*) p)
+		      (multiple-value-bind (index trailing)
+			  (pango::layout-line-x-to-index
+			   (pango::pango_layout_get_line pango::*layout* l)
+			   (* pango::PANGO_SCALE (round x)))
+			(print (list index trailing))
+			(setf (cdr *cursor*) (+ index trailing))))))
 		
 		(when (= i (car *cursor*))
 		  (let* ((index  (cdr *cursor*)))
@@ -128,6 +141,8 @@
 			    (point (multiple-value-list (cairo:get-current-point))))
 
 			(setf *cursor-pixel-position* (map 'list #'+ strong point))
+			(when reposition-x
+			  (setf (car *cursor-pixel-position*) (third reposition-x)))
 			
 			(cairo:save)
 			
@@ -233,15 +248,6 @@
 	  (+ (nth 0 line) (nth 1 line))))
   (draw-buffer))
 
-
-(defun get-up-line (cursor lines-data)
-  (let ((cursor-para (car cursor))
-	(current-line (get-cursor-line-number cursor lines-data)))
-    (if (zerop current-line)
-	(when (< cursor-para 0)
-	  (values (1- cursor-para) (1- (length (nth (1- cursor-para) lines-data)))))
-	(values cursor-para (1- current-line)))))
-
 (defun get-previous-line (paragraph line lines-data)
   (if (<= line 0) 
       ;; get previous paragraph
@@ -250,7 +256,14 @@
 	  (values new-para
 		  (1- (length (nth new-para lines-data))))))
       (values paragraph (1- line))))
-	  
+
+(defun get-next-line (paragraph line lines-data)
+  (let ((p (nth paragraph lines-data)))
+    (if (< line (1- (length p)))
+	(values paragraph (1+ line))
+	(when (< paragraph (length lines-data))
+	  (values (1+ paragraph) 0)))))
+
 (defun get-cursor-line-number (cursor lines-data)
   (let* ((line (car cursor))
 	 (pos  (cdr cursor))
@@ -266,11 +279,20 @@
 	
 
 (defun cursor-up ()
-  
-  )
+  (draw-buffer :reposition-x 
+	       (multiple-value-bind (p l)
+		   (get-previous-line (car *cursor*) 
+				      (get-cursor-line-number *cursor* *buffer-text-ranges*)
+				      *buffer-text-ranges*)
+		 (list p l (car *cursor-pixel-position*)))))
 
 (defun cursor-down ()
-  )
+  (draw-buffer :reposition-x
+	       (multiple-value-bind (p l)
+		   (get-next-line (car *cursor*) 
+				  (get-cursor-line-number *cursor* *buffer-text-ranges*)
+				  *buffer-text-ranges*)
+		 (list p l (car *cursor-pixel-position*)))))
 
 (defun cursor-backspace ()
   (if (> (cdr *cursor*) 0)
@@ -323,8 +345,8 @@
     (:scancode-end              (cursor-end))
     (:scancode-left 	 (cursor-left))
     (:scancode-right 	 (cursor-right))
-  ;;   (:scancode-up 	 (cursor-up))
-  ;;   (:scancode-down 	 (cursor-down))))
+    (:scancode-up 	 (cursor-up))
+    (:scancode-down 	 (cursor-down))))
 
     ))
     
