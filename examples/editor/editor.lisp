@@ -216,34 +216,58 @@
   (loop
      for x from 0
      for l in (nth line *buffer-text-ranges*)
-     when (and (>= pos (nth 8 l))
-	       (< pos (+ (nth 8 l) (nth 9 l))))
+     when (and (>= pos (nth 0 l))
+	       (< pos (+ (nth 0 l) (nth 1 l))))
      return (values x l)
        finally (return (values x l))))
 
 (defun cursor-home ()
   (multiple-value-bind (i line) (find-line-by-position (car *cursor*) (cdr *cursor*))
     (setf (cdr *cursor*) 
-	  (nth 8 line)))
+	  (nth 0 line)))
   (draw-buffer))
 
 (defun cursor-end ()
   (multiple-value-bind (i line) (find-line-by-position (car *cursor*) (cdr *cursor*))
     (setf (cdr *cursor*) 
-	  (+ (nth 8 line) (nth 9 line))))
+	  (+ (nth 0 line) (nth 1 line))))
   (draw-buffer))
 
+
+(defun get-up-line (cursor lines-data)
+  (let ((cursor-para (car cursor))
+	(current-line (get-cursor-line-number cursor lines-data)))
+    (if (zerop current-line)
+	(when (< cursor-para 0)
+	  (values (1- cursor-para) (1- (length (nth (1- cursor-para) lines-data)))))
+	(values cursor-para (1- current-line)))))
+
+(defun get-previous-line (paragraph line lines-data)
+  (if (<= line 0) 
+      ;; get previous paragraph
+      (when (> paragraph 0)
+	(let ((new-para (1- paragraph)))
+	  (values new-para
+		  (1- (length (nth new-para lines-data))))))
+      (values paragraph (1- line))))
+	  
+(defun get-cursor-line-number (cursor lines-data)
+  (let* ((line (car cursor))
+	 (pos  (cdr cursor))
+	 (para (nth line lines-data)))
+    (or 
+     (loop 
+	for x from 0
+	for (start len . rest) in para
+	if (and (>= pos start)
+		(<  pos (+ start len)))
+	return x)
+     (1- (length para)))))
+	
 
 (defun cursor-up ()
   
   )
-  ;; (let* ((p (car *cursor*))
-  ;; 	 (c (cdr *cursor*))
-  ;; 	 (cur-lines (nth p *buffer-text-ranges*)))
-    
-    
-      
-	
 
 (defun cursor-down ()
   )
